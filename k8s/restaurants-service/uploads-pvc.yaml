@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim # PersistentVolumeClaim -> Allows pods to dynamically request storage from the PV
+metadata:
+  name: uploads-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: "" # <- very important to match hostPath PVs manually

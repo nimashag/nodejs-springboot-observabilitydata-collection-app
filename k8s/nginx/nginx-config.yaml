@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  default.conf: |
+    server {
+      listen 80;
+
+      # Proxy orders API routes to orders backend service
+      location /api/orders {
+        proxy_pass http://orders-service;
+      }
+      
+      # Proxy restaurants API routes to restaurants backend service
+      location /api/restaurants {
+        proxy_pass http://restaurants-service;
+      } 
+
+      # Proxy uploads routes to restaurants backend service
+      location /uploads {
+        proxy_pass http://restaurants-service;
+      } 
+
+      # Proxy users API routes to users backend service
+      location /api/auth {
+        proxy_pass http://users-service;
+      }   
+
+      # Proxy delivery API routes to delivery backend service
+      location /api/delivery {
+        proxy_pass http://delivery-service;
+      }  
+
+      # Proxy React app routes to frontend service
+      location / {
+        proxy_pass http://frontend-service;
+      }
+    }

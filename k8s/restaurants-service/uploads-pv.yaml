@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume # PersistentVolume -> Defines physical storage on your host (e.g. /tmp/k8-uploads)
+metadata:
+  name: uploads-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /tmp/k8-uploads # Provide full folder path on host machine
+  persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    namespace: default
+    name: uploads-pvc

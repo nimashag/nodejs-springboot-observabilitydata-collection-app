@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: delivery-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: delivery-service
+  template:
+    metadata:
+      labels:
+        app: delivery-service
+    spec:
+      containers:
+        - name: delivery-service
+          image: my-app/delivery-service:latest
+          imagePullPolicy: IfNotPresent # Use the image if it exists locally before trying to pull from Docker Hub
+          ports:
+            - containerPort: 3004
+          env:
+            - name: RESTAURANTS_SERVICE_URL
+              value: "http://restaurants-service/api/restaurants"
+            - name: ORDERS_SERVICE_URL
+              value: "http://orders-service/api/orders"
+            - name: USERS_SERVICE_URL
+              value: "http://users-service/api/restaurants"
+            - name: DELIVERY_SERVICE_URL
+              value: "http://delivery-service/api/delivery"

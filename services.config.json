@@ -1,0 +1,47 @@
+{
+  "services": [
+    {
+      "name": "frontend-service",
+      "prefix": "frontend",
+      "folder": "frontend-service",
+      "port": 80,
+      "dockerImage": "my-app/frontend-service:latest",
+      "k8sPath": "k8s/frontend-service"
+    },
+    {
+      "name": "restaurants-service",
+      "prefix": "restaurants",
+      "folder": "restaurants-service",
+      "port": 3001,
+      "dockerImage": "my-app/restaurants-service:latest",
+      "k8sPath": "k8s/restaurants-service"
+    },
+    {
+      "name": "orders-service",
+      "prefix": "orders",
+      "folder": "orders-service",
+      "port": 3002,
+      "dockerImage": "my-app/orders-service:latest",
+      "k8sPath": "k8s/orders-service"
+    },
+    {
+      "name": "users-service",
+      "prefix": "users",
+      "folder": "users-service",
+      "port": 3003,
+      "dockerImage": "my-app/users-service:latest",
+      "k8sPath": "k8s/users-service"
+    },
+    {
+      "name": "delivery-service",
+      "prefix": "delivery",
+      "folder": "delivery-service",
+      "port": 3004,
+      "dockerImage": "my-app/delivery-service:latest",
+      "k8sPath": "k8s/delivery-service"
+    }
+  ],
+  "nginx": {
+    "k8sPath": "k8s/nginx"
+  }
+}
