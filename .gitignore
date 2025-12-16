@@ -136,3 +136,12 @@ dist
 .pnp.*
 
 uploads
+
+# Spring Boot configuration files with sensitive data
+**/application.properties
+**/application-*.properties
+**/application.yml
+**/application-*.yml
+
+# Maven build output
+target/
