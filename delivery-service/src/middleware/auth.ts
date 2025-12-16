@@ -1,7 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
-const JWT_SECRET = "be5e2c89748a4281d8c0f15a8f0a8e4f047769c616960281bdfa6c011f2b2b31fb4c44ed42a41f87341389e3cb411464ac0a0d926d624c7272293787ae7f83d4";
+dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET not set in environment");
+}
 
 export interface AuthenticatedRequest extends Request {
   user?: { id: string; role: string };
