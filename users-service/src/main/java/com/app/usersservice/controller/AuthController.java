@@ -6,7 +6,10 @@ import com.app.usersservice.dto.RegisterRequest;
 import com.app.usersservice.dto.UserResponse;
 import com.app.usersservice.model.User;
 import com.app.usersservice.service.UserService;
+import com.app.usersservice.util.LoggingUtil;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,27 +24,44 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
     @Autowired
     private UserService userService;
     
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request) {
         try {
-            System.out.println("Register request received with data: " + request);
+            LoggingUtil.info(
+                log,
+                "auth.register.request",
+                Map.of("email", request.getEmail(), "role", request.getRole())
+            );
             userService.registerUser(request);
             Map<String, String> response = new HashMap<>();
             response.put("message", "User registered successfully");
+            LoggingUtil.info(
+                log,
+                "auth.register.success",
+                Map.of("email", request.getEmail())
+            );
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
             if (e.getMessage().equals("User already exists")) {
+                LoggingUtil.warn(
+                    log,
+                    "auth.register.conflict",
+                    Map.of("email", request.getEmail())
+                );
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("message", "User already exists"));
             }
+            LoggingUtil.error(log, "auth.register.failure", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Registration failed", "error", e.getMessage()));
         } catch (Exception e) {
-            System.err.println("Register error: " + e.getMessage());
+            LoggingUtil.error(log, "auth.register.exception", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Registration failed", "error", e.getMessage()));
         }
@@ -50,8 +70,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest request) {
         try {
+            LoggingUtil.info(
+                log,
+                "auth.login.request",
+                Map.of("email", request.getEmail())
+            );
             LoginResponse response = userService.loginUser(request);
-            System.out.println("Response: " + response);
+            LoggingUtil.info(
+                log,
+                "auth.login.success",
+                Map.of("email", request.getEmail())
+            );
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             if (e.getMessage().equals("User not found")) {
@@ -62,10 +91,15 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Invalid credentials"));
             }
+            LoggingUtil.warn(
+                log,
+                "auth.login.failure",
+                Map.of("email", request.getEmail(), "reason", e.getMessage())
+            );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Login failed", "error", e.getMessage()));
         } catch (Exception e) {
-            System.err.println("Login error: " + e.getMessage());
+            LoggingUtil.error(log, "auth.login.exception", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Login failed", "error", e.getMessage()));
         }
@@ -85,7 +119,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Failed to fetch user", "error", e.getMessage()));
         } catch (Exception e) {
-            System.err.println("Get /me error: " + e.getMessage());
+            LoggingUtil.error(log, "auth.me.exception", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Failed to fetch user", "error", e.getMessage()));
         }
@@ -116,7 +150,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Error fetching user data"));
         } catch (Exception e) {
-            System.err.println("Error fetching user: " + e.getMessage());
+            LoggingUtil.error(log, "auth.get-by-id.exception", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Error fetching user data"));
         }
