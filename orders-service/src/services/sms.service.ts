@@ -1,5 +1,6 @@
 // services/sms.service.ts
 import axios from 'axios';
+import { logError, logInfo } from '../utils/logger';
 
 export const sendOrderStatusSMS = async (phoneNumber: string, orderId: string, status: string) => {
   try {
@@ -13,11 +14,11 @@ export const sendOrderStatusSMS = async (phoneNumber: string, orderId: string, s
     });
 
     if (response.data.includes('OK')) {
-      console.log('✅ SMS sent successfully');
+      logInfo('sms.sent.success', { phoneNumber, orderId, status });
     } else {
-      console.error('❌ Failed to send SMS:', response.data);
+      logError('sms.sent.failed', { phoneNumber, orderId, status, response: response.data });
     }
   } catch (error) {
-    console.error('❌ Error sending SMS via TextIt.biz:', error);
+    logError('sms.sent.error', { phoneNumber, orderId, status }, error as Error);
   }
 };

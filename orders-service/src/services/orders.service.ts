@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { Order } from '../models/order.model';
 import { sendOrderStatusEmail } from './email.service';
 import { sendOrderStatusSMS } from './sms.service'; 
+import { logError } from '../utils/logger';
 
 export const createOrder = (data: any, userId: string) => Order.create({ ...data, userId });
 
@@ -32,7 +33,7 @@ export const updateOrder = async (id: string, data: any, userEmail?: string) => 
       await sendOrderStatusSMS(phoneNumber, updatedOrder._id.toString(), data.status);
 
     } catch (error) {
-      console.error('Error sending notification:', error);
+      logError('order.notify.error', { orderId: updatedOrder._id.toString() }, error as Error);
     }
   }
 

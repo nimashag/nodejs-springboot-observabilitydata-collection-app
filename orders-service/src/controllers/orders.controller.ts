@@ -3,10 +3,16 @@ import * as OrdersService from "../services/orders.service";
 import { AuthenticatedRequest } from "../middlewares/auth";
 import { fetchMenuItems, fetchRestaurant } from "../api/restaurant.api";
 import stripe from '../utils/stripe';
+import { logError, logInfo, logWarn } from "../utils/logger";
 
 export const create = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    console.log("▶️ Creating a new order:", req.body);
+    logInfo("order.create.start", {
+      userId: req.user?.id,
+      restaurantId: req.body?.restaurantId,
+      itemsCount: Array.isArray(req.body?.items) ? req.body.items.length : 0,
+      totalAmount: req.body?.totalAmount,
+    });
 
     const {
       items,
@@ -41,33 +47,33 @@ export const create = async (req: AuthenticatedRequest, res: Response) => {
       req.user.id
     );
 
-    console.log("✅ Created order with ID:", order._id);
+    logInfo("order.create.success", { orderId: order._id });
     res.json(order);
   } catch (err) {
-    console.error("Error creating order:", err);
+    logError("order.create.error", { body: req.body }, err as Error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
 
 export const getOne = async (req: Request, res: Response) => {
-  console.log("▶️ Fetching order with ID:", req.params.id);
+  logInfo("order.getOne.start", { orderId: req.params.id });
   const order = await OrdersService.getOrderById(req.params.id);
   if (!order) {
-    console.warn("Order not found:", req.params.id);
+    logWarn("order.getOne.notFound", { orderId: req.params.id });
   } else {
-    console.log("Order found:", order._id);
+    logInfo("order.getOne.found", { orderId: order._id });
   }
   res.json(order);
 };
 
 export const getAll = async (_req: Request, res: Response) => {
   try {
-    console.log("▶️ Fetching all orders");
+    logInfo("order.list.start");
     const orders = await OrdersService.getAllOrders();
-    console.log(`Found ${orders.length} restaurants`);
+    logInfo("order.list.success", { count: orders.length });
     res.json(orders);
   } catch (err) {
-    console.error("Error getting all orders:", err);
+    logError("order.list.error", undefined, err as Error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
@@ -90,7 +96,7 @@ export const updateDeliveryAddress = async (req: Request, res: Response) => {
 
     res.json(updatedOrder);
   } catch (error) {
-    console.error("Error updating delivery address:", error);
+    logError("order.updateAddress.error", { orderId: req.params.id }, error as Error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -113,26 +119,23 @@ export const updateSpecialInstructions = async (req: Request, res: Response) => 
 
     res.json(updatedOrder);
   } catch (error) {
-    console.error("Error updating special instructions:", error);
+    logError("order.updateSpecialInstructions.error", { orderId: req.params.id }, error as Error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
 //restaurantAdmin
 export const getByRestaurantId = async (req: Request, res: Response) => {
+  const restaurantId = req.params.restaurantId;
   try {
-    const { restaurantId } = req.params;
-
-    console.log(`▶️ Fetching orders for restaurant ID: ${restaurantId}`);
+    logInfo("order.byRestaurant.start", { restaurantId });
 
     const orders = await OrdersService.getOrdersByRestaurantId(restaurantId);
 
-    console.log(
-      `✅ Found ${orders.length} orders for restaurant ID: ${restaurantId}`
-    );
+    logInfo("order.byRestaurant.success", { restaurantId, count: orders.length });
     res.json(orders);
   } catch (err) {
-    console.error("Error fetching orders by restaurant ID:", err);
+    logError("order.byRestaurant.error", { restaurantId }, err as Error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
@@ -140,7 +143,7 @@ export const getByRestaurantId = async (req: Request, res: Response) => {
 //restaurantAdmin
 export const update = async (req: Request, res: Response) => {
   try {
-    console.log("▶️ Updating order ID:", req.params.id);
+    logInfo("order.update.start", { orderId: req.params.id });
 
     const updateData: any = { ...req.body };
 
@@ -158,29 +161,29 @@ export const update = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    console.log("✅ Updated order:", updated._id);
+    logInfo("order.update.success", { orderId: updated._id });
     res.json(updated);
   } catch (err) {
-    console.error("Error updating order:", err);
+    logError("order.update.error", { orderId: req.params.id }, err as Error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
 
 export const deleteOrder = async (req: Request, res: Response) => {
   try {
-    console.log("▶️ Deleting order with ID:", req.params.id);
+    logInfo("order.delete.start", { orderId: req.params.id });
 
     const deletedOrder = await OrdersService.deleteOrder(req.params.id);
 
     if (!deletedOrder) {
-      console.warn("Order not found for deletion:", req.params.id);
+      logWarn("order.delete.notFound", { orderId: req.params.id });
       return res.status(404).json({ message: "Order not found" });
     }
 
-    console.log("✅ Deleted order:", req.params.id);
+    logInfo("order.delete.success", { orderId: req.params.id });
     return res.status(200).json({ message: "Order deleted successfully" });
   } catch (err) {
-    console.error("Error deleting order:", err);
+    logError("order.delete.error", { orderId: req.params.id }, err as Error);
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
@@ -189,13 +192,13 @@ export const getCurrentUserOrders = async (req: AuthenticatedRequest, res: Respo
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
     
-    console.log(`▶️ Fetching orders for user: ${req.user.id}`);
+    logInfo("order.byUser.start", { userId: req.user.id });
     const orders = await OrdersService.getOrdersByUserId(req.user.id);
-    console.log(`Found ${orders.length} orders for user`);
+    logInfo("order.byUser.success", { userId: req.user.id, count: orders.length });
     
     res.json(orders);
   } catch (err) {
-    console.error("Error getting user orders:", err);
+    logError("order.byUser.error", { userId: req.user?.id }, err as Error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
@@ -223,14 +226,14 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
       payment_method_types: ['card'],
     });
 
-    console.log("✅ Created Payment Intent:", paymentIntent.id);
+    logInfo("payment.intent.created", { paymentIntentId: paymentIntent.id, amount: paymentIntent.amount });
 
     res.json({ 
       clientSecret: paymentIntent.client_secret,
       items: itemDetails
     });
   } catch (error) {
-    console.error("Error creating Payment Intent:", error);
+    logError("payment.intent.error", undefined, error as Error);
     res.status(500).json({ message: "Something went wrong while creating payment intent" });
   }
 };
@@ -244,7 +247,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
   try {
     event = stripe.webhooks.constructEvent(req.body, sig as string, endpointSecret);
   } catch (err: any) {
-    console.error(`⚠️  Webhook signature verification failed:`, err.message);
+    logError("payment.webhook.verifyFailed", { signature: sig }, err as Error);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -257,13 +260,13 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       transactionId: paymentIntent.id,
     });
     
-    console.log('✅ PaymentIntent was successful:', paymentIntent.id);
+    logInfo('payment.intent.succeeded', { paymentIntentId: paymentIntent.id, orderId });
 
     // Find the order associated with paymentIntentId and mark it as Paid
     // Example if you store paymentIntentId in your Order Model
     // Or match by totalAmount and status
   } else {
-    console.warn(`Unhandled event type ${event.type}`);
+    logWarn("payment.webhook.unhandledEvent", { eventType: event.type });
   }
 
   res.json({ received: true });
@@ -286,7 +289,7 @@ export const markOrderPaid = async (req: Request, res: Response) => {
 
     res.json(updatedOrder);
   } catch (error) {
-    console.error("Error processing payment:", error);
+    logError("payment.process.error", { orderId: req.params.id }, error as Error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
@@ -311,7 +314,7 @@ export const markOrderAsPaid = async (req: AuthenticatedRequest, res: Response) 
 
     res.json(updatedOrder);
   } catch (err) {
-    console.error("Error marking order as paid:", err);
+    logError("payment.markPaid.error", { orderId: req.params.id }, err as Error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -340,17 +343,17 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
       }
     }
     
-    console.log(`▶️ Updating status for order ${orderId} to ${status}`);
+    logInfo("order.status.update.start", { orderId, status, role: req.user.role });
     const updatedOrder = await OrdersService.updateOrderStatus(orderId, status);
     
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
     
-    console.log(`✅ Updated order status: ${updatedOrder._id}`);
+    logInfo("order.status.update.success", { orderId: updatedOrder._id, status });
     res.json(updatedOrder);
   } catch (err) {
-    console.error("Error updating order status:", err);
+    logError("order.status.update.error", { orderId: req.params.id }, err as Error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };

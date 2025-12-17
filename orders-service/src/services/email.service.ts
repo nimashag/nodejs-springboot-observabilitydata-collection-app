@@ -1,6 +1,7 @@
 // services/email.service.ts
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import { logError, logInfo } from '../utils/logger';
 
 dotenv.config();
 
@@ -36,8 +37,8 @@ export const sendOrderStatusEmail = async (
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent to ${to} for order ${orderId} - Status: ${newStatus}`);
+    logInfo('email.orderStatus.sent', { to, orderId, status: newStatus });
   } catch (error) {
-    console.error('❌ Error sending email:', error);
+    logError('email.orderStatus.error', { to, orderId, status: newStatus }, error as Error);
   }
 };
