@@ -56,14 +56,24 @@ export const create = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 export const getOne = async (req: Request, res: Response) => {
-  logInfo("order.getOne.start", { orderId: req.params.id });
-  const order = await OrdersService.getOrderById(req.params.id);
-  if (!order) {
-    logWarn("order.getOne.notFound", { orderId: req.params.id });
-  } else {
+  try {
+    logInfo("order.getOne.start", { orderId: req.params.id });
+    const order = await OrdersService.getOrderById(req.params.id);
+    if (!order) {
+      logWarn("order.getOne.notFound", { orderId: req.params.id });
+      return res.status(404).json({ message: "Order not found" });
+    }
     logInfo("order.getOne.found", { orderId: order._id });
+    res.json(order);
+  } catch (err: any) {
+    // Handle CastError (invalid ObjectId format)
+    if (err.name === 'CastError') {
+      logWarn("order.getOne.invalidId", { orderId: req.params.id });
+      return res.status(400).json({ message: "Invalid order ID format" });
+    }
+    logError("order.getOne.error", { orderId: req.params.id }, err as Error);
+    res.status(500).json({ message: "Something went wrong" });
   }
-  res.json(order);
 };
 
 export const getAll = async (_req: Request, res: Response) => {
