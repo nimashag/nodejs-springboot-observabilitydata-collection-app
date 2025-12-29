@@ -48,12 +48,12 @@ public class AlertDetector {
         this.objectMapper = new ObjectMapper();
         
         // Create alert data directory if it doesn't exist
-        File alertDir = new File("logs/alert");
+        File alertDir = new File("alerts");
         if (!alertDir.exists()) {
             alertDir.mkdirs();
         }
         
-        this.alertDataFile = "logs/alert/" + serviceName + "-alert-data.ndjson";
+        this.alertDataFile = "alerts/" + serviceName + "-alert-data.ndjson";
         
         // Start periodic check (every 30 seconds)
         this.scheduler = Executors.newSingleThreadScheduledExecutor();

@@ -61,7 +61,7 @@ export class AlertDetector {
     this.serviceName = serviceName;
     
     // Create alert data directory if it doesn't exist
-    const alertDir = path.join(process.cwd(), 'logs', 'alert');
+    const alertDir = path.join(process.cwd(), 'alerts');
     if (!fs.existsSync(alertDir)) {
       fs.mkdirSync(alertDir, { recursive: true });
     }
