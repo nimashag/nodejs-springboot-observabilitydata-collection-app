@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import gsap from "gsap";
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
 
@@ -46,7 +46,7 @@ const LoginAdmin = () => {
     if (!validateForm()) return;
 
     try {
-      const res = await axios.post(`${userUrl}/api/auth/login`, form);
+      const res = await httpClient.post(`${userUrl}/api/auth/login`, form);
 
       if (res.data.user.role === "appAdmin") {
         localStorage.setItem("token", res.data.token);

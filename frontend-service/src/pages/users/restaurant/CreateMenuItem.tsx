@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "./RestaurantAdminLayout";
 import Swal from "sweetalert2";
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
+import httpClient from "../../../utils/httpClient";
 
 const CreateMenuItem = () => {
   const [form, setForm] = useState({
@@ -43,10 +44,10 @@ const CreateMenuItem = () => {
     const fetchRestaurant = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${restaurantUrl}/api/restaurants/my`, {
+        const response = await httpClient.get(`${restaurantUrl}/api/restaurants/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = await response.json();
+        const data = response.data;
         setRestaurantId(data[0]?._id || null);
       } catch (error) {
         console.error("Error fetching restaurant:", error);
@@ -90,10 +91,11 @@ const CreateMenuItem = () => {
     formData.append("image", form.imageFile);
 
     try {
-      await fetch(`${restaurantUrl}/api/restaurants/${restaurantId}/menu-items`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      await httpClient.post(`${restaurantUrl}/api/restaurants/${restaurantId}/menu-items`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       Swal.fire("Success!", "Menu item created successfully!", "success").then(() => {

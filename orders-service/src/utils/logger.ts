@@ -1,11 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import pino from 'pino';
+import { AsyncLocalStorage } from 'async_hooks';
 
 const logDir = path.join(__dirname, '..', '..', 'logs');
 if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir, { recursive: true });
 }
+
+// AsyncLocalStorage to store request context
+export const requestContext = new AsyncLocalStorage<{ requestId: string }>();
 
 const streams = [
     { stream: pino.destination(1) }, // stdout
@@ -35,18 +39,35 @@ const logger = pino(
     pino.multistream(streams)
 );
 
-export const logInfo = (event: string, meta?: Record<string, unknown>) =>
-    meta ? logger.info(meta, event) : logger.info(event);
+// Helper to get requestId from context or use default
+const getRequestId = (): string => {
+    const context = requestContext.getStore();
+    return context?.requestId || 'system';
+};
 
-export const logWarn = (event: string, meta?: Record<string, unknown>) =>
-    meta ? logger.warn(meta, event) : logger.warn(event);
+// Helper to ensure requestId is always in meta
+const enrichMeta = (meta?: Record<string, unknown>): Record<string, unknown> => {
+    const requestId = getRequestId();
+    return { ...meta, requestId };
+};
+
+export const logInfo = (event: string, meta?: Record<string, unknown>) => {
+    const enrichedMeta = enrichMeta(meta);
+    return logger.info(enrichedMeta, event);
+};
+
+export const logWarn = (event: string, meta?: Record<string, unknown>) => {
+    const enrichedMeta = enrichMeta(meta);
+    return logger.warn(enrichedMeta, event);
+};
 
 export const logError = (event: string, meta?: Record<string, unknown>, error?: Error) => {
+    const enrichedMeta = enrichMeta(meta);
     if (error) {
-        const metaWithErr = { ...meta, errMsg: error.message, errStack: error.stack };
+        const metaWithErr = { ...enrichedMeta, errMsg: error.message, errStack: error.stack };
         return logger.error(metaWithErr, event);
     }
-    return meta ? logger.error(meta, event) : logger.error(event);
+    return logger.error(enrichedMeta, event);
 };
 
 export default logger;

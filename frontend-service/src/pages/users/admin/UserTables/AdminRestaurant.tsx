@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import httpClient from "../../../../utils/httpClient";
 import AdminLayout from "../AdminLayout";
 import { CheckCircle, Trash2, Search, Filter, Download } from "lucide-react";
 import jsPDF from "jspdf";
@@ -38,7 +38,7 @@ const AdminRestaurant = () => {
   const fetchRestaurantAdmins = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`${userUrl}/api/auth/all`, {
+      const res = await httpClient.get(`${userUrl}/api/auth/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const filtered = res.data.filter(
@@ -61,7 +61,7 @@ const AdminRestaurant = () => {
     if (!window.confirm("Are you sure you want to delete this restaurant admin?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${userUrl}/api/auth/${id}`, {
+      await httpClient.delete(`${userUrl}/api/auth/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRestaurantAdmins((prev) => prev.filter((admin) => admin._id !== id));
@@ -74,7 +74,7 @@ const AdminRestaurant = () => {
     if (!window.confirm("Approve this restaurant admin?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
+      await httpClient.put(
         `${userUrl}/api/auth/${id}`,
         { isApproved: true },
         { headers: { Authorization: `Bearer ${token}` } }

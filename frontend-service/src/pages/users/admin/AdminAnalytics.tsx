@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import AdminLayout from "./AdminLayout";
 import { Bar, Doughnut } from "react-chartjs-2";
 import {
@@ -60,7 +60,7 @@ const AdminAnalytics = () => {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`${userUrl}/api/auth/all`, {
+        const res = await httpClient.get(`${userUrl}/api/auth/all`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const onlyUsers = res.data.filter((user: User) =>

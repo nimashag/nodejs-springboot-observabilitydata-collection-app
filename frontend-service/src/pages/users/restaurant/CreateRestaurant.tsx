@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "./RestaurantAdminLayout";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import Swal from "sweetalert2";
 import { restaurantUrl } from "../../../api";
 
@@ -42,7 +42,7 @@ const CreateRestaurant: React.FC = () => {
     }
 
     try {
-      await axios.post(`${restaurantUrl}/api/restaurants`, formData, {
+      await httpClient.post(`${restaurantUrl}/api/restaurants`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

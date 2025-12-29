@@ -1,9 +1,9 @@
-import axios from 'axios';
+import httpClient from '../utils/httpClient';
 
 export const fetchDriverProfile = async () => {
-  return axios.get('/api/drivers/me');
+  return httpClient.get('/api/drivers/me');
 };
 
 export const updateDriverProfile = async (data: { pickupLocation?: string; deliveryLocations?: string[]; isAvailable?: boolean }) => {
-  return axios.patch('/api/drivers/me', data);
+  return httpClient.patch('/api/drivers/me', data);
 };

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import gsap from "gsap";
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
 
@@ -44,7 +44,7 @@ const LoginRestaurant = () => {
     if (!validateForm()) return;
 
     try {
-      const res = await axios.post(
+      const res = await httpClient.post(
         `${userUrl}/api/auth/login`,
         form
       );

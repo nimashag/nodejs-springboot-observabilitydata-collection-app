@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import Navbar from "../../../components/Navbar";
 import Swal from "sweetalert2";
 import { 
@@ -40,7 +40,7 @@ const Order: React.FC = () => {
           return;
         }
 
-        const res = await axios.get(
+        const res = await httpClient.get(
           `${orderUrl}/api/orders/${orderId}`,
           {
             headers: {
@@ -64,7 +64,7 @@ const Order: React.FC = () => {
   const handleUpdateAddress = async () => {
     try {
       setUpdatingAddress(true);
-      const res = await axios.patch(
+      const res = await httpClient.patch(
         `${orderUrl}/api/orders/${orderId}/delivery-address`,
         { deliveryAddress: newAddress },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -93,7 +93,7 @@ const Order: React.FC = () => {
   const handleUpdateInstructions = async () => {
     try {
       setUpdatingInstructions(true);
-      const res = await axios.patch(
+      const res = await httpClient.patch(
         `${orderUrl}/api/orders/${orderId}/special-instructions`,
         { specialInstructions: newInstructions },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -134,7 +134,7 @@ const Order: React.FC = () => {
 
     if (confirmation.isConfirmed) {
       try {
-        await axios.delete(`${orderUrl}/api/orders/${orderId}`, {
+        await httpClient.delete(`${orderUrl}/api/orders/${orderId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -164,14 +164,14 @@ const Order: React.FC = () => {
     if (!orderId || !token) return;
 
     // ✅ Fetch order from backend
-    const orderRes = await axios.get(`${orderUrl}/api/orders/${orderId}`, {
+    const orderRes = await httpClient.get(`${orderUrl}/api/orders/${orderId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     const order = orderRes.data;
 
     // ✅ Create Payment Intent
-    const res = await axios.post(
+    const res = await httpClient.post(
       `${orderUrl}/api/orders/create-payment-intent`,
       {
         totalAmount: order.totalAmount,

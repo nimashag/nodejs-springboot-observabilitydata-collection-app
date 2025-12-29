@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import AdminLayout from "./RestaurantAdminLayout";
 import { Bar, Doughnut } from "react-chartjs-2";
 import {
@@ -59,19 +59,19 @@ const RestaurantAnalytics = () => {
           return;
         }
 
-        const restaurantRes = await axios.get(`${restaurantUrl}/api/restaurants/my`, {
+        const restaurantRes = await httpClient.get(`${restaurantUrl}/api/restaurants/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const restaurantData: Restaurant = restaurantRes.data[0];
         setRestaurant(restaurantData);
 
-        const menuItemsRes = await axios.get(
+        const menuItemsRes = await httpClient.get(
           `${restaurantUrl}/api/restaurants/my/menu-items`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setMenuItems(menuItemsRes.data);
 
-        const ordersRes = await axios.get(
+        const ordersRes = await httpClient.get(
           `${orderUrl}/api/orders/restaurant/${restaurantData._id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );

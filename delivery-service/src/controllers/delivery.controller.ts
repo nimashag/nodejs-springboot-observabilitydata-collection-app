@@ -13,7 +13,7 @@ import {
   updateDeliveryStatusById,
 } from "../services/delivery.service";
 import { Driver } from "../models/driver.model";
-import axios from "axios";
+import { httpClient } from "../utils/httpClient";
 import { Delivery } from "../models/delivery.model";
 import { sendSMS } from "../services/sms.service";
 import { logError, logInfo, logWarn } from "../utils/logger";
@@ -33,7 +33,7 @@ export const assignDriverAutomatically = async (
     requestId: req.requestId,
   });
   try {
-    const restaurantRes = await axios.get(
+    const restaurantRes = await httpClient.get(
       `http://localhost:3001/api/restaurants/${restaurantId}`
     ); //3001
     const restaurant = restaurantRes.data;
@@ -41,7 +41,7 @@ export const assignDriverAutomatically = async (
     if (!restaurant.available)
       return res.status(400).json({ message: "Restaurant not available" });
 
-    const orderRes = await axios.get(
+    const orderRes = await httpClient.get(
       `http://localhost:3002/api/orders/${orderId}`
     );
     const order = orderRes.data;
@@ -92,7 +92,7 @@ export const respondToAssignment = async (req: Request, res: Response) => {
       logInfo("delivery.assign.declined", { orderId });
 
       try {
-        const orderRes = await axios.get(
+        const orderRes = await httpClient.get(
           `${ORDER_SERVICE_BASE_URL}/${orderId}`
         );
         const order = orderRes.data;
@@ -176,7 +176,7 @@ export const getAssignedOrders = async (req: Request, res: Response) => {
     const enhancedDeliveries = await Promise.all(
       deliveries.map(async (delivery) => {
         try {
-          const orderRes = await axios.get(
+          const orderRes = await httpClient.get(
             `${ORDER_SERVICE_BASE_URL}/${delivery.orderId}`
           );
           const order = orderRes.data;
@@ -227,7 +227,7 @@ export const getMyDeliveries = async (req: Request, res: Response) => {
     const enhancedDeliveries = await Promise.all(
       deliveries.map(async (delivery) => {
         try {
-          const orderRes = await axios.get(
+          const orderRes = await httpClient.get(
             `${ORDER_SERVICE_BASE_URL}/${delivery.orderId}`
           );
           const order = orderRes.data;
@@ -278,14 +278,14 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
     if (status === "Delivered") {
       // Fetch the order details to get the userId
       logInfo("delivery.status.fetchOrder.start", { orderId: updatedDelivery.orderId });
-      const orderRes = await axios.get(
+      const orderRes = await httpClient.get(
         `${ORDER_SERVICE_BASE_URL}/${updatedDelivery.orderId}`
       );
       const order = orderRes.data;
       logInfo("delivery.status.fetchOrder.success", { orderId: updatedDelivery.orderId });
 
       // Fetch the customer details from the user service using userId
-      const userRes = await axios.get(
+      const userRes = await httpClient.get(
         `${USER_SERVICE_BASE_URL}/${order.userId}`
       );
       const user = userRes.data;

@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import gsap from "gsap";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import { userUrl } from "../../../api";
 
 const LoginCustomer = () => {
@@ -44,7 +44,7 @@ const LoginCustomer = () => {
     if (!validateForm()) return;
 
     try {
-      const res = await axios.post(`${userUrl}/api/auth/login`, form);
+      const res = await httpClient.post(`${userUrl}/api/auth/login`, form);
       const { token, user } = res.data;
 
       if (user.role === "customer") {
