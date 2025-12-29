@@ -21,7 +21,10 @@ import java.util.UUID;
 public class RequestIdFilter extends OncePerRequestFilter {
 
     private static final String REQUEST_ID_HEADER = "X-Request-Id";
+    private static final String SESSION_ID_HEADER = "X-Session-Id";
     private static final String MDC_REQUEST_ID_KEY = "requestId";
+    private static final String MDC_SESSION_ID_KEY = "sessionId";
+    private static final String NO_SESSION = "no-session";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -33,17 +36,26 @@ public class RequestIdFilter extends OncePerRequestFilter {
             requestId = UUID.randomUUID().toString();
         }
         
-        // Add request ID to response header
+        // Get session ID from header or use default
+        String sessionId = request.getHeader(SESSION_ID_HEADER);
+        if (sessionId == null || sessionId.isEmpty()) {
+            sessionId = NO_SESSION;
+        }
+        
+        // Add IDs to response headers
         response.setHeader(REQUEST_ID_HEADER, requestId);
+        response.setHeader(SESSION_ID_HEADER, sessionId);
         
         // Store in MDC for logging
         MDC.put(MDC_REQUEST_ID_KEY, requestId);
+        MDC.put(MDC_SESSION_ID_KEY, sessionId);
         
         try {
             filterChain.doFilter(request, response);
         } finally {
             // Clean up MDC after request
             MDC.remove(MDC_REQUEST_ID_KEY);
+            MDC.remove(MDC_SESSION_ID_KEY);
         }
     }
 }
