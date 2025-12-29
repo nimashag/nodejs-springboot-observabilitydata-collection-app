@@ -16,28 +16,32 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
   const requestId = req.get('X-Request-Id') || randomUUID();
   req.requestId = requestId;
 
-  // Set response header so clients can track the request ID
+  // Extract X-Session-Id header or use default
+  const sessionId = req.get('X-Session-Id') || 'no-session';
+
+  // Set response headers so clients can track the IDs
   res.setHeader('X-Request-Id', requestId);
+  res.setHeader('X-Session-Id', sessionId);
 
   // Run the request in AsyncLocalStorage context
-  requestContext.run({ requestId }, () => {
-    logInfo('http.request.received', {
+  requestContext.run({ requestId, sessionId }, () => {
+  logInfo('http.request.received', {
+    method: req.method,
+    path: req.originalUrl,
+    ip: req.ip,
+  });
+
+  res.on('finish', () => {
+    const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
+    logInfo('http.request.completed', {
       method: req.method,
       path: req.originalUrl,
-      ip: req.ip,
+      status: res.statusCode,
+      durationMs: Number(durationMs.toFixed(2)),
+      userAgent: req.get('user-agent'),
     });
+  });
 
-    res.on('finish', () => {
-      const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
-      logInfo('http.request.completed', {
-        method: req.method,
-        path: req.originalUrl,
-        status: res.statusCode,
-        durationMs: Number(durationMs.toFixed(2)),
-        userAgent: req.get('user-agent'),
-      });
-    });
-
-    next();
+  next();
   });
 };
