@@ -1,3 +1,6 @@
+# Alert data directories (service root level only, not src/alerts)
+*/alerts/
+
 # Logs
 logs
 *.log
