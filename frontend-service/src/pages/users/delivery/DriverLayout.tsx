@@ -8,6 +8,7 @@ import {
   X,
   Truck,
 } from "lucide-react";
+import { clearSessionId } from "../../../utils/sessionManager";
 
 interface DriverLayoutProps {
   children: ReactNode;
@@ -44,6 +45,7 @@ const DriverLayout = ({ children }: DriverLayoutProps) => {
   }, []);
 
   const handleLogout = () => {
+    clearSessionId(); // Clear session ID on logout
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     navigate("/login/delivery");

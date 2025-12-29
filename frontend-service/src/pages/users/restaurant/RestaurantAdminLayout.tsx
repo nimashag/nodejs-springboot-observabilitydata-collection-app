@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Bell,
 } from "lucide-react";
+import { clearSessionId } from "../../../utils/sessionManager";
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -61,6 +62,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const handleLogout = () => {
+    clearSessionId(); // Clear session ID on logout
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     navigate("/login/restaurant");
   };
 

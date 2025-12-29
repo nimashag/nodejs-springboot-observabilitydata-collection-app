@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import httpClient from "../../../utils/httpClient";
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
+import { resetSessionId } from "../../../utils/sessionManager";
 
 const LoginDelivery = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -45,6 +46,9 @@ const LoginDelivery = () => {
     if (!validateForm()) return;
   
     try {
+      // Generate new session ID BEFORE login request so login uses the new sessionId
+      resetSessionId();
+      
       const res = await httpClient.post(`${userUrl}/api/auth/login`, form);
   
       //  Save token and user after successful login

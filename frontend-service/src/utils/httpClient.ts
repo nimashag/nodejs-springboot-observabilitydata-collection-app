@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import { getSessionId } from './sessionManager';
 
 /**
  * Generate a UUID v4 compatible string
@@ -21,18 +22,24 @@ function generateRequestId(): string {
 // Create axios instance
 const httpClient: AxiosInstance = axios.create();
 
-// Add request interceptor to generate and include X-Request-Id header
+// Add request interceptor to generate and include X-Request-Id and X-Session-Id headers
 httpClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   // Generate a new request ID for each frontend request
   const requestId = generateRequestId();
+  
+  // Get or create session ID (persists across requests)
+  const sessionId = getSessionId();
   
   // Ensure headers object exists
   if (!config.headers) {
     config.headers = {} as any;
   }
   
-  // Add X-Request-Id header to all requests
+  // Add X-Request-Id header (unique per request)
   config.headers['X-Request-Id'] = requestId;
+  
+  // Add X-Session-Id header (same across all requests in this session)
+  config.headers['X-Session-Id'] = sessionId;
   
   return config;
 });

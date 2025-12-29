@@ -9,7 +9,7 @@ if (!fs.existsSync(logDir)) {
 }
 
 // AsyncLocalStorage to store request context
-export const requestContext = new AsyncLocalStorage<{ requestId: string }>();
+export const requestContext = new AsyncLocalStorage<{ requestId: string; sessionId: string }>();
 
 // Helper to get requestId from context or use default
 const getRequestId = (): string => {
@@ -17,10 +17,17 @@ const getRequestId = (): string => {
     return context?.requestId || 'system';
 };
 
-// Helper to ensure requestId is always in meta
+// Helper to get sessionId from context or use default
+const getSessionId = (): string => {
+    const context = requestContext.getStore();
+    return context?.sessionId || 'no-session';
+};
+
+// Helper to ensure requestId and sessionId are always in meta
 const enrichMeta = (meta?: Record<string, unknown>): Record<string, unknown> => {
     const requestId = getRequestId();
-    return { ...meta, requestId };
+    const sessionId = getSessionId();
+    return { ...meta, requestId, sessionId };
 };
 
 const baseFormat = format.printf(({ timestamp, level, message, ...meta }) => {
