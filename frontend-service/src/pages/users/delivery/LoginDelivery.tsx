@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import gsap from "gsap";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
 
 const LoginDelivery = () => {
@@ -45,7 +45,7 @@ const LoginDelivery = () => {
     if (!validateForm()) return;
   
     try {
-      const res = await axios.post(`${userUrl}/api/auth/login`, form);
+      const res = await httpClient.post(`${userUrl}/api/auth/login`, form);
   
       //  Save token and user after successful login
       if (res.data.user.role === 'deliveryPersonnel') {
@@ -55,7 +55,7 @@ const LoginDelivery = () => {
         const token = res.data.token;
         try {
           //  Immediately check if driver profile exists
-          const profileRes = await axios.get(`${deliveryUrl}/api/drivers/me`, {
+          const profileRes = await httpClient.get(`${deliveryUrl}/api/drivers/me`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },

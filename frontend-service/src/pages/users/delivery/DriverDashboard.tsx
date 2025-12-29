@@ -1,7 +1,7 @@
 import DriverLayout from "./DriverLayout";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
 
 const DriverDashboard = () => {
@@ -20,7 +20,7 @@ const DriverDashboard = () => {
 
     const fetchAssignedOrders = async () => {
       try {
-        const res = await axios.get(`${deliveryUrl}/api/delivery/assigned-orders`, {
+        const res = await httpClient.get(`${deliveryUrl}/api/delivery/assigned-orders`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -43,7 +43,7 @@ const DriverDashboard = () => {
     }
 
     try {
-      await axios.post(`${deliveryUrl}/api/delivery/respond`, { orderId, action }, {
+      await httpClient.post(`${deliveryUrl}/api/delivery/respond`, { orderId, action }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

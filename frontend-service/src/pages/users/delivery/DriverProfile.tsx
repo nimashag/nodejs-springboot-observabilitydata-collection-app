@@ -1,6 +1,6 @@
 import DriverLayout from "./DriverLayout";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
 
 const DriverProfile = () => {
@@ -21,7 +21,7 @@ const DriverProfile = () => {
       }
 
       try {
-        const res = await axios.get(`${deliveryUrl}/api/drivers/me`, {
+        const res = await httpClient.get(`${deliveryUrl}/api/drivers/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -51,7 +51,7 @@ const DriverProfile = () => {
       const deliveryArray = deliveryLocations
         .split(",")
         .map((loc) => loc.trim());
-      await axios.patch(
+      await httpClient.patch(
         `${deliveryUrl}/api/drivers/me`,
         {
           pickupLocation,

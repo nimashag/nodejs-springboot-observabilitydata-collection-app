@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../../../contexts/CartContext';
 import Navbar from '../../../components/Navbar';
-import axios from 'axios';
+import httpClient from '../../../utils/httpClient';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, MapPin, FileText, CreditCard } from 'lucide-react';
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from '../../../api';
@@ -57,7 +57,7 @@ const Cart: React.FC = () => {
         return;
       }
 
-      const res = await axios.post(
+      const res = await httpClient.post(
         `${orderUrl}/api/orders`,
         {
           restaurantId,

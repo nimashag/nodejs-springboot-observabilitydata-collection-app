@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import Navbar from "../../../components/Navbar"; // adjust path if needed
 import { useNavigate } from "react-router-dom";
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
@@ -43,7 +43,7 @@ const OrderList: React.FC = () => {
           return;
         }
 
-        const res = await axios.get(`${orderUrl}/api/orders`, {
+        const res = await httpClient.get(`${orderUrl}/api/orders`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "./RestaurantAdminLayout";
 import Swal from "sweetalert2";
 import { apiBase, restaurantUrl } from "../../../api";
+import httpClient from "../../../utils/httpClient";
 
 const UpdateMenuItem = () => {
   const { id } = useParams<{ id: string }>(); // id = menuItem id
@@ -30,21 +31,21 @@ const UpdateMenuItem = () => {
         const token = localStorage.getItem("token");
 
         // First fetch the restaurant to get restaurant ID
-        const restaurantRes = await fetch(`${restaurantUrl}/api/restaurants/my`, {
+        const restaurantRes = await httpClient.get(`${restaurantUrl}/api/restaurants/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const restaurantData = await restaurantRes.json();
+        const restaurantData = restaurantRes.data;
         const resId = restaurantData[0]?._id;
         setRestaurantId(resId);
 
         // Then fetch the menu item
-        const itemRes = await fetch(
+        const itemRes = await httpClient.get(
           `${restaurantUrl}/api/restaurants/${resId}/menu-items/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        const itemData = await itemRes.json();
+        const itemData = itemRes.data;
 
         setForm({
           name: itemData.name,
@@ -127,10 +128,11 @@ const UpdateMenuItem = () => {
     }
 
     try {
-      await fetch(`${restaurantUrl}/api/restaurants/${restaurantId}/menu-items/${id}`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      await httpClient.put(`${restaurantUrl}/api/restaurants/${restaurantId}/menu-items/${id}`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       Swal.fire("Success!", "Menu item updated successfully!", "success").then(() => {

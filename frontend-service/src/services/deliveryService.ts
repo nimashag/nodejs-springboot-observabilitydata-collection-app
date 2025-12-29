@@ -1,9 +1,9 @@
-import axios from 'axios';
+import httpClient from '../utils/httpClient';
 
 export const fetchAssignedOrders = async () => {
-  return axios.get('/api/delivery/assigned-orders');
+  return httpClient.get('/api/delivery/assigned-orders');
 };
 
 export const respondToAssignment = async (orderId: string, action: 'accept' | 'decline') => {
-  return axios.post('/api/delivery/respond', { orderId, action });
+  return httpClient.post('/api/delivery/respond', { orderId, action });
 };

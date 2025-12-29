@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import httpClient from "../../../../utils/httpClient";
 import AdminLayout from "../AdminLayout";
 import { CheckCircle, Trash2, Search, Filter, Download } from "lucide-react";
 import jsPDF from "jspdf";
@@ -38,7 +38,7 @@ const AdminDrivers = () => {
   const fetchDrivers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`${userUrl}/api/auth/all`, {
+      const res = await httpClient.get(`${userUrl}/api/auth/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const onlyDrivers = res.data.filter(
@@ -61,7 +61,7 @@ const AdminDrivers = () => {
     if (!window.confirm("Are you sure you want to delete this delivery driver?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${userUrl}/api/auth/${id}`, {
+      await httpClient.delete(`${userUrl}/api/auth/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDrivers((prev) => prev.filter((d) => d._id !== id));
@@ -74,7 +74,7 @@ const AdminDrivers = () => {
     if (!window.confirm("Approve this delivery driver?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
+      await httpClient.put(
         `${userUrl}/api/auth/${id}`,
         { isApproved: true },
         { headers: { Authorization: `Bearer ${token}` } }
