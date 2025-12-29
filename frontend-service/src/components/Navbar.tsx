@@ -7,6 +7,7 @@ import searchicon from "../assets/search_icon.png";
 import usericon from "../assets/user_icon.png";
 import carticon from "../assets/carticon.png";
 import { useCart } from '../contexts/CartContext';
+import { clearSessionId } from '../utils/sessionManager';
 
 const Navbar: React.FC = () => {
   const [isLogged, setIsLogged] = useState<boolean>(false);
@@ -43,7 +44,9 @@ const Navbar: React.FC = () => {
   };
 
   const logout = () => {
+    clearSessionId(); // Clear session ID on logout
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setIsLogged(false);
     location.reload();
   };
