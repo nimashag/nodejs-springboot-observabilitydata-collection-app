@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { randomUUID } from 'crypto';
-import { logInfo } from '../utils/logger';
+import { logInfo, requestContext } from '../utils/logger';
 
 declare global {
   namespace Express {
@@ -12,32 +12,37 @@ declare global {
 
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   const start = process.hrtime.bigint();
-  const requestId = randomUUID();
+  // Use existing X-Request-Id header if present, otherwise generate a new one
+  const requestId = req.get('X-Request-Id') || randomUUID();
   req.requestId = requestId;
 
-  const bodyKeys = req.body && typeof req.body === 'object' ? Object.keys(req.body) : [];
+  // Set response header so clients can track the request ID
+  res.setHeader('X-Request-Id', requestId);
 
-  logInfo('http.request.received', {
-    requestId,
-    method: req.method,
-    path: req.originalUrl,
-    ip: req.ip,
-    bodyKeys,
-    userAgent: req.get('user-agent'),
-  });
+  // Run the request in AsyncLocalStorage context
+  requestContext.run({ requestId }, () => {
+    const bodyKeys = req.body && typeof req.body === 'object' ? Object.keys(req.body) : [];
 
-  res.on('finish', () => {
-    const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
-    const contentLength = res.getHeader('content-length');
-    logInfo('http.request.completed', {
-      requestId,
+    logInfo('http.request.received', {
       method: req.method,
       path: req.originalUrl,
-      status: res.statusCode,
-      durationMs: Number(durationMs.toFixed(2)),
-      contentLength,
+      ip: req.ip,
+      bodyKeys,
+      userAgent: req.get('user-agent'),
     });
-  });
 
-  next();
+    res.on('finish', () => {
+      const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
+      const contentLength = res.getHeader('content-length');
+      logInfo('http.request.completed', {
+        method: req.method,
+        path: req.originalUrl,
+        status: res.statusCode,
+        durationMs: Number(durationMs.toFixed(2)),
+        contentLength,
+      });
+    });
+
+    next();
+  });
 };
