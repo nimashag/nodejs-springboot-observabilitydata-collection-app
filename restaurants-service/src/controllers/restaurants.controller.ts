@@ -69,14 +69,24 @@ export const update = async (req: Request, res: Response) => {
 };
 
 export const getOne = async (req: Request, res: Response) => {
-  logInfo("restaurant.getOne.start", { id: req.params.id });
-  const restaurant = await restaurantsService.getRestaurantById(req.params.id);
-  if (!restaurant) {
-    logWarn("restaurant.getOne.notFound", { id: req.params.id });
-  } else {
+  try {
+    logInfo("restaurant.getOne.start", { id: req.params.id });
+    const restaurant = await restaurantsService.getRestaurantById(req.params.id);
+    if (!restaurant) {
+      logWarn("restaurant.getOne.notFound", { id: req.params.id });
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
     logInfo("restaurant.getOne.found", { id: restaurant._id, name: restaurant.name });
+    res.json(restaurant);
+  } catch (err: any) {
+    // Handle CastError (invalid ObjectId format)
+    if (err.name === 'CastError') {
+      logWarn("restaurant.getOne.invalidId", { id: req.params.id });
+      return res.status(400).json({ message: "Invalid restaurant ID format" });
+    }
+    logError("restaurant.getOne.error", { id: req.params.id }, err as Error);
+    res.status(500).json({ message: "Something went wrong" });
   }
-  res.json(restaurant);
 };
 
 export const getByUser = async (req: AuthenticatedRequest, res: Response) => {
