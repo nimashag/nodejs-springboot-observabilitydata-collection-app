@@ -5,4 +5,5 @@ dist/
 aggregated-logs/
 models/
 *.tsbuildinfo
+templates/templates.json
 
