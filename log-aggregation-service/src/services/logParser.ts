@@ -1,6 +1,8 @@
 import { NlpManager } from 'node-nlp';
 import * as natural from 'natural';
 import { StructuredLog } from '../types/log.types';
+import { LogTemplateMiner } from './templateMiner';
+import { LogTemplate } from '../types/log.types';
 
 export class MLBasedLogParser {
   private nlpManager: NlpManager;
@@ -9,15 +11,34 @@ export class MLBasedLogParser {
   private spanIdPattern: RegExp;
   private requestIdPattern: RegExp;
   private isTrained: boolean = false;
+  private templateMiner?: LogTemplateMiner;
 
-  constructor() {
+  constructor(templateMiner?: LogTemplateMiner) {
     this.nlpManager = new NlpManager({ languages: ['en'], forceNER: true });
     this.tokenizer = new natural.WordTokenizer();
+    this.templateMiner = templateMiner;
     
     // Patterns for extracting IDs
     this.traceIdPattern = /(?:trace[_-]?id|traceId|trace_id)[=:]\s*([a-f0-9-]{8,})/i;
     this.spanIdPattern = /(?:span[_-]?id|spanId|span_id)[=:]\s*([a-f0-9-]{8,})/i;
     this.requestIdPattern = /(?:request[_-]?id|requestId|request_id|correlation[_-]?id)[=:]\s*([a-f0-9-]{8,})/i;
+  }
+
+  /**
+   * Set template miner for enhanced parsing
+   */
+  setTemplateMiner(templateMiner: LogTemplateMiner): void {
+    this.templateMiner = templateMiner;
+  }
+
+  /**
+   * Get matched template for a log (if template miner is available)
+   */
+  getMatchedTemplate(log: string): LogTemplate | null {
+    if (!this.templateMiner) {
+      return null;
+    }
+    return this.templateMiner.matchTemplate(log);
   }
 
   /**
@@ -58,6 +79,21 @@ export class MLBasedLogParser {
 
     // Extract metadata
     const metadata = this.extractMetadata(rawLog);
+
+    // Try to match against templates for enhanced parsing
+    if (this.templateMiner) {
+      const matchedTemplate = this.templateMiner.matchTemplate(rawLog);
+      if (matchedTemplate) {
+        // Use template information to enhance parsing
+        if (matchedTemplate.eventType && matchedTemplate.eventType !== 'unknown') {
+          metadata.templateEventType = matchedTemplate.eventType;
+        }
+        if (matchedTemplate.metadata?.parameterCount) {
+          metadata.templateParameterCount = matchedTemplate.metadata.parameterCount;
+        }
+        metadata.matchedTemplateId = matchedTemplate.id;
+      }
+    }
 
     // Use NLP for additional extraction if trained
     if (this.isTrained) {
