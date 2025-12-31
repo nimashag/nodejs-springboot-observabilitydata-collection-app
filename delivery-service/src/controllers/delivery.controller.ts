@@ -215,14 +215,34 @@ export const getAssignedOrders = async (req: Request, res: Response) => {
 // ✅ Fetch All My Deliveries (Ongoing + Completed)
 export const getMyDeliveries = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      logWarn("delivery.my_deliveries.unauthorized", {
+        reason: "No user in request",
+      });
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    logInfo("delivery.my_deliveries.start", { userId });
     const driver = await Driver.findOne({ userId });
 
     if (!driver) {
+      logWarn("delivery.my_deliveries.driver_not_found", { userId });
       return res.status(404).json({ message: "Driver not found" });
     }
 
+    logInfo("delivery.my_deliveries.driver.found", {
+      userId,
+      driverId: driver._id.toString(),
+    });
+
     const deliveries = await findAllDeliveriesForDriver(driver._id.toString());
+
+    logInfo("delivery.my_deliveries.fetching_orders", {
+      userId,
+      driverId: driver._id.toString(),
+      deliveriesCount: deliveries.length,
+    });
 
     const enhancedDeliveries = await Promise.all(
       deliveries.map(async (delivery) => {
@@ -237,10 +257,11 @@ export const getMyDeliveries = async (req: Request, res: Response) => {
             deliveryAddress: order.deliveryAddress || null,
           };
         } catch (err) {
-          console.error(
-            `Failed fetching order ${delivery.orderId}:`,
-            (err as Error).message
-          );
+          logWarn("delivery.my_deliveries.order.fetch_failed", {
+            orderId: delivery.orderId,
+            deliveryId: delivery._id.toString(),
+            error: (err as Error).message,
+          });
           return {
             ...delivery.toObject(),
             deliveryAddress: null,
@@ -249,9 +270,17 @@ export const getMyDeliveries = async (req: Request, res: Response) => {
       })
     );
 
+    logInfo("delivery.my_deliveries.success", {
+      userId,
+      driverId: driver._id.toString(),
+      count: enhancedDeliveries.length,
+    });
+
     res.status(200).json(enhancedDeliveries);
   } catch (error: any) {
-    console.error(error);
+    logError("delivery.my_deliveries.error", {
+      userId: (req as any).user?.id,
+    }, error);
     res
       .status(500)
       .json({ message: "Error fetching deliveries", error: error.message });
@@ -261,16 +290,33 @@ export const getMyDeliveries = async (req: Request, res: Response) => {
 // ✅ Update Delivery Status
 export const updateDeliveryStatus = async (req: Request, res: Response) => {
   try {
+    const userId = (req as any).user?.id;
     const { deliveryId } = req.params;
     const { status } = req.body;
 
+    logInfo("delivery.update_status.start", {
+      deliveryId,
+      userId,
+      newStatus: status,
+    });
+
     const allowedStatuses = ["PickedUp", "Delivered", "Cancelled"];
     if (!allowedStatuses.includes(status)) {
+      logWarn("delivery.update_status.invalid_status", {
+        deliveryId,
+        userId,
+        status,
+        allowedStatuses,
+      });
       return res.status(400).json({ message: "Invalid status" });
     }
 
     const updatedDelivery = await updateDeliveryStatusById(deliveryId, status);
     if (!updatedDelivery) {
+      logWarn("delivery.update_status.not_found", {
+        deliveryId,
+        userId,
+      });
       return res.status(404).json({ message: "Delivery not found" });
     }
 
@@ -323,12 +369,23 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
       }
     }
 
+    logInfo("delivery.update_status.success", {
+      deliveryId,
+      userId,
+      orderId: updatedDelivery.orderId,
+      status,
+    });
+
     res.status(200).json({
       message: "Delivery status updated successfully",
       updatedDelivery,
     });
   } catch (error: any) {
-    logError("delivery.status.error", { deliveryId: req.params.deliveryId, status }, error);
+    logError("delivery.update_status.error", {
+      deliveryId: req.params.deliveryId,
+      userId: (req as any).user?.id,
+      status,
+    }, error);
     res.status(500).json({
       message: "Error updating delivery status",
       error: error.message,
