@@ -153,6 +153,13 @@ export class MLBasedLogParser {
           metadata.templateParameterCount = matchedTemplate.metadata.parameterCount;
         }
         metadata.matchedTemplateId = matchedTemplate.id;
+        
+        // Debug logging
+        if (process.env.DEBUG_TEMPLATE_MATCHING === 'true') {
+          console.log(`[LogParser] Matched template ${matchedTemplate.id} for log from ${serviceName}`);
+        }
+      } else if (process.env.DEBUG_TEMPLATE_MATCHING === 'true') {
+        console.log(`[LogParser] No template matched for log from ${serviceName}: ${rawLog.substring(0, 80)}...`);
       }
     }
 
