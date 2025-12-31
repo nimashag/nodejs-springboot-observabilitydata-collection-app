@@ -28,6 +28,8 @@ This service provides intelligent log aggregation, structuring, and analysis for
 
 ## 🚀 Installation
 
+> **📌 Quick Start**: If you're running the service for the first time or need to recreate `templates.json`, see [QUICK_START.md](./QUICK_START.md) for step-by-step instructions.
+
 ### 1. Install Dependencies
 
 ```bash
