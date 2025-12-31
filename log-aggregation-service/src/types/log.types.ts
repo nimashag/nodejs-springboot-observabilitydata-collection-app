@@ -5,6 +5,7 @@ export interface StructuredLog {
   traceId?: string;
   spanId?: string;
   requestId?: string;
+  sessionId?: string;
   event: string;
   metadata: Record<string, any>;
   raw: string;
