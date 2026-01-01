@@ -2,8 +2,11 @@ import { Router } from 'express';
 import { assignDriverAutomatically, respondToAssignment, getAssignedOrders,getMyDeliveries, updateDeliveryStatus } from '../controllers/delivery.controller';
 import { authenticate } from '../middleware/auth'; // <--- correct path
 import { authorizeRoles } from '../middleware/authorize'; // <--- correct path
+import { getTelemetry } from "../controllers/telemetry.controller";
 
 const router = Router();
+router.get("/telemetry", getTelemetry);
+
 
 // Admin/system will assign driver (no role restriction, just authenticated)
 router.post('/assign', authenticate, assignDriverAutomatically);
