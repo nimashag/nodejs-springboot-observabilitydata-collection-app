@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import { FaShoppingCart } from "react-icons/fa";
@@ -39,7 +39,7 @@ const RestaurantMenu: React.FC = () => {
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
-        const response = await axios.get(`${restaurantUrl}/api/restaurants/${restaurantId}`);
+        const response = await httpClient.get(`${restaurantUrl}/api/restaurants/${restaurantId}`);
         setRestaurant(response.data);
       } catch (error) {
         console.error("Error fetching restaurant:", error);
@@ -48,7 +48,7 @@ const RestaurantMenu: React.FC = () => {
 
     const fetchMenuItems = async () => {
       try {
-        const response = await axios.get(`${restaurantUrl}/api/restaurants/${restaurantId}/menu-items`);
+        const response = await httpClient.get(`${restaurantUrl}/api/restaurants/${restaurantId}/menu-items`);
         const items: MenuItem[] = response.data;
         setMenuItems(items);
         setFilteredItems(items);

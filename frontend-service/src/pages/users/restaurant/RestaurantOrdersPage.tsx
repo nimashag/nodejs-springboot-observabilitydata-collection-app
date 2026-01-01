@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import AdminLayout from "./RestaurantAdminLayout";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -35,7 +35,7 @@ const RestaurantOrders = () => {
   const fetchRestaurant = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${restaurantUrl}/api/restaurants/my`, {
+      const response = await httpClient.get(`${restaurantUrl}/api/restaurants/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRestaurant(response.data[0]);
@@ -47,7 +47,7 @@ const RestaurantOrders = () => {
   const fetchOrders = async (restaurantId: string) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
+      const response = await httpClient.get(
         `${orderUrl}/api/orders/restaurant/${restaurantId}`
       );
       setOrders(response.data);
@@ -83,7 +83,7 @@ const RestaurantOrders = () => {
       const token = localStorage.getItem("token");
   
       // 1. Update the Order Status first
-      await axios.put(
+      await httpClient.put(
         `${orderUrl}/api/orders/${orderId}`,
         { status: newStatus },
         {
@@ -112,7 +112,7 @@ const RestaurantOrders = () => {
           }
   
           // Assuming you have restaurant _id stored in restaurant state
-          const response = await axios.post(
+          const response = await httpClient.post(
             `${deliveryUrl}/api/delivery/assign`,
             {
               orderId: order._id,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import httpClient from '../../../utils/httpClient';
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
 
 const DriverProfileRegister = () => {
@@ -36,7 +36,7 @@ const DriverProfileRegister = () => {
         formData.append('profileImage', profileImage);
       }
 
-      await axios.post(`${deliveryUrl}/api/drivers/register`, formData, {
+      await httpClient.post(`${deliveryUrl}/api/drivers/register`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

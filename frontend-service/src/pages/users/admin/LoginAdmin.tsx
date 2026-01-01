@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import gsap from "gsap";
 import { apiBase, userUrl, restaurantUrl, orderUrl, deliveryUrl } from "../../../api";
+import { resetSessionId } from "../../../utils/sessionManager";
 
 const LoginAdmin = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -46,7 +47,10 @@ const LoginAdmin = () => {
     if (!validateForm()) return;
 
     try {
-      const res = await axios.post(`${userUrl}/api/auth/login`, form);
+      // Generate new session ID BEFORE login request so login uses the new sessionId
+      resetSessionId();
+      
+      const res = await httpClient.post(`${userUrl}/api/auth/login`, form);
 
       if (res.data.user.role === "appAdmin") {
         localStorage.setItem("token", res.data.token);

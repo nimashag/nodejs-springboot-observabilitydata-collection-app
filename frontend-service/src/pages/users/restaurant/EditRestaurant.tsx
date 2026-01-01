@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import AdminLayout from "./RestaurantAdminLayout";
 import Swal from "sweetalert2";
 import { restaurantUrl } from "../../../api";
@@ -40,7 +40,7 @@ const EditRestaurant: React.FC = () => {
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
-        const res = await axios.get(`${restaurantUrl}/api/restaurants/${id}`, {
+        const res = await httpClient.get(`${restaurantUrl}/api/restaurants/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const restaurant = res.data;
@@ -91,7 +91,7 @@ const EditRestaurant: React.FC = () => {
     }
 
     try {
-      await axios.put(`${restaurantUrl}/api/restaurants/${id}`, formData, {
+      await httpClient.put(`${restaurantUrl}/api/restaurants/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

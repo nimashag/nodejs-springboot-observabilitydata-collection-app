@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import httpClient from '../../../utils/httpClient';
 import DriverLayout from './DriverLayout';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -32,7 +32,7 @@ const DriverMyDeliveries = () => {
     const fetchDeliveries = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${deliveryUrl}/api/delivery/my-deliveries`, {
+        const res = await httpClient.get(`${deliveryUrl}/api/delivery/my-deliveries`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -59,7 +59,7 @@ const DriverMyDeliveries = () => {
     if (!modalDeliveryId || !modalAction) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${deliveryUrl}/api/delivery/delivery/${modalDeliveryId}/status`, 
+      await httpClient.patch(`${deliveryUrl}/api/delivery/delivery/${modalDeliveryId}/status`, 
         { status: modalAction },
         {
           headers: {

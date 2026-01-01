@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import AdminLayout from "./RestaurantAdminLayout";
 import { LuTrash2, LuPencil } from "react-icons/lu";
 import {
@@ -53,7 +53,7 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const restaurantRes = await axios.get(
+        const restaurantRes = await httpClient.get(
           `${restaurantUrl}/api/restaurants/my`,
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -62,7 +62,7 @@ const AdminDashboard: React.FC = () => {
         const restaurantData = restaurantRes.data[0];
         setRestaurant(restaurantData);
 
-        const menuRes = await axios.get(
+        const menuRes = await httpClient.get(
           `${restaurantUrl}/api/restaurants/my/menu-items`,
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -70,7 +70,7 @@ const AdminDashboard: React.FC = () => {
         );
         setMenuItems(menuRes.data);
 
-        const ordersRes = await axios.get(
+        const ordersRes = await httpClient.get(
           `${orderUrl}/api/orders/restaurant/${restaurantData._id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -99,7 +99,7 @@ const AdminDashboard: React.FC = () => {
 
     if (confirm.isConfirmed) {
       try {
-        await axios.delete(
+        await httpClient.delete(
           `${restaurantUrl}/api/restaurants/${restaurant._id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -151,7 +151,7 @@ const AdminDashboard: React.FC = () => {
   const toggleStoreStatus = async (newStatus: boolean) => {
     if (!restaurant) return;
     try {
-      await axios.put(
+      await httpClient.put(
         `${restaurantUrl}/api/restaurants/${restaurant._id}`,
         { available: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }

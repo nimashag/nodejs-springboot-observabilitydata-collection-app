@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import httpClient from '../utils/httpClient';
 import Swal from "sweetalert2";
 import { orderUrl } from '../api';
 
@@ -65,7 +65,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ clientSecret }) => {
       if (result.error) {
         setMessage(result.error.message || 'An unexpected error occurred.');
       } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-        await axios.patch(
+        await httpClient.patch(
           `${orderUrl}/api/orders/${orderId}/mark-paid`,
           {
             paymentMethod: 'Stripe',

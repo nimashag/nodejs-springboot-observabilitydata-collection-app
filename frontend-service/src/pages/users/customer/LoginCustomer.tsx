@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import gsap from "gsap";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import { userUrl } from "../../../api";
+import { resetSessionId } from "../../../utils/sessionManager";
 
 const LoginCustomer = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -44,7 +45,10 @@ const LoginCustomer = () => {
     if (!validateForm()) return;
 
     try {
-      const res = await axios.post(`${userUrl}/api/auth/login`, form);
+      // Generate new session ID BEFORE login request so login uses the new sessionId
+      resetSessionId();
+      
+      const res = await httpClient.post(`${userUrl}/api/auth/login`, form);
       const { token, user } = res.data;
 
       if (user.role === "customer") {

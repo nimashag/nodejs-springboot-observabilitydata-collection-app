@@ -13,7 +13,7 @@ import {
   updateDeliveryStatusById,
 } from "../services/delivery.service";
 import { Driver } from "../models/driver.model";
-import axios from "axios";
+import { httpClient } from "../utils/httpClient";
 import { Delivery } from "../models/delivery.model";
 import { sendSMS } from "../services/sms.service";
 import { logError, logInfo, logWarn } from "../utils/logger";
@@ -33,7 +33,7 @@ export const assignDriverAutomatically = async (
     requestId: req.requestId,
   });
   try {
-    const restaurantRes = await axios.get(
+    const restaurantRes = await httpClient.get(
       `http://localhost:3001/api/restaurants/${restaurantId}`
     ); //3001
     const restaurant = restaurantRes.data;
@@ -41,7 +41,7 @@ export const assignDriverAutomatically = async (
     if (!restaurant.available)
       return res.status(400).json({ message: "Restaurant not available" });
 
-    const orderRes = await axios.get(
+    const orderRes = await httpClient.get(
       `http://localhost:3002/api/orders/${orderId}`
     );
     const order = orderRes.data;
@@ -92,7 +92,7 @@ export const respondToAssignment = async (req: Request, res: Response) => {
       logInfo("delivery.assign.declined", { orderId });
 
       try {
-        const orderRes = await axios.get(
+        const orderRes = await httpClient.get(
           `${ORDER_SERVICE_BASE_URL}/${orderId}`
         );
         const order = orderRes.data;
@@ -176,7 +176,7 @@ export const getAssignedOrders = async (req: Request, res: Response) => {
     const enhancedDeliveries = await Promise.all(
       deliveries.map(async (delivery) => {
         try {
-          const orderRes = await axios.get(
+          const orderRes = await httpClient.get(
             `${ORDER_SERVICE_BASE_URL}/${delivery.orderId}`
           );
           const order = orderRes.data;
@@ -215,19 +215,39 @@ export const getAssignedOrders = async (req: Request, res: Response) => {
 // ✅ Fetch All My Deliveries (Ongoing + Completed)
 export const getMyDeliveries = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      logWarn("delivery.my_deliveries.unauthorized", {
+        reason: "No user in request",
+      });
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    logInfo("delivery.my_deliveries.start", { userId });
     const driver = await Driver.findOne({ userId });
 
     if (!driver) {
+      logWarn("delivery.my_deliveries.driver_not_found", { userId });
       return res.status(404).json({ message: "Driver not found" });
     }
 
+    logInfo("delivery.my_deliveries.driver.found", {
+      userId,
+      driverId: driver._id.toString(),
+    });
+
     const deliveries = await findAllDeliveriesForDriver(driver._id.toString());
+
+    logInfo("delivery.my_deliveries.fetching_orders", {
+      userId,
+      driverId: driver._id.toString(),
+      deliveriesCount: deliveries.length,
+    });
 
     const enhancedDeliveries = await Promise.all(
       deliveries.map(async (delivery) => {
         try {
-          const orderRes = await axios.get(
+          const orderRes = await httpClient.get(
             `${ORDER_SERVICE_BASE_URL}/${delivery.orderId}`
           );
           const order = orderRes.data;
@@ -237,10 +257,11 @@ export const getMyDeliveries = async (req: Request, res: Response) => {
             deliveryAddress: order.deliveryAddress || null,
           };
         } catch (err) {
-          console.error(
-            `Failed fetching order ${delivery.orderId}:`,
-            (err as Error).message
-          );
+          logWarn("delivery.my_deliveries.order.fetch_failed", {
+            orderId: delivery.orderId,
+            deliveryId: delivery._id.toString(),
+            error: (err as Error).message,
+          });
           return {
             ...delivery.toObject(),
             deliveryAddress: null,
@@ -249,9 +270,17 @@ export const getMyDeliveries = async (req: Request, res: Response) => {
       })
     );
 
+    logInfo("delivery.my_deliveries.success", {
+      userId,
+      driverId: driver._id.toString(),
+      count: enhancedDeliveries.length,
+    });
+
     res.status(200).json(enhancedDeliveries);
   } catch (error: any) {
-    console.error(error);
+    logError("delivery.my_deliveries.error", {
+      userId: (req as any).user?.id,
+    }, error);
     res
       .status(500)
       .json({ message: "Error fetching deliveries", error: error.message });
@@ -261,16 +290,33 @@ export const getMyDeliveries = async (req: Request, res: Response) => {
 // ✅ Update Delivery Status
 export const updateDeliveryStatus = async (req: Request, res: Response) => {
   try {
+    const userId = (req as any).user?.id;
     const { deliveryId } = req.params;
     const { status } = req.body;
 
+    logInfo("delivery.update_status.start", {
+      deliveryId,
+      userId,
+      newStatus: status,
+    });
+
     const allowedStatuses = ["PickedUp", "Delivered", "Cancelled"];
     if (!allowedStatuses.includes(status)) {
+      logWarn("delivery.update_status.invalid_status", {
+        deliveryId,
+        userId,
+        status,
+        allowedStatuses,
+      });
       return res.status(400).json({ message: "Invalid status" });
     }
 
     const updatedDelivery = await updateDeliveryStatusById(deliveryId, status);
     if (!updatedDelivery) {
+      logWarn("delivery.update_status.not_found", {
+        deliveryId,
+        userId,
+      });
       return res.status(404).json({ message: "Delivery not found" });
     }
 
@@ -278,14 +324,14 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
     if (status === "Delivered") {
       // Fetch the order details to get the userId
       logInfo("delivery.status.fetchOrder.start", { orderId: updatedDelivery.orderId });
-      const orderRes = await axios.get(
+      const orderRes = await httpClient.get(
         `${ORDER_SERVICE_BASE_URL}/${updatedDelivery.orderId}`
       );
       const order = orderRes.data;
       logInfo("delivery.status.fetchOrder.success", { orderId: updatedDelivery.orderId });
 
       // Fetch the customer details from the user service using userId
-      const userRes = await axios.get(
+      const userRes = await httpClient.get(
         `${USER_SERVICE_BASE_URL}/${order.userId}`
       );
       const user = userRes.data;
@@ -323,12 +369,23 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
       }
     }
 
+    logInfo("delivery.update_status.success", {
+      deliveryId,
+      userId,
+      orderId: updatedDelivery.orderId,
+      status,
+    });
+
     res.status(200).json({
       message: "Delivery status updated successfully",
       updatedDelivery,
     });
   } catch (error: any) {
-    logError("delivery.status.error", { deliveryId: req.params.deliveryId, status }, error);
+    logError("delivery.update_status.error", {
+      deliveryId: req.params.deliveryId,
+      userId: (req as any).user?.id,
+      status,
+    }, error);
     res.status(500).json({
       message: "Error updating delivery status",
       error: error.message,

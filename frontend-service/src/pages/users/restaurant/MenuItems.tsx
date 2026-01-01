@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import AdminLayout from "./RestaurantAdminLayout";
 import { Pencil, Trash2, PlusCircle, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -39,7 +39,7 @@ const MenuItems = () => {
   const fetchRestaurant = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${restaurantUrl}/api/restaurants/my`, {
+      const response = await httpClient.get(`${restaurantUrl}/api/restaurants/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRestaurant(response.data[0]);
@@ -51,7 +51,7 @@ const MenuItems = () => {
   const fetchMenuItems = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
+      const response = await httpClient.get(
         `${restaurantUrl}/api/restaurants/my/menu-items`,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -109,7 +109,7 @@ const MenuItems = () => {
     if (confirm.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`${restaurantUrl}/api/restaurants/my/menu-items/${id}`, {
+        await httpClient.delete(`${restaurantUrl}/api/restaurants/my/menu-items/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setMenuItems(menuItems.filter((item) => item._id !== id));

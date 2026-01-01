@@ -3,6 +3,9 @@ import { createApp } from './app';
 import { LogCollector } from './services/logCollector';
 import { MLBasedLogParser } from './services/logParser';
 import { TraceCorrelator } from './services/traceCorrelator';
+import { LogTemplateMiner } from './services/templateMiner';
+import { TemplateModel } from './models/templateModel';
+import { PIIDetector } from './services/piiDetector';
 
 // Load environment variables
 dotenv.config();
@@ -13,8 +16,27 @@ async function startServer() {
   try {
     console.log('Starting Log Aggregation Service...');
 
+    // Initialize template miner and model
+    const templateMiner = new LogTemplateMiner();
+    const templateModel = new TemplateModel();
+    
+    // Load existing templates into miner
+    const existingTemplates = templateModel.getAllTemplates();
+    existingTemplates.forEach(template => {
+      templateMiner.addTemplate(template);
+    });
+    console.log(`Loaded ${existingTemplates.length} existing templates`);
+
+    // Initialize PII detector
+    const piiDetector = new PIIDetector();
+    console.log(`PII Detection: ${piiDetector.getConfig().enabled ? 'Enabled' : 'Disabled'}`);
+    if (piiDetector.getConfig().enabled) {
+      console.log(`  Strategy: ${piiDetector.getConfig().strategy}`);
+      console.log(`  Detecting: IPs=${piiDetector.getConfig().detectIPs}, Emails=${piiDetector.getConfig().detectEmails}, Usernames=${piiDetector.getConfig().detectUsernames}, Credentials=${piiDetector.getConfig().detectCredentials}`);
+    }
+
     // Initialize services
-    const logParser = new MLBasedLogParser();
+    const logParser = new MLBasedLogParser(templateMiner, piiDetector);
     const logCollector = new LogCollector(logParser);
     const traceCorrelator = new TraceCorrelator();
 
@@ -35,7 +57,7 @@ async function startServer() {
     }
 
     // Create Express app
-    const app = createApp(traceCorrelator, logParser);
+    const app = createApp(traceCorrelator, logParser, templateMiner, templateModel, piiDetector);
 
     // Start server
     app.listen(PORT, () => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -42,7 +42,7 @@ const AdminDashboard = () => {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`${userUrl}/api/auth/all`, {
+        const res = await httpClient.get(`${userUrl}/api/auth/all`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsers(res.data);

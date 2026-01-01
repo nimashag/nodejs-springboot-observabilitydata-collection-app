@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import httpClient from "../../../utils/httpClient";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import { FaSearch } from "react-icons/fa";
@@ -23,7 +23,7 @@ const RestaurantList: React.FC = () => {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const response = await axios.get(`${restaurantUrl}/api/restaurants`);
+        const response = await httpClient.get(`${restaurantUrl}/api/restaurants`);
         const fetched = response.data;
 
         // Sort immediately when fetching: OPEN first, CLOSED after
