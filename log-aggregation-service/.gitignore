@@ -5,4 +5,6 @@ dist/
 aggregated-logs/
 *.tsbuildinfo
 templates/templates.json
+evaluation-results/
+model.nlp
 

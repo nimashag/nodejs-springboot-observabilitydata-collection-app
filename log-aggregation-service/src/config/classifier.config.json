@@ -1,0 +1,12 @@
+{
+    "classifier": "rule-based",
+    "options": {
+        "k": 3
+    },
+    "availableClassifiers": [
+        "rule-based",
+        "naive-bayes",
+        "nlp-based",
+        "tfidf-knn"
+    ]
+}
