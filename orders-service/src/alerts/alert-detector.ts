@@ -1,14 +1,3 @@
-/**
- * Alert Detector for Orders Service
- * 
- * This module detects alert events based on application behavior:
- * - Error bursts (multiple errors in short time)
- * - Repeated failures (same error pattern)
- * - High latency conditions (slow responses)
- * 
- * NO OpenTelemetry, NO Prometheus, NO external observability libraries
- */
-
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -48,6 +37,9 @@ export class AlertDetector {
   private alertDataFile: string;
   private recentRequests: RequestMetrics[] = [];
   private activeAlerts: Map<string, ActiveAlert> = new Map();
+  private periodicCheckInterval: NodeJS.Timeout | null = null;
+  private previousCpuUsage: NodeJS.CpuUsage | null = null;
+  private processStartTime: number = Date.now();
   
   // Configuration thresholds
   private readonly ERROR_BURST_THRESHOLD = 5; // errors in window
@@ -104,9 +96,19 @@ export class AlertDetector {
    * Start periodic alert checking (every 30 seconds)
    */
   private startPeriodicCheck(): void {
-    setInterval(() => {
+    this.periodicCheckInterval = setInterval(() => {
       this.checkAlertConditions();
     }, 30000);
+  }
+  
+  /**
+   * Cleanup method to stop periodic checking and clear resources
+   */
+  public cleanup(): void {
+    if (this.periodicCheckInterval) {
+      clearInterval(this.periodicCheckInterval);
+      this.periodicCheckInterval = null;
+    }
   }
   
   /**
@@ -278,28 +280,42 @@ export class AlertDetector {
     
     // Get process metrics
     const memUsage = process.memoryUsage();
-    const cpuUsage = process.cpuUsage();
+    const currentCpuUsage = process.cpuUsage();
+    
+    // Calculate CPU usage percentage
+    // process.cpuUsage() returns cumulative microseconds since process start
+    // Calculate approximate average CPU utilization over process lifetime
+    const totalCpuMicros = currentCpuUsage.user + currentCpuUsage.system;
+    const elapsedMicros = process.uptime() * 1e6;
+    const cpuUsagePercent = elapsedMicros > 0
+      ? (totalCpuMicros / elapsedMicros) * 100
+      : 0;
+    
+    // Store current CPU usage for next calculation
+    this.previousCpuUsage = currentCpuUsage;
     
     return {
       request_count: requestCount,
       error_count: errorCount,
       average_response_time: Math.round(avgResponseTime),
-      process_cpu_usage: cpuUsage.user + cpuUsage.system,
+      process_cpu_usage: Math.round(cpuUsagePercent * 100) / 100, // Round to 2 decimal places
       process_memory_usage: memUsage.heapUsed
     };
   }
   
   /**
    * Write alert event to file (append-only NDJSON)
+   * Uses synchronous write to prevent race conditions from concurrent alert checks
    */
   private writeAlertEvent(alertEvent: AlertEvent): void {
     const line = JSON.stringify(alertEvent) + '\n';
     
-    fs.appendFile(this.alertDataFile, line, (err) => {
-      if (err) {
-        console.error(`Failed to write alert event: ${err.message}`);
-      }
-    });
+    try {
+      // Use synchronous append to avoid interleaved writes from concurrent calls
+      fs.appendFileSync(this.alertDataFile, line);
+    } catch (err: any) {
+      console.error(`Failed to write alert event: ${err.message}`);
+    }
   }
   
   /**

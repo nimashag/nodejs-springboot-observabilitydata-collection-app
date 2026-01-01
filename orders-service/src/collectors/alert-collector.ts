@@ -69,7 +69,7 @@ export function recordErrorEvent(errorType: string): void {
 /**
  * Get current alert statistics
  */
-export function getAlertStats(): any {
+export function getAlertStats(): ReturnType<AlertDetector['getStats']> | null {
   if (alertDetector) {
     return alertDetector.getStats();
   }
