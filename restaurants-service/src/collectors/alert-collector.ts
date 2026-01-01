@@ -67,3 +67,12 @@ export function getAlertStats(): ReturnType<AlertDetector['getStats']> | null {
   return null;
 }
 
+/**
+ * Record authentication failure (for security alerts)
+ */
+export function recordAuthFailure(failureType: string): void {
+  if (alertDetector) {
+    alertDetector.recordAuthFailure(failureType);
+  }
+}
+
