@@ -1,0 +1,8 @@
+{
+  "services": [
+    {
+      "name": "orders-service",
+      "url": "http://localhost:3002/api/orders/telemetry"
+    }
+  ]
+}

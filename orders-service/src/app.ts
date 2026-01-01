@@ -4,6 +4,7 @@ import cors from 'cors';
 import orderRoutes from './routes/orders.routes';
 import { requestLogger } from './middlewares/requestLogger';
 import { initializeAlertCollector, alertCollectorMiddleware } from './collectors/alert-collector';
+import { telemetryMiddleware } from "./middlewares/telemetry.middleware";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(cors({
 app.use(express.json());
 app.use(requestLogger);
 app.use(alertCollectorMiddleware);
+app.use(telemetryMiddleware);
 
 app.use('/api/orders', orderRoutes);
 

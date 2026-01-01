@@ -3,8 +3,12 @@ import * as ctrl from '../controllers/orders.controller';
 import { authenticate } from "../middlewares/auth";
 import { authorizeRoles } from "../middlewares/authorize";
 import bodyParser from 'body-parser';
+import { getTelemetry } from "../controllers/telemetry.controller";
 
 const router = Router();
+
+//Telemetry data
+router.get("/telemetry", getTelemetry);
 
 router.post('/', authenticate, authorizeRoles("customer"), ctrl.create);
 router.get('/', ctrl.getAll);
@@ -21,5 +25,6 @@ router.patch('/:id/mark-paid', authenticate, ctrl.markOrderAsPaid);
 
 // Update just the order status
 router.patch('/:id/status', authenticate, authorizeRoles("admin", "restaurantAdmin"), ctrl.updateOrderStatus);
+
 
 export default router;
