@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { randomUUID } from 'crypto';
-import { logInfo, requestContext } from '../utils/logger';
+import { logInfo, logWarn, requestContext } from '../utils/logger';
 
 declare global {
     namespace Express {
@@ -14,6 +14,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
     const start = process.hrtime.bigint();
     // Use existing X-Request-Id header if present, otherwise generate a new one
     const requestId = req.get('X-Request-Id') || randomUUID();
+    const requestIdGenerated = !req.get('X-Request-Id');
     
     // Extract X-Session-Id header or use default
     const sessionId = req.get('X-Session-Id') || 'no-session';
@@ -35,17 +36,30 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
         logInfo('http.request.received', {
             method: req.method,
             path: req.originalUrl,
+            query: req.query && Object.keys(req.query).length > 0 ? req.query : undefined,
             ip: req.ip,
+            userAgent: req.get('User-Agent')?.substring(0, 100),
+            requestIdGenerated,
         });
 
     res.on('finish', () => {
         const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
-        const meta = {
+        const meta: Record<string, unknown> = {
+            method: req.method,
+            path: req.originalUrl,
             status: res.statusCode,
             durationMs: Number(durationMs.toFixed(2)),
-            userId: (req as any).user?.id,
         };
-        logInfo('http.request.completed', meta);
+        
+        if ((req as any).user?.id) {
+            meta.userId = (req as any).user.id;
+        }
+        
+        if (res.statusCode >= 400) {
+            logWarn('http.request.completed.error', meta);
+        } else {
+            logInfo('http.request.completed.success', meta);
+        }
     });
 
     next();

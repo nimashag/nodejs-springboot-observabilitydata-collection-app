@@ -496,19 +496,101 @@ export class LogTemplateMiner {
   matchTemplate(log: string): LogTemplate | null {
     const parameterized = this.parameterizeLog(log);
     
+    // Debug: Log template matching attempts (only if DEBUG env var is set)
+    const debugMode = process.env.DEBUG_TEMPLATE_MATCHING === 'true';
+    
+    if (debugMode) {
+      console.log(`[TemplateMiner] Matching log: ${log.substring(0, 100)}...`);
+      console.log(`[TemplateMiner] Parameterized: ${parameterized.substring(0, 100)}...`);
+      console.log(`[TemplateMiner] Total templates: ${this.templates.size}`);
+    }
+    
+    // First, try exact regex matching
     for (const template of this.templates.values()) {
       try {
-        const regex = new RegExp(template.pattern, 'i');
-        if (regex.test(log) || regex.test(parameterized)) {
+        // Fix pattern: Remove leading/trailing slashes if present (pattern might be stored as "/pattern/i")
+        let patternStr = template.pattern;
+        if (patternStr.startsWith('/') && patternStr.endsWith('/i')) {
+          patternStr = patternStr.slice(1, -2);
+        } else if (patternStr.startsWith('/') && patternStr.endsWith('/')) {
+          patternStr = patternStr.slice(1, -1);
+        }
+        
+        // Make pattern more flexible: replace hardcoded timestamp milliseconds with flexible pattern
+        // This handles cases where template has .648Z but log has .123Z
+        patternStr = patternStr.replace(/\\\.\d{3}Z/g, '\\.\\d{3}Z'); // Make milliseconds flexible
+        patternStr = patternStr.replace(/\\\.\d{3}\\+/g, '\\.\\d{3}\\+'); // Handle timezone offsets
+        
+        const regex = new RegExp(patternStr, 'i');
+        const matchesOriginal = regex.test(log);
+        const matchesParameterized = regex.test(parameterized);
+        
+        if (debugMode) {
+          console.log(`[TemplateMiner] Template ${template.id}: matchesOriginal=${matchesOriginal}, matchesParameterized=${matchesParameterized}`);
+        }
+        
+        if (matchesOriginal || matchesParameterized) {
+          if (debugMode) {
+            console.log(`[TemplateMiner] ✓ Matched template: ${template.id}`);
+          }
           return template;
         }
       } catch (error) {
         // Invalid regex, skip
+        if (debugMode) {
+          console.log(`[TemplateMiner] ✗ Invalid regex for template ${template.id}: ${error}`);
+        }
         continue;
       }
     }
 
+    // Fallback: Try matching against parameterized template strings using similarity
+    // This helps when regex patterns are too strict
+    let bestMatch: LogTemplate | null = null;
+    let bestSimilarity = 0;
+    const similarityThreshold = 0.85; // 85% similarity required
+    
+    for (const template of this.templates.values()) {
+      const templateParam = template.parameterizedLog || template.template;
+      const similarity = this.calculateSimilarity(parameterized, templateParam);
+      
+      if (debugMode && similarity > 0.5) {
+        console.log(`[TemplateMiner] Template ${template.id} similarity: ${(similarity * 100).toFixed(2)}%`);
+      }
+      
+      if (similarity > bestSimilarity && similarity >= similarityThreshold) {
+        bestSimilarity = similarity;
+        bestMatch = template;
+      }
+    }
+    
+    if (bestMatch) {
+      if (debugMode) {
+        console.log(`[TemplateMiner] ✓ Matched template via similarity (${(bestSimilarity * 100).toFixed(2)}%): ${bestMatch.id}`);
+      }
+      return bestMatch;
+    }
+
+    if (debugMode) {
+      console.log(`[TemplateMiner] ✗ No template matched`);
+    }
     return null;
+  }
+
+  /**
+   * Calculate similarity between two strings (simple Jaccard-like similarity)
+   */
+  private calculateSimilarity(str1: string, str2: string): number {
+    // Tokenize both strings
+    const tokens1 = new Set(str1.toLowerCase().split(/\s+/));
+    const tokens2 = new Set(str2.toLowerCase().split(/\s+/));
+    
+    // Calculate intersection and union
+    const intersection = new Set([...tokens1].filter(x => tokens2.has(x)));
+    const union = new Set([...tokens1, ...tokens2]);
+    
+    // Jaccard similarity
+    return union.size > 0 ? intersection.size / union.size : 0;
   }
 
   /**

@@ -84,10 +84,14 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             if (e.getMessage().equals("User not found")) {
+                LoggingUtil.warn(log, "auth.login.not_found", 
+                    Map.of("email", request.getEmail(), "reason", "User not found in database"));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "User not found"));
             }
             if (e.getMessage().equals("Invalid credentials")) {
+                LoggingUtil.warn(log, "auth.login.invalid_credentials", 
+                    Map.of("email", request.getEmail(), "reason", "Password mismatch"));
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Invalid credentials"));
             }
@@ -109,13 +113,20 @@ public class AuthController {
     public ResponseEntity<?> getMyProfile(Authentication authentication) {
         try {
             String userId = authentication.getName();
+            LoggingUtil.info(log, "auth.me.request", 
+                Map.of("userId", userId));
             UserResponse user = userService.getMyProfile(userId);
+            LoggingUtil.info(log, "auth.me.success", 
+                Map.of("userId", userId, "email", user.getEmail()));
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
             if (e.getMessage().equals("User not found")) {
+                LoggingUtil.warn(log, "auth.me.not_found", 
+                    Map.of("userId", authentication.getName(), "reason", "User not found"));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "User not found"));
             }
+            LoggingUtil.error(log, "auth.me.failure", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Failed to fetch user", "error", e.getMessage()));
         } catch (Exception e) {
@@ -127,11 +138,17 @@ public class AuthController {
     
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('ROLE_appAdmin')")
-    public ResponseEntity<?> getAllUsers() {
+    public ResponseEntity<?> getAllUsers(Authentication authentication) {
         try {
+            String userId = authentication != null ? authentication.getName() : "unknown";
+            LoggingUtil.info(log, "auth.get_all.request", 
+                Map.of("requestedBy", userId));
             List<UserResponse> users = userService.getAllUsers();
+            LoggingUtil.info(log, "auth.get_all.success", 
+                Map.of("requestedBy", userId, "count", users.size()));
             return ResponseEntity.ok(users);
         } catch (Exception e) {
+            LoggingUtil.error(log, "auth.get_all.exception", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Failed to fetch users", "error", e.getMessage()));
         }
@@ -140,17 +157,24 @@ public class AuthController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable String id) {
         try {
+            LoggingUtil.info(log, "auth.get_by_id.request", 
+                Map.of("userId", id));
             UserResponse user = userService.getUserById(id);
+            LoggingUtil.info(log, "auth.get_by_id.success", 
+                Map.of("userId", id, "email", user.getEmail()));
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
             if (e.getMessage().equals("User not found")) {
+                LoggingUtil.warn(log, "auth.get_by_id.not_found", 
+                    Map.of("userId", id, "reason", "User not found"));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "User not found"));
             }
+            LoggingUtil.error(log, "auth.get_by_id.failure", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Error fetching user data"));
         } catch (Exception e) {
-            LoggingUtil.error(log, "auth.get-by-id.exception", e.getMessage(), e);
+            LoggingUtil.error(log, "auth.get_by_id.exception", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Error fetching user data"));
         }
@@ -158,21 +182,31 @@ public class AuthController {
     
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_appAdmin')")
-    public ResponseEntity<?> updateUserById(@PathVariable String id, @RequestBody User updateData) {
+    public ResponseEntity<?> updateUserById(@PathVariable String id, @RequestBody User updateData, 
+                                           Authentication authentication) {
         try {
+            String requestedBy = authentication != null ? authentication.getName() : "unknown";
+            LoggingUtil.info(log, "auth.update.request", 
+                Map.of("userId", id, "requestedBy", requestedBy));
             UserResponse updatedUser = userService.updateUserById(id, updateData);
             Map<String, Object> response = new HashMap<>();
             response.put("message", "User updated successfully");
             response.put("user", updatedUser);
+            LoggingUtil.info(log, "auth.update.success", 
+                Map.of("userId", id, "requestedBy", requestedBy, "email", updatedUser.getEmail()));
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             if (e.getMessage().equals("User not found")) {
+                LoggingUtil.warn(log, "auth.update.not_found", 
+                    Map.of("userId", id, "reason", "User not found"));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "User not found"));
             }
+            LoggingUtil.error(log, "auth.update.failure", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Failed to update user", "error", e.getMessage()));
         } catch (Exception e) {
+            LoggingUtil.error(log, "auth.update.exception", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Failed to update user", "error", e.getMessage()));
         }
@@ -180,20 +214,29 @@ public class AuthController {
     
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_appAdmin')")
-    public ResponseEntity<?> deleteUserById(@PathVariable String id) {
+    public ResponseEntity<?> deleteUserById(@PathVariable String id, Authentication authentication) {
         try {
+            String requestedBy = authentication != null ? authentication.getName() : "unknown";
+            LoggingUtil.info(log, "auth.delete.request", 
+                Map.of("userId", id, "requestedBy", requestedBy));
             userService.deleteUserById(id);
             Map<String, String> response = new HashMap<>();
             response.put("message", "User deleted successfully");
+            LoggingUtil.info(log, "auth.delete.success", 
+                Map.of("userId", id, "requestedBy", requestedBy));
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             if (e.getMessage().equals("User not found")) {
+                LoggingUtil.warn(log, "auth.delete.not_found", 
+                    Map.of("userId", id, "reason", "User not found"));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "User not found"));
             }
+            LoggingUtil.error(log, "auth.delete.failure", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Failed to delete user", "error", e.getMessage()));
         } catch (Exception e) {
+            LoggingUtil.error(log, "auth.delete.exception", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Failed to delete user", "error", e.getMessage()));
         }

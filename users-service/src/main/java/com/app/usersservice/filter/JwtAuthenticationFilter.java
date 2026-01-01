@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -34,6 +35,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            // Log when no auth header is present (for public endpoints)
+            if (request.getRequestURI().startsWith("/api/auth/")) {
+                // Public endpoint, no auth needed
+            } else {
+                LoggingUtil.warn(logger, "jwt.missing", 
+                    Map.of("uri", request.getRequestURI(), "method", request.getMethod(),
+                           "reason", "No Authorization header or invalid format"));
+            }
             filterChain.doFilter(request, response);
             return;
         }
@@ -45,6 +54,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userId = jwtUtil.extractUserId(token);
                 String role = jwtUtil.extractRole(token);
                 
+                LoggingUtil.info(logger, "jwt.validation.success", 
+                    Map.of("userId", userId, "role", role, "uri", request.getRequestURI()));
+                
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userId,
                     null,
@@ -53,9 +65,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                LoggingUtil.warn(logger, "jwt.validation.invalid", 
+                    Map.of("uri", request.getRequestURI(), "reason", "Token validation returned false"));
             }
         } catch (Exception e) {
-            LoggingUtil.error(logger, "jwt.validation.failed", "JWT validation failed", e);
+            LoggingUtil.error(logger, "jwt.validation.failed", 
+                "JWT validation failed: " + e.getMessage(), e);
         }
         
         filterChain.doFilter(request, response);

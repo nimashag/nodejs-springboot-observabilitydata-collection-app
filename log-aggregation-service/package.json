@@ -8,7 +8,8 @@
     "dev": "ts-node-dev --respawn src/server.ts",
     "build": "tsc",
     "train": "ts-node src/scripts/trainModel.ts",
-    "test:templates": "ts-node src/scripts/testTemplateMining.ts"
+    "test:templates": "ts-node src/scripts/testTemplateMining.ts",
+    "test:matching": "ts-node src/scripts/testTemplateMatching.ts"
   },
   "dependencies": {
     "chokidar": "^3.5.3",
