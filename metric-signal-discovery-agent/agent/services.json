@@ -3,6 +3,10 @@
     {
       "name": "orders-service",
       "url": "http://localhost:3002/api/orders/telemetry"
+    },
+    {
+      "name": "restaurants-service",
+      "url": "http://localhost:3001/api/restaurants/telemetry"
     }
   ]
 }

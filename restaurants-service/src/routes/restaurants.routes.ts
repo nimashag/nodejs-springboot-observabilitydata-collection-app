@@ -3,8 +3,11 @@ import * as ctrl from '../controllers/restaurants.controller';
 import { authenticate } from "../middlewares/auth";
 import { authorizeRoles } from "../middlewares/authorize";
 import { upload } from '../middlewares/upload';
+import { getTelemetry } from "../controllers/telemetry.controller";
 
 const router = express.Router();
+
+router.get("/telemetry", getTelemetry);
 
 router.post('/', upload.single('image'), authenticate, authorizeRoles("restaurantAdmin"), ctrl.create);
 router.get('/', ctrl.list);
