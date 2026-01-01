@@ -3,6 +3,7 @@ import * as natural from 'natural';
 import { StructuredLog } from '../types/log.types';
 import { LogTemplateMiner } from './templateMiner';
 import { LogTemplate } from '../types/log.types';
+import { PIIDetector } from './piiDetector';
 
 export class MLBasedLogParser {
   private nlpManager: NlpManager;
@@ -13,11 +14,13 @@ export class MLBasedLogParser {
   private sessionIdPattern: RegExp;
   private isTrained: boolean = false;
   private templateMiner?: LogTemplateMiner;
+  private piiDetector?: PIIDetector;
 
-  constructor(templateMiner?: LogTemplateMiner) {
+  constructor(templateMiner?: LogTemplateMiner, piiDetector?: PIIDetector) {
     this.nlpManager = new NlpManager({ languages: ['en'], forceNER: true });
     this.tokenizer = new natural.WordTokenizer();
     this.templateMiner = templateMiner;
+    this.piiDetector = piiDetector;
     
     // Patterns for extracting IDs
     this.traceIdPattern = /(?:trace[_-]?id|traceId|trace_id)[=:]\s*([a-f0-9-]{8,})/i;
@@ -31,6 +34,13 @@ export class MLBasedLogParser {
    */
   setTemplateMiner(templateMiner: LogTemplateMiner): void {
     this.templateMiner = templateMiner;
+  }
+
+  /**
+   * Set PII detector for privacy protection
+   */
+  setPIIDetector(piiDetector: PIIDetector): void {
+    this.piiDetector = piiDetector;
   }
 
   /**
@@ -208,6 +218,11 @@ export class MLBasedLogParser {
     // Add sourceFile last if present
     if (sourceFile) {
       structuredLog.sourceFile = sourceFile;
+    }
+
+    // Apply PII redaction if detector is available
+    if (this.piiDetector) {
+      return this.piiDetector.redactStructuredLog(structuredLog);
     }
 
     return structuredLog;
