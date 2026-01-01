@@ -7,21 +7,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-/**
- * Alert Collector Interceptor for Users Service
- * 
- * This interceptor tracks HTTP requests and feeds data to the AlertDetector
- * to detect alert conditions.
- * 
- * NO OpenTelemetry, NO Prometheus, NO external observability libraries
- */
 @Component
 public class AlertCollectorInterceptor implements HandlerInterceptor {
     
-    @Autowired
-    private AlertDetector alertDetector;
+    private final AlertDetector alertDetector;
     
     private static final String START_TIME_ATTR = "alertCollectorStartTime";
+    
+    @Autowired
+    public AlertCollectorInterceptor(AlertDetector alertDetector) {
+        this.alertDetector = alertDetector;
+    }
     
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
