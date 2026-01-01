@@ -4,9 +4,14 @@
       "name": "orders-service",
       "url": "http://localhost:3002/api/orders/telemetry"
     },
-    {
-      "name": "restaurants-service",
-      "url": "http://localhost:3001/api/restaurants/telemetry"
+    { "name": "restaurants-service", 
+      "url": "http://localhost:3001/api/restaurants/telemetry" 
+    },
+    { "name": "delivery-service", 
+      "url": "http://localhost:<DELIVERY_PORT>/api/delivery/telemetry" 
+    },
+    { "name": "users-service", 
+      "url": "http://localhost:3003/telemetry"
     }
   ]
 }
