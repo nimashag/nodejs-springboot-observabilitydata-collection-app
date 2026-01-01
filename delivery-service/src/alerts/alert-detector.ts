@@ -1,14 +1,3 @@
-/**
- * Alert Detector for Delivery Service
- * 
- * This module detects alert events based on application behavior:
- * - Error bursts (multiple errors in short time)
- * - Repeated failures (same error pattern)
- * - High latency conditions (slow responses)
- * 
- * NO OpenTelemetry, NO Prometheus, NO external observability libraries
- */
-
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -48,6 +37,9 @@ export class AlertDetector {
   private alertDataFile: string;
   private recentRequests: RequestMetrics[] = [];
   private activeAlerts: Map<string, ActiveAlert> = new Map();
+  private periodicCheckInterval: NodeJS.Timeout | null = null;
+  private previousCpuUsage: NodeJS.CpuUsage | null = null;
+  private processStartTime: number = Date.now();
   
   // Configuration thresholds
   private readonly ERROR_BURST_THRESHOLD = 5; // errors in window
