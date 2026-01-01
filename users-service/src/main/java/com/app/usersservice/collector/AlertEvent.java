@@ -16,7 +16,7 @@ public class AlertEvent {
     private String alertName;
     
     @JsonProperty("alert_type")
-    private String alertType; // error / latency / availability
+    private String alertType; // error / latency / availability / resource / traffic / security / performance
     
     @JsonProperty("alert_state")
     private String alertState; // fired / resolved
@@ -25,7 +25,7 @@ public class AlertEvent {
     private Long alertDuration; // milliseconds, only if resolved
     
     @JsonProperty("severity")
-    private String severity; // low / medium / high
+    private String severity; // low / medium / high / critical
     
     // Context fields captured at alert time
     @JsonProperty("request_count")
@@ -42,6 +42,9 @@ public class AlertEvent {
     
     @JsonProperty("process_memory_usage")
     private long processMemoryUsage;
+    
+    @JsonProperty("traffic_rate")
+    private Double trafficRate;
     
     // Constructors
     public AlertEvent() {}
@@ -159,5 +162,12 @@ public class AlertEvent {
     public void setProcessMemoryUsage(long processMemoryUsage) {
         this.processMemoryUsage = processMemoryUsage;
     }
+    
+    public Double getTrafficRate() {
+        return trafficRate;
+    }
+    
+    public void setTrafficRate(Double trafficRate) {
+        this.trafficRate = trafficRate;
+    }
 }
-
