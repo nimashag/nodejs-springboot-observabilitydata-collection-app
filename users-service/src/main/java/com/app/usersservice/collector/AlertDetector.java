@@ -1,6 +1,7 @@
 package com.app.usersservice.collector;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -13,16 +14,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-/**
- * Alert Detector for Users Service (Spring Boot)
- * 
- * This class detects alert events based on application behavior:
- * - Error bursts (multiple errors in short time)
- * - Repeated failures (same error pattern)
- * - High latency conditions (slow responses)
- * 
- * NO OpenTelemetry, NO Prometheus, NO external observability libraries
- */
 @Component
 public class AlertDetector {
     
@@ -65,6 +56,24 @@ public class AlertDetector {
         );
         
         System.out.println("[Alert Detector] Initialized for " + serviceName);
+    }
+    
+    /**
+     * Cleanup method to shutdown scheduler when bean is destroyed
+     */
+    @PreDestroy
+    public void cleanup() {
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdown();
+            try {
+                if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    scheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                scheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
     }
     
     /**
@@ -289,19 +298,42 @@ public class AlertDetector {
         Runtime runtime = Runtime.getRuntime();
         long memoryUsage = runtime.totalMemory() - runtime.freeMemory();
         
+        // Get process-specific CPU usage if available, otherwise use system load average
+        double cpuUsage = -1.0;
         OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
-        double cpuUsage = osBean.getSystemLoadAverage();
+        if (osBean instanceof com.sun.management.OperatingSystemMXBean) {
+            com.sun.management.OperatingSystemMXBean sunOsBean = 
+                (com.sun.management.OperatingSystemMXBean) osBean;
+            double processCpuLoad = sunOsBean.getProcessCpuLoad();
+            if (processCpuLoad >= 0) {
+                // Convert to percentage (0.0 to 1.0 -> 0% to 100%)
+                cpuUsage = processCpuLoad * 100;
+            }
+        }
+        
+        // Fallback to system load average if process CPU not available
+        if (cpuUsage < 0) {
+            double loadAvg = osBean.getSystemLoadAverage();
+            // System load average can be -1 if unavailable
+            cpuUsage = loadAvg >= 0 ? loadAvg : -1.0;
+        }
         
         return new ContextMetrics(requestCount, errorCount, avgResponseTime, cpuUsage, memoryUsage);
     }
     
     /**
      * Write alert event to file (append-only NDJSON)
+     * Synchronized to prevent concurrent writes from multiple threads
      */
-    private void writeAlertEvent(AlertEvent alertEvent) {
-        try (FileWriter writer = new FileWriter(alertDataFile, true)) {
+    private synchronized void writeAlertEvent(AlertEvent alertEvent) {
+        try {
+            // Serialize first so that we only open the file if JSON generation succeeds
             String json = objectMapper.writeValueAsString(alertEvent);
-            writer.write(json + "\n");
+            
+            try (FileWriter writer = new FileWriter(alertDataFile, true)) {
+                writer.write(json);
+                writer.write(System.lineSeparator());
+            }
         } catch (IOException e) {
             System.err.println("Failed to write alert event: " + e.getMessage());
         }

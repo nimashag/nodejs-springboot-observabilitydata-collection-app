@@ -3,11 +3,6 @@ package com.app.usersservice.collector;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * Alert Event data structure for Users Service
- * 
- * NO OpenTelemetry, NO Prometheus, NO external observability libraries
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AlertEvent {
     
