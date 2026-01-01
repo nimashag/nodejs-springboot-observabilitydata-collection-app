@@ -1,12 +1,3 @@
-/**
- * Alert Collector for Orders Service
- * 
- * This module integrates the alert detector with the Express middleware
- * to automatically track requests and detect alert conditions.
- * 
- * NO OpenTelemetry, NO Prometheus, NO external observability libraries
- */
-
 import { Request, Response, NextFunction } from 'express';
 import { AlertDetector } from '../alerts/alert-detector';
 
@@ -74,5 +65,14 @@ export function getAlertStats(): ReturnType<AlertDetector['getStats']> | null {
     return alertDetector.getStats();
   }
   return null;
+}
+
+/**
+ * Record authentication failure (for security alerts)
+ */
+export function recordAuthFailure(failureType: string): void {
+  if (alertDetector) {
+    alertDetector.recordAuthFailure(failureType);
+  }
 }
 
