@@ -1,5 +1,54 @@
 {
-  "generated_at": 1767304827957,
-  "samples": 12,
-  "signals": []
+  "generated_at": 1767305104625,
+  "samples": 3,
+  "signals": [
+    {
+      "service": "orders-service",
+      "signal": "latency_spike",
+      "severity": "critical",
+      "confidence": 0.99,
+      "metric": "avg_latency_ms",
+      "current": 1509,
+      "baseline_mean": 198,
+      "baseline_std": 37,
+      "z_score": 35.51,
+      "timestamp": 1767305100843
+    },
+    {
+      "service": "restaurants-service",
+      "signal": "latency_spike",
+      "severity": "critical",
+      "confidence": 0.99,
+      "metric": "avg_latency_ms",
+      "current": 229,
+      "baseline_mean": 112,
+      "baseline_std": 15,
+      "z_score": 7.86,
+      "timestamp": 1767305100847
+    },
+    {
+      "service": "orders-service",
+      "signal": "latency_spike",
+      "severity": "warning",
+      "confidence": 0.62,
+      "metric": "avg_latency_ms",
+      "current": 1383,
+      "baseline_mean": 291,
+      "baseline_std": 352,
+      "z_score": 3.1,
+      "timestamp": 1767305102626
+    },
+    {
+      "service": "restaurants-service",
+      "signal": "latency_spike",
+      "severity": "warning",
+      "confidence": 0.6,
+      "metric": "avg_latency_ms",
+      "current": 224,
+      "baseline_mean": 120,
+      "baseline_std": 35,
+      "z_score": 3.01,
+      "timestamp": 1767305102628
+    }
+  ]
 }

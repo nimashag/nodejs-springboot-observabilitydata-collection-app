@@ -10,6 +10,14 @@ const router = Router();
 //Telemetry data
 router.get("/telemetry", getTelemetry);
 
+// DEBUG: intentionally slow endpoint to test anomaly detection
+router.get("/debug/slow", async (req, res) => {
+  const ms = Number(req.query.ms ?? 1200);
+  await new Promise((r) => setTimeout(r, ms));
+  res.json({ ok: true, delayed_ms: ms });
+});
+
+
 router.post('/', authenticate, authorizeRoles("customer"), ctrl.create);
 router.get('/', ctrl.getAll);
 router.get('/restaurant/:restaurantId', ctrl.getByRestaurantId);
