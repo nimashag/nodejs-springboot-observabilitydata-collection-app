@@ -1,0 +1,20 @@
+{
+  "raw_glob": "data/raw/logs/*.jsonl",
+  "files": [
+    "data/raw/logs/aggregated-2025-12-30.jsonl",
+    "data/raw/logs/aggregated-2025-12-31.jsonl",
+    "data/raw/logs/aggregated-2026-01-01.jsonl",
+    "data/raw/logs/aggregated-2026-01-02.jsonl"
+  ],
+  "total_lines": 12014,
+  "written": 12014,
+  "skipped_invalid_json": 0,
+  "skipped_not_object": 0,
+  "by_service_written": {
+    "delivery-service": 60,
+    "restaurants-service": 1933,
+    "orders-service": 388,
+    "users-service": 9633
+  },
+  "by_service_skipped": {}
+}
