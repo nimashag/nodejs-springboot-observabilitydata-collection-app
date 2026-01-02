@@ -6,6 +6,7 @@ import { RuleBasedEventTypeClassifier } from '../../src/classifiers/ruleBasedCla
 import { NaiveBayesEventTypeClassifier } from '../../src/classifiers/naiveBayesClassifier';
 import { NLPEventTypeClassifier } from '../../src/classifiers/nlpClassifier';
 import { TfIdfKnnEventTypeClassifier } from '../../src/classifiers/tfidfKnnClassifier';
+import { LogParameterizer } from '../../src/utils/logParameterizer';
 
 interface EvaluationResult {
     classifier: string;
@@ -28,8 +29,8 @@ interface EvaluationResult {
  * Load all dataset from aggregated logs and split into train/test
  */
 async function loadDatasetFromLogs(): Promise<{
-  train: Array<{ template: string; eventType: string }>;
-  test: Array<{ template: string; eventType: string }>;
+    train: Array<{ template: string; eventType: string }>;
+    test: Array<{ template: string; eventType: string }>;
 }> {
     const projectRoot = path.resolve(__dirname, '../..');
     const aggregatedLogsPath = path.join(projectRoot, 'aggregated-logs');
@@ -58,13 +59,9 @@ async function loadDatasetFromLogs(): Promise<{
 
                 // Create a template-like string from the log
                 if (log.event && log.raw) {
-                    // Parameterize the raw log (simplified)
-                    let template = log.raw
-                        .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<UUID>')
-                        .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '<IP>')
-                        .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?/g, '<TIMESTAMP>')
-                        .replace(/\b\d{4,}\b/g, '<NUM>')
-                        .replace(/SESSION-[0-9a-f-]+/gi, '<SESSION_ID>');
+                    // Use the same parameterization logic as templateMiner
+                    const parameterizer = new LogParameterizer();
+                    let template = parameterizer.parameterizeLog(log.raw);
 
                     const templateKey = `${log.event}|${template.substring(0, 100)}`;
 
@@ -106,7 +103,7 @@ async function loadDatasetFromLogs(): Promise<{
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     const splitIndex = Math.floor(shuffled.length * 0.7);
-    
+
     return {
         train: shuffled.slice(0, splitIndex),
         test: shuffled.slice(splitIndex),
@@ -271,6 +268,26 @@ async function evaluateClassifier(
         if (trainResult instanceof Promise) {
             await trainResult;
         }
+
+        // Save trained model if save method is available
+        if (classifier.save && classifier.name !== 'rule-based') {
+            const projectRoot = path.resolve(__dirname, '../..');
+            const modelsDir = path.join(projectRoot, 'models');
+            if (!fs.existsSync(modelsDir)) {
+                fs.mkdirSync(modelsDir, { recursive: true });
+            }
+
+            const modelPath = path.join(modelsDir, `${classifier.name}-model.json`);
+            try {
+                const saveResult = classifier.save(modelPath);
+                if (saveResult instanceof Promise) {
+                    await saveResult;
+                }
+                console.log(`    ✓ Model saved to: ${modelPath}`);
+            } catch (error) {
+                console.warn(`    ⚠ Failed to save model: ${error}`);
+            }
+        }
     }
 
     // After training evaluation
@@ -314,13 +331,13 @@ async function main() {
     // Load datasets from actual logs (train/test split)
     console.log('Loading datasets from aggregated logs...');
     const { train: trainDataset, test: testDataset } = await loadDatasetFromLogs();
-    
+
     // Also load synthetic training data as supplement
     const syntheticTrain = await loadSyntheticTrainingDataset();
-    
+
     // Combine real and synthetic training data
     const trainingDataset = [...trainDataset, ...syntheticTrain];
-    
+
     console.log(`Training dataset: ${trainingDataset.length} samples (${trainDataset.length} from logs + ${syntheticTrain.length} synthetic)`);
     console.log(`Test dataset: ${testDataset.length} samples\n`);
 

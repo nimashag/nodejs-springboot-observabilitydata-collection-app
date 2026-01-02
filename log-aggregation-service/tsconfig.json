@@ -27,11 +27,11 @@
   },
   "include": [
     "src/**/*",
-    "tests/**/*",
     "*.d.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "tests"
   ]
 }
