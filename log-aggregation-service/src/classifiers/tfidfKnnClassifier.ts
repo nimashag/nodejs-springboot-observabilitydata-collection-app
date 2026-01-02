@@ -1,5 +1,6 @@
 import { TfIdf } from 'natural';
 import { EventTypeClassifier } from './baseEventTypeClassifier';
+import { EventType } from '../types/eventTypes';
 
 /**
  * TF-IDF + K-Nearest Neighbors Event Type Classifier
@@ -51,7 +52,7 @@ export class TfIdfKnnEventTypeClassifier implements EventTypeClassifier {
 
     classify(template: string): string {
         if (!this.trained || this.vectors.length === 0) {
-            return 'unknown';
+            return EventType.UNKNOWN;
         }
 
         // Create vector for input
@@ -78,7 +79,7 @@ export class TfIdfKnnEventTypeClassifier implements EventTypeClassifier {
             votes[label] = (votes[label] || 0) + 1;
         }
 
-        return Object.entries(votes).sort((a, b) => b[1] - a[1])[0]?.[0] || 'unknown';
+        return Object.entries(votes).sort((a, b) => b[1] - a[1])[0]?.[0] || EventType.UNKNOWN;
     }
 
     private cosineSimilarity(a: number[], b: number[]): number {

@@ -2,6 +2,7 @@ import { StructuredLog } from '../types/log.types';
 import { LogTemplateMiner } from './templateMiner';
 import { LogTemplate } from '../types/log.types';
 import { PIIDetector } from './piiDetector';
+import { EventType } from '../types/eventTypes';
 
 export class MLBasedLogParser {
   private traceIdPattern: RegExp;
@@ -143,7 +144,7 @@ export class MLBasedLogParser {
       const matchedTemplate = this.templateMiner.matchTemplate(rawLog);
       if (matchedTemplate) {
         // Use template information to enhance parsing
-        if (matchedTemplate.eventType && matchedTemplate.eventType !== 'unknown') {
+        if (matchedTemplate.eventType && matchedTemplate.eventType !== EventType.UNKNOWN) {
           metadata.templateEventType = matchedTemplate.eventType;
         }
         if (matchedTemplate.metadata?.parameterCount) {
