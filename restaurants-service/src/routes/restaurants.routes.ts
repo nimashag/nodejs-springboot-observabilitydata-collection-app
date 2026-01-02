@@ -9,6 +9,11 @@ const router = express.Router();
 
 router.get("/telemetry", getTelemetry);
 
+// DEBUG: intentionally fail endpoint to test error_burst
+router.get("/debug/fail", (req, res) => {
+  res.status(500).json({ ok: false, error: "forced_failure" });
+});
+
 router.post('/', upload.single('image'), authenticate, authorizeRoles("restaurantAdmin"), ctrl.create);
 router.get('/', ctrl.list);
 router.get("/my", authenticate, authorizeRoles("restaurantAdmin"), ctrl.getByUser);
