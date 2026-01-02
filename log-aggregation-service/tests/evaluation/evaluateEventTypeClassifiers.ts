@@ -7,6 +7,7 @@ import { NaiveBayesEventTypeClassifier } from '../../src/classifiers/naiveBayesC
 import { NLPEventTypeClassifier } from '../../src/classifiers/nlpClassifier';
 import { TfIdfKnnEventTypeClassifier } from '../../src/classifiers/tfidfKnnClassifier';
 import { LogParameterizer } from '../../src/utils/logParameterizer';
+import { inferEventTypeFromText } from '../../src/utils/eventTypeInference';
 
 interface EvaluationResult {
     classifier: string;
@@ -68,20 +69,10 @@ async function loadDatasetFromLogs(): Promise<{
                     if (!seenTemplates.has(templateKey)) {
                         seenTemplates.add(templateKey);
 
-                        // Infer event type from event name
-                        let eventType = 'unknown';
-                        const eventLower = log.event.toLowerCase();
-                        if (eventLower.includes('error') || eventLower.includes('exception') || eventLower.includes('fail')) {
-                            eventType = 'error';
-                        } else if (eventLower.includes('warn')) {
-                            eventType = 'warning';
-                        } else if (eventLower.includes('http') || eventLower.includes('request')) {
-                            eventType = 'http_request';
-                        } else if (eventLower.includes('db') || eventLower.includes('database')) {
-                            eventType = 'database';
-                        } else if (eventLower.includes('auth') || eventLower.includes('login') || eventLower.includes('logout')) {
-                            eventType = 'authentication';
-                        }
+                        // Infer event type from event name using shared utility
+                        // This ensures consistency with the rule-based classifier logic
+                        // Note: We use log.event (not template) as ground truth source
+                        const eventType = inferEventTypeFromText(log.event);
 
                         dataset.push({ template, eventType });
                     }
