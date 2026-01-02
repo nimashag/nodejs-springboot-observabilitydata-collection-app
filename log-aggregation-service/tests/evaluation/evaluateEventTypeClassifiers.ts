@@ -71,8 +71,22 @@ async function loadDatasetFromLogs(): Promise<{
 
                         // Infer event type from event name using shared utility
                         // This ensures consistency with the rule-based classifier logic
-                        // Note: We use log.event (not template) as ground truth source
-                        const eventType = inferEventTypeFromText(log.event);
+                        // Primary source: log.event
+                        let eventType = inferEventTypeFromText(log.event);
+                        
+                        // If log.event doesn't match any category (unknown), check the raw log
+                        // This helps identify infrastructure logs where log.event might be "unknown"
+                        // but the raw log contains infrastructure patterns
+                        if (eventType === 'unknown' && log.raw) {
+                            const rawEventType = inferEventTypeFromText(log.raw);
+                            // Only use raw log inference for infrastructure, server_lifecycle, or business_logic
+                            // to avoid false positives from other patterns in raw logs
+                            if (rawEventType === 'infrastructure' || 
+                                rawEventType === 'server_lifecycle' || 
+                                rawEventType === 'business_logic') {
+                                eventType = rawEventType;
+                            }
+                        }
 
                         dataset.push({ template, eventType });
                     }
@@ -151,6 +165,24 @@ async function loadSyntheticTrainingDataset(): Promise<Array<{ template: string;
         { template: "User authenticated", eventType: "authentication" },
         { template: "Login attempt from <IP>", eventType: "authentication" },
         { template: "Logout successful for user <ID>", eventType: "authentication" },
+
+        // Business logic events
+        { template: "order.get_one.success orderId=<ID>", eventType: "business_logic" },
+        { template: "order.create.start userId=<ID>", eventType: "business_logic" },
+        { template: "restaurant.list.start", eventType: "business_logic" },
+        { template: "restaurant.list.success count=<NUM>", eventType: "business_logic" },
+        { template: "payment.mark_as_paid.success orderId=<ID>", eventType: "business_logic" },
+        { template: "order.service.process_payment.start", eventType: "business_logic" },
+
+        // Server lifecycle events
+        { template: "server.started port=<NUM>", eventType: "server_lifecycle" },
+        { template: "server.stopped gracefully", eventType: "server_lifecycle" },
+
+        // Infrastructure events
+        { template: "org.mongodb.driver.cluster - Monitor thread connected", eventType: "infrastructure" },
+        { template: "org.springframework.web.servlet.DispatcherServlet initialized", eventType: "infrastructure" },
+        { template: "Tomcat started on port <NUM>", eventType: "infrastructure" },
+        { template: "at com.mongodb.internal.connection.DefaultServerMonitor", eventType: "infrastructure" },
     ];
 }
 
