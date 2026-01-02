@@ -1,5 +1,6 @@
 import natural from 'natural';
 import { EventTypeClassifier } from './baseEventTypeClassifier';
+import { EventType } from '../types/eventTypes';
 
 /**
  * Naive Bayes Event Type Classifier
@@ -25,14 +26,14 @@ export class NaiveBayesEventTypeClassifier implements EventTypeClassifier {
 
     classify(template: string): string {
         if (!this.trained) {
-            return 'unknown';
+            return EventType.UNKNOWN;
         }
         return this.classifier.classify(template.toLowerCase());
     }
 
     classifyWithConfidence(template: string): Array<{ label: string; value: number }> {
         if (!this.trained) {
-            return [{ label: 'unknown', value: 1.0 }];
+            return [{ label: EventType.UNKNOWN, value: 1.0 }];
         }
         return this.classifier.getClassifications(template.toLowerCase());
     }

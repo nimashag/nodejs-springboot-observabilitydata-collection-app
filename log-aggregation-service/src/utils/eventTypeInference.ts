@@ -1,3 +1,5 @@
+import { EventType } from '../types/eventTypes';
+
 /**
  * Shared utility for inferring event types from text using keyword matching
  * This ensures consistency between rule-based classifier and evaluation scripts
@@ -26,51 +28,51 @@ export function inferEventTypeFromText(text: string): string {
 
     // Error events (check first to catch error-related logs)
     if (lower.includes('error') || lower.includes('exception') || lower.includes('fail')) {
-        return 'error';
+        return EventType.ERROR;
     }
-    
+
     // Warning events
     if (lower.includes('warn') || lower.includes('warning')) {
-        return 'warning';
+        return EventType.WARNING;
     }
-    
+
     // HTTP request events (check before business_logic to avoid conflicts)
     if (lower.includes('http.request')) {
-        return 'http_request';
+        return EventType.HTTP_REQUEST;
     }
-    
+
     // Database operations (check before infrastructure to catch db.* events)
     if (lower.includes('db.') || lower.includes('database')) {
-        return 'database';
+        return EventType.DATABASE;
     }
-    
+
     // Authentication events
     if (lower.includes('auth') || lower.includes('login') || lower.includes('logout')) {
-        return 'authentication';
+        return EventType.AUTHENTICATION;
     }
-    
+
     // Business logic events (application domain events)
-    if (lower.includes('order.') || lower.includes('restaurant.') || lower.includes('restaurants.') || 
+    if (lower.includes('order.') || lower.includes('restaurant.') || lower.includes('restaurants.') ||
         lower.includes('payment.') || lower.includes('menuitem.') || lower.includes('delivery.')) {
-        return 'business_logic';
+        return EventType.BUSINESS_LOGIC;
     }
-    
+
     // Server lifecycle events
-    if (lower.includes('server.started') || lower.includes('server.stopped') || 
+    if (lower.includes('server.started') || lower.includes('server.stopped') ||
         lower.includes('server.start') || lower.includes('server.stop')) {
-        return 'server_lifecycle';
+        return EventType.SERVER_LIFECYCLE;
     }
-    
+
     // Infrastructure/system logs (MongoDB driver, Spring, Tomcat, Hibernate, etc.)
-    if (lower.includes('org.mongodb.driver') || lower.includes('org.springframework') || 
-        lower.includes('org.hibernate') || lower.includes('tomcat') || 
+    if (lower.includes('org.mongodb.driver') || lower.includes('org.springframework') ||
+        lower.includes('org.hibernate') || lower.includes('tomcat') ||
         lower.includes('dispatcherservlet') || lower.includes('spring') ||
         lower.includes('hibernate') || lower.includes('catalina') ||
         lower.includes('at com.mongodb') || lower.includes('at java.') ||
         lower.includes('at org.springframework')) {
-        return 'infrastructure';
+        return EventType.INFRASTRUCTURE;
     }
 
-    return 'unknown';
+    return EventType.UNKNOWN;
 }
 

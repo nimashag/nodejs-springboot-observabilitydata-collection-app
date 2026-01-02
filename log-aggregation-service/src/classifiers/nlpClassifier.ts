@@ -1,5 +1,6 @@
 import { NlpManager } from 'node-nlp';
 import { EventTypeClassifier } from './baseEventTypeClassifier';
+import { EventType } from '../types/eventTypes';
 
 /**
  * NLP-based Event Type Classifier
@@ -29,21 +30,21 @@ export class NLPEventTypeClassifier implements EventTypeClassifier {
 
     async classify(template: string): Promise<string> {
         if (!this.trained) {
-            return 'unknown';
+            return EventType.UNKNOWN;
         }
 
         const result = await this.nlp.process('en', template);
-        return result.intent || 'unknown';
+        return result.intent || EventType.UNKNOWN;
     }
 
     async classifyWithConfidence(template: string): Promise<{ eventType: string; confidence: number }> {
         if (!this.trained) {
-            return { eventType: 'unknown', confidence: 0 };
+            return { eventType: EventType.UNKNOWN, confidence: 0 };
         }
 
         const result = await this.nlp.process('en', template);
         return {
-            eventType: result.intent || 'unknown',
+            eventType: result.intent || EventType.UNKNOWN,
             confidence: result.score || 0,
         };
     }

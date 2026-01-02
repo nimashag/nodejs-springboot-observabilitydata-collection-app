@@ -6,6 +6,7 @@ import { EventTypeClassifier } from '../classifiers';
 import { getConfiguredClassifier, getConfiguredClassifierSync } from '../config/classifierLoader';
 import { loadClassifierConfig } from '../config/classifierLoader';
 import { LogParameterizer } from '../utils/logParameterizer';
+import { EventType } from '../types/eventTypes';
 
 /**
  * Enhanced Log Template Miner
@@ -392,7 +393,7 @@ export class LogTemplateMiner {
 
   /**
    * Infer event type from template using the configured classifier
-   * Note: For async classifiers (like NLP), this will return 'unknown' initially
+   * Note: For async classifiers (like NLP), this will return EventType.UNKNOWN initially
    * The classifier should be trained and used synchronously for best results
    */
   private inferEventType(template: string): string {
@@ -400,14 +401,14 @@ export class LogTemplateMiner {
       const result = this.eventTypeClassifier.classify(template);
       // Handle both sync and async results
       if (result instanceof Promise) {
-        // For async classifiers, return 'unknown' as fallback
+        // For async classifiers, return EventType.UNKNOWN as fallback
         // In a production system, you might want to await this
-        return 'unknown';
+        return EventType.UNKNOWN;
       }
       return result;
     } catch (error) {
       console.warn(`Error classifying event type: ${error}`);
-      return 'unknown';
+      return EventType.UNKNOWN;
     }
   }
 
