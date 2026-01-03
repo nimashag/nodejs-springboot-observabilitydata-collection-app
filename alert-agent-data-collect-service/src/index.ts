@@ -285,6 +285,11 @@ const server = http.createServer((req, res) => {
       res.writeHead(200);
       res.end(JSON.stringify(analysisData, null, 2));
     } else if (urlPath === '/api/summary') {
+      // Return the alert_summary (for dashboard) instead of analysis summary
+      res.writeHead(200);
+      res.end(JSON.stringify(analysisData.alert_summary, null, 2));
+    } else if (urlPath === '/api/analysis-summary') {
+      // Return the analysis summary (for advanced analytics)
       res.writeHead(200);
       res.end(JSON.stringify(analysisData.summary, null, 2));
     } else if (urlPath === '/api/alerts') {
@@ -305,6 +310,20 @@ const server = http.createServer((req, res) => {
         efficiency: analysisData.routing_efficiency,
         recommendations: analysisData.routing_recommendations
       }, null, 2));
+    } else if (urlPath === '/api/adaptive-config') {
+      res.writeHead(200);
+      res.end(JSON.stringify(analysisData.threshold_config, null, 2));
+    } else if (urlPath === '/api/ml-report') {
+      // Read ML model report from file
+      const mlReportPath = path.join(__dirname, '..', 'ml-module', 'models', 'training_report_enhanced.json');
+      if (fs.existsSync(mlReportPath)) {
+        const mlReport = JSON.parse(fs.readFileSync(mlReportPath, 'utf-8'));
+        res.writeHead(200);
+        res.end(JSON.stringify(mlReport, null, 2));
+      } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'ML report not found. Please train models first.' }));
+      }
     } else {
       res.writeHead(404);
       res.end(JSON.stringify({ 
@@ -315,7 +334,9 @@ const server = http.createServer((req, res) => {
           '/api/summary',
           '/api/alerts?page=1&limit=100',
           '/api/recommendations',
-          '/api/routing'
+          '/api/routing',
+          '/api/adaptive-config',
+          '/api/ml-report'
         ]
       }));
     }
