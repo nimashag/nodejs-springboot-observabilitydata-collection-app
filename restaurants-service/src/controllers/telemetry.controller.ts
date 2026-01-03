@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { telemetryStore } from "../collectors/telemetry.collector";
+import { telemetryStore, percentile } from "../collectors/telemetry.collector";
 
 export function getTelemetry(req: Request, res: Response) {
   const mem = process.memoryUsage();
@@ -9,17 +9,25 @@ export function getTelemetry(req: Request, res: Response) {
       ? 0
       : telemetryStore.totalLatencyMs / telemetryStore.totalRequests;
 
-  const routes = Object.entries(telemetryStore.routes).map(([route, stats]) => ({
-    route,
-    count: stats.count,
-    errors: stats.errors,
-    avg_latency_ms: stats.count === 0 ? 0 : Math.round(stats.totalLatencyMs / stats.count),
-  }));
+  // ✅ RPS (requests per second since start)
+  const uptimeMs = Date.now() - telemetryStore.startTime;
+  const uptimeSec = Math.max(1, Math.floor(uptimeMs / 1000));
+  const rps = telemetryStore.totalRequests / uptimeSec;
+
+  const routes = Object.entries(telemetryStore.routes).map(
+    ([route, stats]: any) => ({
+      route,
+      count: stats.count,
+      errors: stats.errors,
+      avg_latency_ms:
+        stats.count === 0 ? 0 : Math.round(stats.totalLatencyMs / stats.count),
+    })
+  );
 
   res.json({
     service: "restaurants-service",
     timestamp: Date.now(),
-    uptime_ms: Date.now() - telemetryStore.startTime,
+    uptime_ms: uptimeMs,
     process: {
       rss_mb: Math.round(mem.rss / 1024 / 1024),
       heap_used_mb: Math.round(mem.heapUsed / 1024 / 1024),
@@ -28,6 +36,9 @@ export function getTelemetry(req: Request, res: Response) {
       total_requests: telemetryStore.totalRequests,
       total_errors: telemetryStore.totalErrors,
       avg_latency_ms: Math.round(avgLatency),
+      rps: Math.round(rps * 100) / 100,
+      p95_latency_ms: Math.round(percentile(telemetryStore.latenciesMs, 95)),
+      p99_latency_ms: Math.round(percentile(telemetryStore.latenciesMs, 99)),
     },
     routes,
   });
