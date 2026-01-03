@@ -1,10 +1,10 @@
 {
-  "generated_at": 1767422078063,
+  "generated_at": 1767427750525,
   "services": [
     {
       "service": "orders-service",
       "snapshot": {
-        "total_requests": 6,
+        "total_requests": 4,
         "total_errors": 0,
         "avg_latency_ms": 2,
         "rss_mb": 76,
@@ -20,7 +20,7 @@
     {
       "service": "restaurants-service",
       "snapshot": {
-        "total_requests": 6,
+        "total_requests": 4,
         "total_errors": 0,
         "avg_latency_ms": 2,
         "rss_mb": 73,
@@ -36,10 +36,10 @@
     {
       "service": "delivery-service",
       "snapshot": {
-        "total_requests": 6,
+        "total_requests": 4,
         "total_errors": 0,
-        "avg_latency_ms": 1,
-        "rss_mb": 76,
+        "avg_latency_ms": 2,
+        "rss_mb": 77,
         "heap_used_mb": 27,
         "heap_used_mb_java": 27
       },
@@ -52,12 +52,12 @@
     {
       "service": "users-service",
       "snapshot": {
-        "total_requests": 6,
+        "total_requests": 4,
         "total_errors": 0,
-        "avg_latency_ms": 4,
-        "rss_mb": 0,
-        "heap_used_mb": 101,
-        "heap_used_mb_java": 101
+        "avg_latency_ms": 10,
+        "rss_mb": 242,
+        "heap_used_mb": 32,
+        "heap_used_mb_java": 32
       },
       "discovered": {
         "top_routes": [],
