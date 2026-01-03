@@ -144,8 +144,6 @@ export class AlertSuppressor {
       by_rule: Record<string, number>;
     };
   } {
-    console.log('[Alert Suppressor] Processing alerts...');
-    
     const suppressed: SuppressionResult[] = [];
     const allowed: SuppressionResult[] = [];
     const byRule: Record<string, number> = {};
@@ -170,10 +168,6 @@ export class AlertSuppressor {
       suppression_rate: (suppressed.length / alerts.length) * 100,
       by_rule: byRule
     };
-
-    console.log(`[Alert Suppressor]   Total: ${summary.total}`);
-    console.log(`[Alert Suppressor]   Suppressed: ${summary.suppressed_count} (${summary.suppression_rate.toFixed(1)}%)`);
-    console.log(`[Alert Suppressor]   Allowed: ${summary.allowed_count} (${(summary.allowed_count/summary.total*100).toFixed(1)}%)`);
 
     return { suppressed, allowed, summary };
   }
@@ -231,7 +225,6 @@ export class AlertSuppressor {
    */
   addMaintenanceWindow(window: MaintenanceWindow): void {
     this.maintenanceWindows.push(window);
-    console.log(`[Alert Suppressor] Added maintenance window for ${window.service_name}: ${window.start_time} to ${window.end_time}`);
   }
 
   /**
@@ -241,7 +234,6 @@ export class AlertSuppressor {
     const rule = this.rules.find(r => r.id === ruleId);
     if (rule) {
       rule.enabled = enabled;
-      console.log(`[Alert Suppressor] Rule '${rule.name}' ${enabled ? 'enabled' : 'disabled'}`);
     }
   }
 
