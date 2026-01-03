@@ -1,0 +1,82 @@
+{
+  "generated_at": 1767424146093,
+  "results": [
+    {
+      "service": "orders-service",
+      "url": "http://localhost:3002/api/orders/telemetry",
+      "checked_at": 1767424145851,
+      "missing_kpis": [
+        "latency_percentiles",
+        "rps"
+      ],
+      "coverage": {
+        "latency_avg": true,
+        "traffic_total_requests": true,
+        "errors_total_errors": true,
+        "memory_heap_used": true,
+        "memory_rss": true,
+        "route_level_metrics": true,
+        "latency_percentiles": false,
+        "rps": false
+      }
+    },
+    {
+      "service": "restaurants-service",
+      "url": "http://localhost:3001/api/restaurants/telemetry",
+      "checked_at": 1767424145856,
+      "missing_kpis": [
+        "latency_percentiles",
+        "rps"
+      ],
+      "coverage": {
+        "latency_avg": true,
+        "traffic_total_requests": true,
+        "errors_total_errors": true,
+        "memory_heap_used": true,
+        "memory_rss": true,
+        "route_level_metrics": true,
+        "latency_percentiles": false,
+        "rps": false
+      }
+    },
+    {
+      "service": "delivery-service",
+      "url": "http://localhost:3004/api/delivery/telemetry",
+      "checked_at": 1767424145859,
+      "missing_kpis": [
+        "latency_percentiles",
+        "rps"
+      ],
+      "coverage": {
+        "latency_avg": true,
+        "traffic_total_requests": true,
+        "errors_total_errors": true,
+        "memory_heap_used": true,
+        "memory_rss": true,
+        "route_level_metrics": true,
+        "latency_percentiles": false,
+        "rps": false
+      }
+    },
+    {
+      "service": "users-service",
+      "url": "http://localhost:3003/telemetry",
+      "checked_at": 1767424146093,
+      "missing_kpis": [
+        "memory_rss",
+        "latency_percentiles",
+        "rps"
+      ],
+      "coverage": {
+        "latency_avg": true,
+        "traffic_total_requests": true,
+        "errors_total_errors": true,
+        "memory_heap_used": true,
+        "memory_rss": false,
+        "route_level_metrics": true,
+        "latency_percentiles": false,
+        "rps": false
+      }
+    }
+  ]
+}
