@@ -1,206 +1,63 @@
 {
-  "generated_at": 1767304360968,
+  "generated_at": 1767422078063,
   "services": [
     {
       "service": "orders-service",
       "snapshot": {
-        "total_requests": 15,
+        "total_requests": 6,
         "total_errors": 0,
-        "avg_latency_ms": 293,
-        "rss_mb": 70,
-        "heap_used_mb": 30,
-        "heap_used_mb_java": 30
+        "avg_latency_ms": 2,
+        "rss_mb": 76,
+        "heap_used_mb": 27,
+        "heap_used_mb_java": 27
       },
       "discovered": {
-        "top_routes": [
-          {
-            "route": "GET /api/orders",
-            "count": 4,
-            "errors": 0,
-            "avg_latency_ms": 690
-          },
-          {
-            "route": "GET /api/orders/6956e2f40b83f7fbaf2729c0",
-            "count": 2,
-            "errors": 0,
-            "avg_latency_ms": 195
-          },
-          {
-            "route": "PATCH /api/orders/6956e136502d3f4b674e4341/special-instructions",
-            "count": 1,
-            "errors": 0,
-            "avg_latency_ms": 407
-          },
-          {
-            "route": "PATCH /api/orders/6956e136502d3f4b674e4341/delivery-address",
-            "count": 1,
-            "errors": 0,
-            "avg_latency_ms": 396
-          },
-          {
-            "route": "POST /api/orders",
-            "count": 1,
-            "errors": 0,
-            "avg_latency_ms": 431
-          }
-        ],
-        "slow_routes": [
-          {
-            "route": "GET /api/orders",
-            "count": 4,
-            "errors": 0,
-            "avg_latency_ms": 690
-          },
-          {
-            "route": "POST /api/orders",
-            "count": 1,
-            "errors": 0,
-            "avg_latency_ms": 431
-          },
-          {
-            "route": "PATCH /api/orders/6956e136502d3f4b674e4341/special-instructions",
-            "count": 1,
-            "errors": 0,
-            "avg_latency_ms": 407
-          },
-          {
-            "route": "PATCH /api/orders/6956e136502d3f4b674e4341/delivery-address",
-            "count": 1,
-            "errors": 0,
-            "avg_latency_ms": 396
-          },
-          {
-            "route": "GET /api/orders/6956e2f40b83f7fbaf2729c0",
-            "count": 2,
-            "errors": 0,
-            "avg_latency_ms": 195
-          }
-        ],
+        "top_routes": [],
+        "slow_routes": [],
         "error_routes": []
       }
     },
     {
       "service": "restaurants-service",
       "snapshot": {
-        "total_requests": 23,
-        "total_errors": 11,
-        "avg_latency_ms": 147,
-        "rss_mb": 74,
-        "heap_used_mb": 26,
-        "heap_used_mb_java": 26
+        "total_requests": 6,
+        "total_errors": 0,
+        "avg_latency_ms": 2,
+        "rss_mb": 73,
+        "heap_used_mb": 24,
+        "heap_used_mb_java": 24
       },
       "discovered": {
-        "top_routes": [
-          {
-            "route": "GET /api/restaurants",
-            "count": 4,
-            "errors": 0,
-            "avg_latency_ms": 640
-          },
-          {
-            "route": "GET /uploads/1766990428825-290144901.jpg",
-            "count": 3,
-            "errors": 3,
-            "avg_latency_ms": 2
-          },
-          {
-            "route": "GET /uploads/1767007929646-426333557.jpg",
-            "count": 3,
-            "errors": 3,
-            "avg_latency_ms": 2
-          },
-          {
-            "route": "GET /uploads/1765868481913-746469645.jpg",
-            "count": 2,
-            "errors": 2,
-            "avg_latency_ms": 3
-          },
-          {
-            "route": "GET /api/restaurants/694103c1eb5047e453c93212",
-            "count": 2,
-            "errors": 0,
-            "avg_latency_ms": 196
-          }
-        ],
-        "slow_routes": [
-          {
-            "route": "GET /api/restaurants",
-            "count": 4,
-            "errors": 0,
-            "avg_latency_ms": 640
-          },
-          {
-            "route": "GET /api/restaurants/694103c1eb5047e453c93212/menu-items",
-            "count": 2,
-            "errors": 0,
-            "avg_latency_ms": 200
-          },
-          {
-            "route": "GET /api/restaurants/694103c1eb5047e453c93212",
-            "count": 2,
-            "errors": 0,
-            "avg_latency_ms": 196
-          },
-          {
-            "route": "GET /uploads/1765868530680-856016836.jpg",
-            "count": 1,
-            "errors": 1,
-            "avg_latency_ms": 4
-          },
-          {
-            "route": "GET /uploads/1765868481913-746469645.jpg",
-            "count": 2,
-            "errors": 2,
-            "avg_latency_ms": 3
-          }
-        ],
-        "error_routes": [
-          {
-            "route": "GET /uploads/1766990428825-290144901.jpg",
-            "count": 3,
-            "errors": 3,
-            "avg_latency_ms": 2
-          },
-          {
-            "route": "GET /uploads/1767007929646-426333557.jpg",
-            "count": 3,
-            "errors": 3,
-            "avg_latency_ms": 2
-          },
-          {
-            "route": "GET /uploads/1765868481913-746469645.jpg",
-            "count": 2,
-            "errors": 2,
-            "avg_latency_ms": 3
-          },
-          {
-            "route": "GET /uploads/1765868553732-772186235.jpg",
-            "count": 2,
-            "errors": 2,
-            "avg_latency_ms": 2
-          },
-          {
-            "route": "GET /uploads/1765868530680-856016836.jpg",
-            "count": 1,
-            "errors": 1,
-            "avg_latency_ms": 4
-          }
-        ]
+        "top_routes": [],
+        "slow_routes": [],
+        "error_routes": []
       }
     },
     {
       "service": "delivery-service",
-      "error": "Failed to parse URL from http://localhost:<DELIVERY_PORT>/api/delivery/telemetry"
+      "snapshot": {
+        "total_requests": 6,
+        "total_errors": 0,
+        "avg_latency_ms": 1,
+        "rss_mb": 76,
+        "heap_used_mb": 27,
+        "heap_used_mb_java": 27
+      },
+      "discovered": {
+        "top_routes": [],
+        "slow_routes": [],
+        "error_routes": []
+      }
     },
     {
       "service": "users-service",
       "snapshot": {
-        "total_requests": 3,
+        "total_requests": 6,
         "total_errors": 0,
-        "avg_latency_ms": 9,
+        "avg_latency_ms": 4,
         "rss_mb": 0,
-        "heap_used_mb": 37,
-        "heap_used_mb_java": 37
+        "heap_used_mb": 101,
+        "heap_used_mb_java": 101
       },
       "discovered": {
         "top_routes": [],
