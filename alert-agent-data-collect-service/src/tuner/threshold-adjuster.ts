@@ -43,8 +43,6 @@ export class ThresholdAdjuster {
    * Calculate adaptive thresholds for all services
    */
   calculateAdaptiveThresholds(): AdaptiveThreshold[] {
-    console.log('[Threshold Adjuster] Calculating adaptive thresholds...');
-    
     const recommendations: AdaptiveThreshold[] = [];
     const services = [...new Set(this.alerts.map(a => a.service_name))];
 
@@ -58,10 +56,6 @@ export class ThresholdAdjuster {
       // Availability threshold
       const availThreshold = this.calculateAvailabilityThreshold(serviceAlerts);
       recommendations.push(availThreshold);
-
-      console.log(`[Threshold Adjuster]   ${service}:`);
-      console.log(`[Threshold Adjuster]     Error: ${errorThreshold.current_threshold} → ${errorThreshold.recommended_threshold} (${errorThreshold.adjustment_percentage.toFixed(1)}%)`);
-      console.log(`[Threshold Adjuster]     Availability: ${availThreshold.current_threshold} → ${availThreshold.recommended_threshold} (${availThreshold.adjustment_percentage.toFixed(1)}%)`);
     }
 
     return recommendations;
@@ -179,8 +173,6 @@ export class ThresholdAdjuster {
    * Export threshold configuration file
    */
   exportThresholdConfig(): ThresholdConfig {
-    console.log('[Threshold Adjuster] Generating threshold configuration...');
-    
     const services = [...new Set(this.alerts.map(a => a.service_name))];
     const thresholds: Record<string, ServiceThresholds> = {};
 
