@@ -180,8 +180,6 @@ export class AlertRouter {
     decisions: AlertRoutingDecision[];
     summary: RoutingSummary;
   } {
-    console.log('[Alert Router] Routing alerts...');
-    
     const decisions: AlertRoutingDecision[] = [];
     const summary: RoutingSummary = {
       total_alerts: alerts.length,
@@ -224,13 +222,6 @@ export class AlertRouter {
         summary.admin_notifications++;
       }
     }
-
-    console.log(`[Alert Router]   Total: ${summary.total_alerts}`);
-    console.log(`[Alert Router]   Suppressed: ${summary.suppressed} (${(summary.suppressed/summary.total_alerts*100).toFixed(1)}%)`);
-    console.log(`[Alert Router]   Logged: ${summary.logged} (${(summary.logged/summary.total_alerts*100).toFixed(1)}%)`);
-    console.log(`[Alert Router]   Notified: ${summary.notified} (${(summary.notified/summary.total_alerts*100).toFixed(1)}%)`);
-    console.log(`[Alert Router]   Escalated: ${summary.escalated} (${(summary.escalated/summary.total_alerts*100).toFixed(1)}%)`);
-    console.log(`[Alert Router]   Admin Notifications: ${summary.admin_notifications} (${(summary.admin_notifications/summary.total_alerts*100).toFixed(1)}%)`);
 
     return { decisions, summary };
   }

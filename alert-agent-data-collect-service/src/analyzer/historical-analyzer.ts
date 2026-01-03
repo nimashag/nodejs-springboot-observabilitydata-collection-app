@@ -43,8 +43,6 @@ export class HistoricalAnalyzer {
    * Main analysis method - runs all analyses
    */
   analyze(): AnalysisReport {
-    console.log('[Historical Analyzer] Starting analysis...');
-    
     const report: AnalysisReport = {
       generated_at: new Date().toISOString(),
       total_alerts_analyzed: this.alerts.length,
@@ -58,7 +56,6 @@ export class HistoricalAnalyzer {
     // Generate recommendations based on analysis
     report.recommendations = this.generateRecommendations(report);
 
-    console.log('[Historical Analyzer] Analysis complete');
     return report;
   }
 
@@ -80,8 +77,6 @@ export class HistoricalAnalyzer {
    * Calculate baseline metrics for each service
    */
   private calculateServiceBaselines(): Record<string, ServiceBaseline> {
-    console.log('[Historical Analyzer] Calculating service baselines...');
-    
     const baselines: Record<string, ServiceBaseline> = {};
     const services = [...new Set(this.alerts.map(a => a.service_name))];
 
@@ -115,8 +110,6 @@ export class HistoricalAnalyzer {
         ),
         avg_memory_usage: Statistics.mean(serviceAlerts.map(a => a.process_memory_usage))
       };
-
-      console.log(`[Historical Analyzer]   ${service}: ${serviceAlerts.length} alerts, FP rate: ${(baselines[service].false_positive_rate * 100).toFixed(1)}%`);
     }
 
     return baselines;
@@ -136,8 +129,6 @@ export class HistoricalAnalyzer {
    * Detect false positive patterns
    */
   private detectFalsePositives(): FalsePositiveIndicators {
-    console.log('[Historical Analyzer] Detecting false positive patterns...');
-    
     const resolvedAlerts = this.alerts.filter(a => a.alert_state === 'resolved');
     const quickResolves = resolvedAlerts.filter(
       a => a.alert_duration && a.alert_duration < 30000
@@ -173,8 +164,6 @@ export class HistoricalAnalyzer {
       ? quickResolves.length / resolvedAlerts.length 
       : 0;
 
-    console.log(`[Historical Analyzer]   Quick resolves: ${quickResolves.length}, Repetitive: ${repetitiveCount}, FP rate: ${(fpRate * 100).toFixed(1)}%`);
-
     return {
       quick_resolves: quickResolves,
       repetitive_count: repetitiveCount,
@@ -186,8 +175,6 @@ export class HistoricalAnalyzer {
    * Analyze temporal patterns (hourly/daily)
    */
   private analyzeTemporalPatterns(): TemporalPattern {
-    console.log('[Historical Analyzer] Analyzing temporal patterns...');
-    
     const hourCounts: Record<number, number> = {};
     const dayCounts: Record<number, number> = {};
 
@@ -214,9 +201,6 @@ export class HistoricalAnalyzer {
       .map(([day, _]) => parseInt(day))
       .sort((a, b) => a - b);
 
-    console.log(`[Historical Analyzer]   Peak hours: ${peakHours.join(', ') || 'None'}`);
-    console.log(`[Historical Analyzer]   Peak days: ${peakDays.join(', ') || 'None'}`);
-
     return {
       peak_hours: peakHours,
       peak_days: peakDays,
@@ -229,8 +213,6 @@ export class HistoricalAnalyzer {
    * Generate actionable recommendations
    */
   private generateRecommendations(report: AnalysisReport): string[] {
-    console.log('[Historical Analyzer] Generating recommendations...');
-    
     const recommendations: string[] = [];
 
     // High false positive rate

@@ -1,3 +1,4 @@
+import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import { AlertDataCollector } from './collector';
@@ -7,35 +8,22 @@ import { ReportGenerator } from './reporter/report-generator';
 import { AlertRouter } from './router/alert-router';
 import { AlertSuppressor } from './suppressor/alert-suppressor';
 
-function main() {
-  console.log('='.repeat(70));
-  console.log('🤖 ADAPTIVE ALERT TUNING AGENT (AATA)');
-  console.log('='.repeat(70));
-  console.log('');
-  console.log('Smart Observability Middleware for Adaptive Microservice Monitoring');
-  console.log('');
-  console.log('='.repeat(70));
-  console.log('');
+const PORT = 3008;
 
-  // Step 1: Collect alert data
-  console.log('📊 STEP 1: Collecting Alert Data');
-  console.log('-'.repeat(70));
+// Global data storage
+let analysisData: any = null;
+
+function processAlertData() {
   const collector = new AlertDataCollector();
   const allAlerts = collector.collectAllAlerts();
   
   if (allAlerts.length === 0) {
-    console.log('');
-    console.log('❌ No alert data found!');
-    console.log('');
-    console.log('Please ensure:');
-    console.log('  1. Services are running');
-    console.log('  2. Traffic has been generated');
-    console.log('  3. Alerts have been triggered');
-    console.log('');
-    return;
+    console.log('No alert data found');
+    return null;
   }
 
   const summary = collector.generateSummary(allAlerts);
+  console.log(`Collected: ${allAlerts.length} alerts from ${Object.keys(summary.alerts_by_service).length} services`);
 
   // Create output directory
   const outputDir = path.join(__dirname, '..', 'output');
@@ -47,12 +35,7 @@ function main() {
   collector.writeCombinedAlertHistory(allAlerts, path.join(outputDir, 'combined-alert-history.json'));
   collector.writeSummary(summary, path.join(outputDir, 'alert-summary.json'));
 
-  console.log(`✅ Collected ${allAlerts.length} alerts from ${Object.keys(summary.alerts_by_service).length} services`);
-  console.log('');
-
   // Step 2: Historical Analysis
-  console.log('🔍 STEP 2: Analyzing Historical Alert Patterns');
-  console.log('-'.repeat(70));
   const analyzer = new HistoricalAnalyzer(allAlerts);
   const analysisReport = analyzer.analyze();
 
@@ -61,16 +44,7 @@ function main() {
     JSON.stringify(analysisReport, null, 2)
   );
 
-  console.log(`✅ Analysis complete`);
-  console.log(`   Time range: ${analysisReport.time_range.start}`);
-  console.log(`              to ${analysisReport.time_range.end}`);
-  console.log(`   Services: ${Object.keys(analysisReport.service_baselines).length}`);
-  console.log(`   False positive rate: ${(analysisReport.false_positive_analysis.estimated_fp_rate * 100).toFixed(1)}%`);
-  console.log('');
-
   // Step 3: Threshold Adjustment
-  console.log('⚙️  STEP 3: Calculating Adaptive Thresholds');
-  console.log('-'.repeat(70));
   const adjuster = new ThresholdAdjuster(allAlerts, analysisReport.service_baselines);
   const thresholdRecommendations = adjuster.calculateAdaptiveThresholds();
   const thresholdConfig = adjuster.exportThresholdConfig();
@@ -86,14 +60,7 @@ function main() {
     JSON.stringify(thresholdConfig, null, 2)
   );
 
-  console.log(`✅ Threshold recommendations generated`);
-  console.log(`   Recommendations: ${thresholdRecommendations.length}`);
-  console.log(`   Expected alerts saved: ~${impact.alerts_saved}`);
-  console.log('');
-
-  // Step 4: Alert Routing & Suppression
-  console.log('🚦 STEP 4: Intelligent Alert Routing');
-  console.log('-'.repeat(70));
+  // Step 4: Alert Routing
   const router = new AlertRouter();
   const { decisions: routingDecisions, summary: routingSummary } = router.routeAlerts(allAlerts);
   const routingEfficiency = router.calculateEfficiency(routingSummary);
@@ -109,14 +76,7 @@ function main() {
     JSON.stringify({ summary: routingSummary, efficiency: routingEfficiency, recommendations: routingRecommendations }, null, 2)
   );
 
-  console.log(`✅ Alert routing complete`);
-  console.log(`   Admin notifications: ${routingSummary.admin_notifications} (${(routingSummary.admin_notifications/routingSummary.total_alerts*100).toFixed(1)}%)`);
-  console.log(`   Noise reduction: ${routingEfficiency.noise_reduction_percentage.toFixed(1)}%`);
-  console.log('');
-
   // Step 5: Alert Suppression
-  console.log('🔇 STEP 5: Alert Suppression Analysis');
-  console.log('-'.repeat(70));
   const suppressor = new AlertSuppressor();
   const { suppressed, allowed, summary: suppressionSummary } = suppressor.suppressAlerts(allAlerts);
 
@@ -125,125 +85,123 @@ function main() {
     JSON.stringify({ suppressed, allowed, summary: suppressionSummary }, null, 2)
   );
 
-  console.log(`✅ Suppression analysis complete`);
-  console.log(`   Suppression rate: ${suppressionSummary.suppression_rate.toFixed(1)}%`);
-  console.log('');
-
   // Step 6: Generate Report
-  console.log('📄 STEP 6: Generating Comprehensive Report');
-  console.log('-'.repeat(70));
   ReportGenerator.generateMarkdownReport(
     analysisReport,
     thresholdRecommendations,
     path.join(outputDir, 'AATA-REPORT.md')
   );
-  console.log('✅ Report generated');
-  console.log('');
 
-  // Step 5: Display Summary
-  console.log('='.repeat(70));
-  console.log('📋 SUMMARY REPORT');
-  console.log('='.repeat(70));
-  console.log('');
-
-  console.log('📊 Alert Statistics:');
-  console.log('');
-  for (const [service, baseline] of Object.entries(analysisReport.service_baselines)) {
-    console.log(`   ${service}:`);
-    console.log(`      Total alerts: ${baseline.total_alerts}`);
-    console.log(`      False positive rate: ${(baseline.false_positive_rate * 100).toFixed(1)}%`);
-    console.log(`      Avg alert duration: ${(baseline.avg_alert_duration / 1000).toFixed(1)}s`);
-    console.log(`      Alert rate: ${baseline.alert_rate_per_hour.toFixed(2)}/hour`);
-    console.log('');
-  }
-
-  console.log('🎯 Threshold Recommendations:');
-  console.log('');
-  for (const rec of thresholdRecommendations) {
-    const arrow = rec.adjustment_percentage > 0 ? '↑' : rec.adjustment_percentage < 0 ? '↓' : '→';
-    console.log(`   ${rec.service_name} (${rec.alert_type}):`);
-    console.log(`      Current: ${rec.current_threshold} ${arrow} Recommended: ${rec.recommended_threshold}`);
-    console.log(`      Adjustment: ${rec.adjustment_percentage.toFixed(1)}% (${rec.confidence} confidence)`);
-    console.log('');
-  }
-
-  console.log('💡 Key Recommendations:');
-  console.log('');
-  for (const recommendation of analysisReport.recommendations.slice(0, 5)) {
-    console.log(`   ${recommendation}`);
-  }
-  console.log('');
-
-  console.log('📈 Expected Impact:');
-  console.log('');
-  console.log(`   Target FP Reduction: 40%`);
-  console.log(`   Estimated Alerts Saved: ~${impact.alerts_saved} alerts`);
-  console.log(`   Noise Reduction: ${impact.noise_reduction_percentage.toFixed(1)}%`);
-  console.log('');
-
-  console.log('🚦 Alert Routing Impact:');
-  console.log('');
-  console.log(`   Total Alerts: ${routingSummary.total_alerts}`);
-  console.log(`   Admin Notifications: ${routingSummary.admin_notifications} (${(routingSummary.admin_notifications/routingSummary.total_alerts*100).toFixed(1)}%)`);
-  console.log(`   Suppressed: ${routingSummary.suppressed} (${(routingSummary.suppressed/routingSummary.total_alerts*100).toFixed(1)}%)`);
-  console.log(`   Logged Only: ${routingSummary.logged} (${(routingSummary.logged/routingSummary.total_alerts*100).toFixed(1)}%)`);
-  console.log(`   Escalated: ${routingSummary.escalated}`);
-  console.log('');
-  console.log('   By Urgency:');
-  console.log(`      Critical: ${routingSummary.by_urgency.critical}`);
-  console.log(`      High: ${routingSummary.by_urgency.high}`);
-  console.log(`      Medium: ${routingSummary.by_urgency.medium}`);
-  console.log(`      Low: ${routingSummary.by_urgency.low}`);
-  console.log('');
-
-  console.log('💡 Routing Recommendations:');
-  console.log('');
-  for (const rec of routingRecommendations) {
-    console.log(`   ${rec}`);
-  }
-  console.log('');
-
-  console.log('='.repeat(70));
-  console.log('✅ AATA ANALYSIS COMPLETE!');
-  console.log('='.repeat(70));
-  console.log('');
-  console.log('📁 Output files generated in ./output/:');
-  console.log('   ✓ combined-alert-history.json     - Raw alert data');
-  console.log('   ✓ alert-summary.json               - Alert statistics');
-  console.log('   ✓ analysis-report.json             - Detailed analysis');
-  console.log('   ✓ threshold-recommendations.json   - Threshold adjustments');
-  console.log('   ✓ adaptive-threshold-config.json   - Ready-to-use config');
-  console.log('   ✓ alert-routing-decisions.json     - Routing decisions');
-  console.log('   ✓ routing-summary.json             - Routing analysis');
-  console.log('   ✓ suppression-analysis.json        - Suppression analysis');
-  console.log('   ✓ AATA-REPORT.md                   - Human-readable report');
-  console.log('');
-  console.log('🎯 Key Achievement:');
-  console.log('');
-  console.log(`   ✅ Only ${routingSummary.admin_notifications} of ${routingSummary.total_alerts} alerts (${(routingSummary.admin_notifications/routingSummary.total_alerts*100).toFixed(1)}%) require admin attention`);
-  console.log(`   ✅ ${routingEfficiency.admin_alert_reduction_percentage.toFixed(1)}% reduction in admin notifications`);
-  console.log(`   ✅ Intelligent routing ensures only urgent situations reach admins`);
-  console.log('');
-  console.log('📖 Next Steps:');
-  console.log('   1. Review AATA-REPORT.md for detailed insights');
-  console.log('   2. Review alert-routing-decisions.json for routing policies');
-  console.log('   3. Validate threshold recommendations');
-  console.log('   4. Apply adaptive thresholds to services');
-  console.log('   5. Configure notification channels (email, SMS, Slack)');
-  console.log('   6. Monitor impact for 24-48 hours');
-  console.log('   7. Re-run AATA to validate improvements');
-  console.log('');
-  console.log('='.repeat(70));
+  // Return all data for API
+  return {
+    summary: {
+      total_alerts: allAlerts.length,
+      services_count: Object.keys(summary.alerts_by_service).length,
+      false_positive_rate: (analysisReport.false_positive_analysis.estimated_fp_rate * 100).toFixed(1),
+      recommendations_count: thresholdRecommendations.length,
+      alerts_saved: impact.alerts_saved,
+      noise_reduction: routingEfficiency.noise_reduction_percentage.toFixed(1),
+      admin_notifications: routingSummary.admin_notifications,
+      admin_notification_percentage: (routingSummary.admin_notifications/routingSummary.total_alerts*100).toFixed(1),
+      suppression_rate: suppressionSummary.suppression_rate.toFixed(1)
+    },
+    alerts: allAlerts,
+    alert_summary: summary,
+    analysis_report: analysisReport,
+    threshold_recommendations: thresholdRecommendations,
+    threshold_config: thresholdConfig,
+    impact: impact,
+    routing_decisions: routingDecisions,
+    routing_summary: routingSummary,
+    routing_efficiency: routingEfficiency,
+    routing_recommendations: routingRecommendations,
+    suppression_summary: suppressionSummary,
+    suppressed_alerts: suppressed,
+    allowed_alerts: allowed
+  };
 }
 
-// Run the AATA
-try {
-  main();
-} catch (error) {
-  console.error('');
-  console.error('❌ AATA encountered an error:');
-  console.error('');
-  console.error(error);
-  console.error('');
-  process.exit(1);
-}
+// HTTP Server
+const server = http.createServer((req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  if (req.url === '/' || req.url === '/api/analysis') {
+    if (!analysisData) {
+      res.writeHead(503);
+      res.end(JSON.stringify({ error: 'Analysis not yet complete. Please wait.' }));
+      return;
+    }
+    res.writeHead(200);
+    res.end(JSON.stringify(analysisData, null, 2));
+  } else if (req.url === '/api/summary') {
+    if (!analysisData) {
+      res.writeHead(503);
+      res.end(JSON.stringify({ error: 'Analysis not yet complete. Please wait.' }));
+      return;
+    }
+    res.writeHead(200);
+    res.end(JSON.stringify(analysisData.summary, null, 2));
+  } else if (req.url === '/api/alerts') {
+    if (!analysisData) {
+      res.writeHead(503);
+      res.end(JSON.stringify({ error: 'Analysis not yet complete. Please wait.' }));
+      return;
+    }
+    res.writeHead(200);
+    res.end(JSON.stringify(analysisData.alerts, null, 2));
+  } else if (req.url === '/api/recommendations') {
+    if (!analysisData) {
+      res.writeHead(503);
+      res.end(JSON.stringify({ error: 'Analysis not yet complete. Please wait.' }));
+      return;
+    }
+    res.writeHead(200);
+    res.end(JSON.stringify(analysisData.threshold_recommendations, null, 2));
+  } else if (req.url === '/api/routing') {
+    if (!analysisData) {
+      res.writeHead(503);
+      res.end(JSON.stringify({ error: 'Analysis not yet complete. Please wait.' }));
+      return;
+    }
+    res.writeHead(200);
+    res.end(JSON.stringify({
+      decisions: analysisData.routing_decisions,
+      summary: analysisData.routing_summary,
+      efficiency: analysisData.routing_efficiency,
+      recommendations: analysisData.routing_recommendations
+    }, null, 2));
+  } else if (req.url === '/api/health') {
+    res.writeHead(200);
+    res.end(JSON.stringify({ status: 'ok', port: PORT }));
+  } else {
+    res.writeHead(404);
+    res.end(JSON.stringify({ 
+      error: 'Not found',
+      available_endpoints: [
+        '/api/health',
+        '/api/analysis',
+        '/api/summary',
+        '/api/alerts',
+        '/api/recommendations',
+        '/api/routing'
+      ]
+    }));
+  }
+});
+
+// Start server
+server.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+  console.log(`API: http://localhost:${PORT}/api/analysis`);
+  
+  // Process data after server starts
+  try {
+    analysisData = processAlertData();
+    if (analysisData) {
+      console.log('Ready');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+});

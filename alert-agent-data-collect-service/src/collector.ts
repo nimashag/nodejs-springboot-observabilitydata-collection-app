@@ -23,7 +23,7 @@ export class AlertDataCollector {
     const fullPath = path.resolve(collectorDir, filePath);
     
     if (!fs.existsSync(fullPath)) {
-      console.log(`[Collector] Alert file not found for ${serviceName}: ${fullPath}`);
+      console.log(`${serviceName}: file not found`);
       return [];
     }
     
@@ -37,14 +37,14 @@ export class AlertDataCollector {
           const event = JSON.parse(line) as AlertEvent;
           events.push(event);
         } catch (err) {
-          console.error(`[Collector] Failed to parse line in ${serviceName}: ${err}`);
+          console.error(`${serviceName}: parse error`);
         }
       }
       
-      console.log(`[Collector] Read ${events.length} alert events from ${serviceName}`);
+      console.log(`${serviceName}: ${events.length} alerts`);
       return events;
     } catch (err) {
-      console.error(`[Collector] Failed to read ${serviceName} alert file: ${err}`);
+      console.error(`${serviceName}: read error`);
       return [];
     }
   }
@@ -70,8 +70,6 @@ export class AlertDataCollector {
    * Collect and merge alert data from all services
    */
   public collectAllAlerts(): NormalizedAlertEvent[] {
-    console.log('[Collector] Starting alert data collection...');
-    
     const allAlerts: NormalizedAlertEvent[] = [];
     
     for (const [serviceName, filePath] of this.serviceAlertFiles.entries()) {
@@ -87,7 +85,7 @@ export class AlertDataCollector {
     // Sort by timestamp (oldest first)
     allAlerts.sort((a, b) => a.normalized_timestamp - b.normalized_timestamp);
     
-    console.log(`[Collector] Total alerts collected: ${allAlerts.length}`);
+    console.log(`Total alerts: ${allAlerts.length}`);
     return allAlerts;
   }
   
@@ -139,10 +137,8 @@ export class AlertDataCollector {
       // Write as JSON array
       const json = JSON.stringify(alerts, null, 2);
       fs.writeFileSync(outputPath, json, 'utf-8');
-      
-      console.log(`[Collector] Combined alert history written to: ${outputPath}`);
     } catch (err) {
-      console.error(`[Collector] Failed to write combined alert history: ${err}`);
+      console.error(`Failed to write alert history: ${err}`);
     }
   }
   
@@ -153,10 +149,8 @@ export class AlertDataCollector {
     try {
       const json = JSON.stringify(summary, null, 2);
       fs.writeFileSync(outputPath, json, 'utf-8');
-      
-      console.log(`[Collector] Summary written to: ${outputPath}`);
     } catch (err) {
-      console.error(`[Collector] Failed to write summary: ${err}`);
+      console.error(`Failed to write summary: ${err}`);
     }
   }
 }
