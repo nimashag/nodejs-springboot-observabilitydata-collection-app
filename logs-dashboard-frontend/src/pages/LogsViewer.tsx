@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { queryLogs, getTemplates } from '../api/logAggregationApi';
 import type { StructuredLog, LogQueryParams, LogTemplate } from '../types/logAggregation.types';
-import LogFilters from '../components/logs/LogFilters';
-import LogCard from '../components/logs/LogCard';
-import LogDetailModal from '../components/logs/LogDetailModal';
+import LogFilters from '../components/logComponents/LogFilters';
+import LogCard from '../components/logComponents/LogCard';
+import LogDetailModal from '../components/logComponents/LogDetailModal';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,

@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getTrace, getRootCause } from '../api/logAggregationApi';
 import type { StructuredLog, RootCauseAnalysis } from '../types/logAggregation.types';
-import LogCard from '../components/logs/LogCard';
-import LogDetailModal from '../components/logs/LogDetailModal';
+import LogCard from '../components/logComponents/LogCard';
+import LogDetailModal from '../components/logComponents/LogDetailModal';
 import { format } from 'date-fns';
 
 export default function TraceView() {

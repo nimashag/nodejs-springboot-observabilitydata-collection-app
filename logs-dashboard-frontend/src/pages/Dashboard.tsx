@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { queryLogs } from '../api/logAggregationApi';
 import type { StructuredLog } from '../types/logAggregation.types';
-import LogCard from '../components/logs/LogCard';
-import LogDetailModal from '../components/logs/LogDetailModal';
+import LogCard from '../components/logComponents/LogCard';
+import LogDetailModal from '../components/logComponents/LogDetailModal';
 import {
   DocumentTextIcon,
   ExclamationTriangleIcon,

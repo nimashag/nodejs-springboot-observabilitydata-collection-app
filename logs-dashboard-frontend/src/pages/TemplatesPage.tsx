@@ -30,9 +30,8 @@ export default function TemplatesPage() {
   const [allTemplates, setAllTemplates] = useState<LogTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [mining, setMining] = useState(false);
-  const [selectedService, setSelectedService] = useState<string>('');
+  const [selectedFrequencyRange, setSelectedFrequencyRange] = useState<string>('');
   const [selectedEventType, setSelectedEventType] = useState<string>('');
-  const [services, setServices] = useState<string[]>([]);
   const [eventTypes, setEventTypes] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -47,7 +46,7 @@ export default function TemplatesPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
-  }, [selectedService, selectedEventType]);
+  }, [selectedFrequencyRange, selectedEventType]);
 
   const loadTemplates = async () => {
     try {
@@ -57,12 +56,6 @@ export default function TemplatesPage() {
       const data = await getTemplates();
       setAllTemplates(data || []);
       
-      // Extract unique services
-      const uniqueServices = Array.from(
-        new Set(data.map((t) => t.service).filter((s): s is string => Boolean(s)))
-      ).sort();
-      setServices(uniqueServices);
-
       // Extract unique event types
       const uniqueEventTypes = Array.from(
         new Set(data.map((t) => t.eventType).filter((s): s is string => Boolean(s)))
@@ -73,7 +66,6 @@ export default function TemplatesPage() {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to load templates';
       setError(errorMessage);
       setAllTemplates([]);
-      setServices([]);
       setEventTypes([]);
     } finally {
       setLoading(false);
@@ -84,8 +76,24 @@ export default function TemplatesPage() {
   const filteredTemplates = useMemo(() => {
     let filtered = [...allTemplates];
 
-    if (selectedService) {
-      filtered = filtered.filter((t) => t.service === selectedService);
+    if (selectedFrequencyRange) {
+      switch (selectedFrequencyRange) {
+        case 'very-high':
+          filtered = filtered.filter((t) => t.frequency >= 1000);
+          break;
+        case 'high':
+          filtered = filtered.filter((t) => t.frequency >= 500 && t.frequency < 1000);
+          break;
+        case 'medium':
+          filtered = filtered.filter((t) => t.frequency >= 100 && t.frequency < 500);
+          break;
+        case 'low':
+          filtered = filtered.filter((t) => t.frequency >= 10 && t.frequency < 100);
+          break;
+        case 'very-low':
+          filtered = filtered.filter((t) => t.frequency < 10);
+          break;
+      }
     }
 
     if (selectedEventType) {
@@ -93,7 +101,7 @@ export default function TemplatesPage() {
     }
 
     return filtered;
-  }, [allTemplates, selectedService, selectedEventType]);
+  }, [allTemplates, selectedFrequencyRange, selectedEventType]);
 
   // Paginate filtered templates
   const paginatedTemplates = useMemo(() => {
@@ -196,19 +204,19 @@ export default function TemplatesPage() {
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Filter by Service
+            Filter by Frequency
           </label>
           <select
-            value={selectedService}
-            onChange={(e) => setSelectedService(e.target.value)}
+            value={selectedFrequencyRange}
+            onChange={(e) => setSelectedFrequencyRange(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">All Services</option>
-            {services.map((service) => (
-              <option key={service} value={service}>
-                {service}
-              </option>
-            ))}
+            <option value="">All Frequencies</option>
+            <option value="very-high">Very High (≥1000)</option>
+            <option value="high">High (500-999)</option>
+            <option value="medium">Medium (100-499)</option>
+            <option value="low">Low (10-99)</option>
+            <option value="very-low">Very Low (&lt;10)</option>
           </select>
         </div>
 
@@ -267,10 +275,10 @@ export default function TemplatesPage() {
             'No templates found'
           )}
         </div>
-        {(selectedService || selectedEventType) && (
+        {(selectedFrequencyRange || selectedEventType) && (
           <button
             onClick={() => {
-              setSelectedService('');
+              setSelectedFrequencyRange('');
               setSelectedEventType('');
             }}
             className="text-sm text-blue-600 hover:text-blue-700"
@@ -453,32 +461,34 @@ export default function TemplatesPage() {
                       {template.metadata && (
                         <div>
                           <p className="text-sm font-semibold text-gray-700 mb-2">Metadata</p>
-                          <div className="bg-gray-50 p-3 rounded space-y-2">
-                            {template.metadata.avgLength !== undefined && (
-                              <div className="flex justify-between text-xs">
-                                <span className="text-gray-600 font-medium">Average Length:</span>
-                                <span className="text-gray-900">{template.metadata.avgLength}</span>
-                              </div>
-                            )}
-                            {template.metadata.parameterCount !== undefined && (
-                              <div className="flex justify-between text-xs">
-                                <span className="text-gray-600 font-medium">Parameter Count:</span>
-                                <span className="text-gray-900">{template.metadata.parameterCount}</span>
-                              </div>
-                            )}
-                            {template.metadata.parameterTypes && Object.keys(template.metadata.parameterTypes).length > 0 && (
-                              <div className="text-xs">
-                                <span className="text-gray-600 font-medium">Parameter Types:</span>
-                                <div className="mt-1 space-y-1">
-                                  {Object.entries(template.metadata.parameterTypes).map(([param, type]) => (
-                                    <div key={param} className="flex justify-between pl-4">
-                                      <span className="text-gray-600 font-mono">{param}:</span>
-                                      <span className="text-gray-900">{type}</span>
-                                    </div>
-                                  ))}
+                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div className="space-y-3">
+                              {template.metadata.avgLength !== undefined && (
+                                <div className="flex items-center">
+                                  <span className="text-xs text-gray-600 font-medium w-32 flex-shrink-0">Average Length:</span>
+                                  <span className="text-xs text-gray-900 font-semibold">{template.metadata.avgLength}</span>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                              {template.metadata.parameterCount !== undefined && (
+                                <div className="flex items-center">
+                                  <span className="text-xs text-gray-600 font-medium w-32 flex-shrink-0">Parameter Count:</span>
+                                  <span className="text-xs text-gray-900 font-semibold">{template.metadata.parameterCount}</span>
+                                </div>
+                              )}
+                              {template.metadata.parameterTypes && Object.keys(template.metadata.parameterTypes).length > 0 && (
+                                <div>
+                                  <div className="text-xs text-gray-600 font-medium mb-2">Parameter Types:</div>
+                                  <div className="space-y-2 pl-4 border-l-2 border-gray-300">
+                                    {Object.entries(template.metadata.parameterTypes).map(([param, type]) => (
+                                      <div key={param} className="flex items-center">
+                                        <span className="text-xs text-gray-600 font-mono font-medium w-24 flex-shrink-0">{param}:</span>
+                                        <span className="text-xs text-gray-900 bg-white px-2 py-1 rounded border border-gray-200">{type}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}
