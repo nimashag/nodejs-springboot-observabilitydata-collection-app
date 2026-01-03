@@ -45,7 +45,7 @@ const AlertData = () => {
       const alertsArray = response.data || response.alerts || (Array.isArray(response) ? response : [])
       
       // Sort by timestamp in descending order (most recent first)
-      const sortedAlerts = alertsArray.sort((a, b) => {
+      const sortedAlerts = alertsArray.sort((a: Alert, b: Alert) => {
         const dateA = new Date(a.timestamp).getTime()
         const dateB = new Date(b.timestamp).getTime()
         return dateB - dateA // Descending order

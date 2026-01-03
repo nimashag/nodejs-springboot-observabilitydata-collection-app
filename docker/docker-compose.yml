@@ -6,6 +6,12 @@ services:
     container_name: frontend-service
     ports:
       - "30000:80"
+    environment:
+      - VITE_API_BASE=http://localhost:31000
+      - VITE_USER_URL=http://localhost:31000
+      - VITE_RESTAURANT_URL=http://localhost:31000
+      - VITE_ORDER_URL=http://localhost:31000
+      - VITE_DELIVERY_URL=http://localhost:31000
     networks:
       - app-network
     restart: unless-stopped
@@ -68,6 +74,45 @@ services:
       - app-network
     restart: unless-stopped
 
+  alert-agent-data-collect-service:
+    image: my-app/alert-agent-data-collect-service:latest
+    container_name: alert-agent-data-collect-service
+    ports:
+      - "31008:3008"
+    volumes:
+      - ..:/project:ro
+    working_dir: /project/alert-agent-data-collect-service
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  alert-dashboard-frontend:
+    image: my-app/alert-dashboard-frontend:latest
+    container_name: alert-dashboard-frontend
+    ports:
+      - "30009:80"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  log-aggregation-service:
+    image: my-app/log-aggregation-service:latest
+    container_name: log-aggregation-service
+    ports:
+      - "31005:3005"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  logs-dashboard-frontend:
+    image: my-app/logs-dashboard-frontend:latest
+    container_name: logs-dashboard-frontend
+    ports:
+      - "30010:80"
+    networks:
+      - app-network
+    restart: unless-stopped
+
   nginx-gateway:
     image: nginx:alpine
     container_name: nginx-gateway
@@ -81,6 +126,10 @@ services:
       - orders-service
       - users-service
       - delivery-service
+      - alert-agent-data-collect-service
+      - alert-dashboard-frontend
+      - log-aggregation-service
+      - logs-dashboard-frontend
     networks:
       - app-network
     restart: unless-stopped

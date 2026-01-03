@@ -39,6 +39,38 @@
       "port": 3004,
       "dockerImage": "my-app/delivery-service:latest",
       "k8sPath": "k8s/delivery-service"
+    },
+    {
+      "name": "alert-agent-data-collect-service",
+      "prefix": "alert-agent",
+      "folder": "alert-agent-data-collect-service",
+      "port": 3008,
+      "dockerImage": "my-app/alert-agent-data-collect-service:latest",
+      "k8sPath": ""
+    },
+    {
+      "name": "alert-dashboard-frontend",
+      "prefix": "alert-dashboard",
+      "folder": "alert-dashboard-frontend",
+      "port": 80,
+      "dockerImage": "my-app/alert-dashboard-frontend:latest",
+      "k8sPath": ""
+    },
+    {
+      "name": "log-aggregation-service",
+      "prefix": "log-aggregation",
+      "folder": "log-aggregation-service",
+      "port": 3005,
+      "dockerImage": "my-app/log-aggregation-service:latest",
+      "k8sPath": ""
+    },
+    {
+      "name": "logs-dashboard-frontend",
+      "prefix": "logs-dashboard",
+      "folder": "logs-dashboard-frontend",
+      "port": 80,
+      "dockerImage": "my-app/logs-dashboard-frontend:latest",
+      "k8sPath": ""
     }
   ],
   "nginx": {
