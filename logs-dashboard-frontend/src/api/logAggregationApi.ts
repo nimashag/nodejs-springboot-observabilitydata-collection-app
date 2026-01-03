@@ -20,8 +20,8 @@ function getApiBaseUrl(): string {
   }
 
   // Get current hostname and protocol from the browser
-  const { protocol, hostname, port } = window.location;
-
+  const { protocol, hostname } = window.location;
+  
   // For local development, use direct service port
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:3005';
@@ -29,8 +29,15 @@ function getApiBaseUrl(): string {
 
   // For remote deployments (EC2, etc.), use nginx gateway on the same host
   // Use port 31000 (nginx gateway) on the same hostname
+  // Always use http (not https) for the API gateway
+  const apiProtocol = protocol === 'https:' ? 'https:' : 'http:';
   const nginxPort = '31000';
-  return `${protocol}//${hostname}:${nginxPort}`;
+  const apiUrl = `${apiProtocol}//${hostname}:${nginxPort}`;
+  
+  // Debug logging (remove in production if needed)
+  console.log('[LogAggregationAPI] Detected hostname:', hostname, 'Using API URL:', apiUrl);
+  
+  return apiUrl;
 }
 
 const API_BASE_URL = getApiBaseUrl();
