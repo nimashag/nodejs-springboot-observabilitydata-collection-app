@@ -15,9 +15,9 @@ import type {
 // This works for both local development and remote deployments (EC2, etc.)
 function getApiBaseUrl(): string {
   // If explicitly set via environment variable, use it
-  if (import.meta.env.VITE_LOG_AGGREGATION_API_URL) {
-    return import.meta.env.VITE_LOG_AGGREGATION_API_URL;
-  }
+  // if (import.meta.env.VITE_LOG_AGGREGATION_API_URL) {
+  //   return import.meta.env.VITE_LOG_AGGREGATION_API_URL;
+  // }
 
   // Get current hostname and protocol from the browser
   const { protocol, hostname } = window.location;
