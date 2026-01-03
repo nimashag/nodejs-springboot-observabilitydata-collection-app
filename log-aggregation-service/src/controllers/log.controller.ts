@@ -22,6 +22,7 @@ export class LogController {
         endTime,
         event,
         templateId,
+        piiRedacted,
         limit,
         offset,
       } = req.query;
@@ -34,6 +35,7 @@ export class LogController {
         endTime: endTime as string | undefined,
         event: event as string | undefined,
         templateId: templateId as string | undefined,
+        piiRedacted: piiRedacted === 'true' ? true : piiRedacted === 'false' ? false : undefined,
         limit: limit ? parseInt(limit as string, 10) : undefined,
         offset: offset ? parseInt(offset as string, 10) : undefined,
       };

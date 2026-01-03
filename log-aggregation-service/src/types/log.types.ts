@@ -40,6 +40,7 @@ export interface LogQuery {
   endTime?: string;
   event?: string;
   templateId?: string;
+  piiRedacted?: boolean;
   limit?: number;
   offset?: number;
 }

@@ -199,6 +199,7 @@ export class TraceCorrelator {
     endTime?: string;
     event?: string;
     templateId?: string;
+    piiRedacted?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<{ logs: StructuredLog[]; totalCount: number }> {
@@ -238,6 +239,12 @@ export class TraceCorrelator {
     if (query.templateId) {
       logs = logs.filter(log => 
         log.metadata?.matchedTemplateId === query.templateId
+      );
+    }
+
+    if (query.piiRedacted !== undefined) {
+      logs = logs.filter(log => 
+        query.piiRedacted ? log.piiRedacted === true : log.piiRedacted !== true
       );
     }
 

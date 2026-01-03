@@ -12,9 +12,16 @@ export default function LogFilters({ filters, onFiltersChange, services, templat
   const [localFilters, setLocalFilters] = useState<LogQueryParams>(filters);
 
   const handleChange = (key: keyof LogQueryParams, value: any) => {
-    const newFilters = { ...localFilters, [key]: value || undefined };
-    setLocalFilters(newFilters);
-    onFiltersChange(newFilters);
+    // Handle boolean values for piiRedacted
+    if (key === 'piiRedacted') {
+      const newFilters = { ...localFilters, [key]: value === '' ? undefined : value === 'true' };
+      setLocalFilters(newFilters);
+      onFiltersChange(newFilters);
+    } else {
+      const newFilters = { ...localFilters, [key]: value || undefined };
+      setLocalFilters(newFilters);
+      onFiltersChange(newFilters);
+    }
   };
 
   const clearFilters = () => {
@@ -36,7 +43,7 @@ export default function LogFilters({ filters, onFiltersChange, services, templat
           Clear All
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">Service</label>
           <select
@@ -112,6 +119,19 @@ export default function LogFilters({ filters, onFiltersChange, services, templat
             placeholder="Filter by trace ID..."
             className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1">PII Redacted</label>
+          <select
+            value={localFilters.piiRedacted === undefined ? '' : localFilters.piiRedacted ? 'true' : 'false'}
+            onChange={(e) => handleChange('piiRedacted', e.target.value)}
+            className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">All Logs</option>
+            <option value="true">PII Redacted Only</option>
+            <option value="false">Not PII Redacted</option>
+          </select>
         </div>
       </div>
     </div>

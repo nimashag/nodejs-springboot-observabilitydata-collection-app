@@ -28,6 +28,7 @@ export default function LogsViewer() {
     event: searchParams.get('event') || undefined,
     traceId: searchParams.get('traceId') || undefined,
     templateId: searchParams.get('templateId') || undefined,
+    piiRedacted: searchParams.get('piiRedacted') === 'true' ? true : searchParams.get('piiRedacted') === 'false' ? false : undefined,
     limit: initialPageSize,
   });
   const [services, setServices] = useState<string[]>([]);
@@ -60,6 +61,7 @@ export default function LogsViewer() {
         event: undefined,
         traceId: undefined,
         templateId: undefined,
+        piiRedacted: undefined,
       });
       const uniqueServices = Array.from(
         new Set(response.logs.map((log) => log.service).filter(Boolean))
@@ -76,6 +78,7 @@ export default function LogsViewer() {
           event: undefined,
           traceId: undefined,
           templateId: undefined,
+          piiRedacted: undefined,
         });
         const uniqueServices = Array.from(
           new Set(fallbackResponse.logs.map((log) => log.service).filter(Boolean))
@@ -111,8 +114,13 @@ export default function LogsViewer() {
       // Update URL params
       const newParams = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value && key !== 'limit' && key !== 'offset') {
-          newParams.set(key, value.toString());
+        if (value !== undefined && value !== null && key !== 'limit' && key !== 'offset') {
+          // Handle boolean values
+          if (typeof value === 'boolean') {
+            newParams.set(key, value.toString());
+          } else {
+            newParams.set(key, value.toString());
+          }
         }
       });
       newParams.set('page', page.toString());
