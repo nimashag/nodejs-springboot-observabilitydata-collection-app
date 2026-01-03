@@ -11,9 +11,29 @@ import type {
   TemplateMatchResponse,
 } from '../types/logAggregation.types';
 
-// Default to nginx gateway URL for Docker deployments (http://localhost:31000)
-// For local development, set VITE_LOG_AGGREGATION_API_URL=http://localhost:3005
-const API_BASE_URL = import.meta.env.VITE_LOG_AGGREGATION_API_URL || 'http://localhost:31000';
+// Dynamically determine API base URL based on current hostname
+// This works for both local development and remote deployments (EC2, etc.)
+function getApiBaseUrl(): string {
+  // If explicitly set via environment variable, use it
+  if (import.meta.env.VITE_LOG_AGGREGATION_API_URL) {
+    return import.meta.env.VITE_LOG_AGGREGATION_API_URL;
+  }
+
+  // Get current hostname and protocol from the browser
+  const { protocol, hostname, port } = window.location;
+
+  // For local development, use direct service port
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3005';
+  }
+
+  // For remote deployments (EC2, etc.), use nginx gateway on the same host
+  // Use port 31000 (nginx gateway) on the same hostname
+  const nginxPort = '31000';
+  return `${protocol}//${hostname}:${nginxPort}`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,

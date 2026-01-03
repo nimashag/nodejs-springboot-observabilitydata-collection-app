@@ -6,12 +6,6 @@ services:
     container_name: frontend-service
     ports:
       - "30000:80"
-    environment:
-      - VITE_API_BASE=http://localhost:31000
-      - VITE_USER_URL=http://localhost:31000
-      - VITE_RESTAURANT_URL=http://localhost:31000
-      - VITE_ORDER_URL=http://localhost:31000
-      - VITE_DELIVERY_URL=http://localhost:31000
     networks:
       - app-network
     restart: unless-stopped
@@ -28,6 +22,7 @@ services:
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
     volumes:
       - uploads-data:/app/uploads
+      - ~/temp/docker-files/restaurants-service/logs:/app/logs
     networks:
       - app-network
     restart: unless-stopped
@@ -42,6 +37,8 @@ services:
       - ORDERS_SERVICE_URL=http://orders-service:3002/api/orders
       - USERS_SERVICE_URL=http://users-service:3003/api/restaurants
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
+    volumes:
+      - ~/temp/docker-files/orders-service/logs:/app/logs
     networks:
       - app-network
     restart: unless-stopped
@@ -56,6 +53,8 @@ services:
       - ORDERS_SERVICE_URL=http://orders-service:3002/api/orders
       - USERS_SERVICE_URL=http://users-service:3003/api/restaurants
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
+    volumes:
+      - ~/temp/docker-files/users-service/logs:/app/logs
     networks:
       - app-network
     restart: unless-stopped
@@ -70,6 +69,8 @@ services:
       - ORDERS_SERVICE_URL=http://orders-service:3002/api/orders
       - USERS_SERVICE_URL=http://users-service:3003/api/restaurants
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
+    volumes:
+      - ~/temp/docker-files/delivery-service/logs:/app/logs
     networks:
       - app-network
     restart: unless-stopped
@@ -100,6 +101,17 @@ services:
     container_name: log-aggregation-service
     ports:
       - "31005:3005"
+    environment:
+      - DELIVERY_SERVICE_LOG_PATH=/app/service-logs/delivery-service
+      - ORDERS_SERVICE_LOG_PATH=/app/service-logs/orders-service
+      - RESTAURANTS_SERVICE_LOG_PATH=/app/service-logs/restaurants-service
+      - USERS_SERVICE_LOG_PATH=/app/service-logs/users-service
+    volumes:
+      - ~/temp/docker-files/log-aggregation-service/aggregated-logs:/app/aggregated-logs
+      - ~/temp/docker-files/delivery-service/logs:/app/service-logs/delivery-service:ro
+      - ~/temp/docker-files/orders-service/logs:/app/service-logs/orders-service:ro
+      - ~/temp/docker-files/restaurants-service/logs:/app/service-logs/restaurants-service:ro
+      - ~/temp/docker-files/users-service/logs:/app/service-logs/users-service:ro
     networks:
       - app-network
     restart: unless-stopped
