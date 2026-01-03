@@ -1,15 +1,15 @@
 {
-  "generated_at": 1767427757231,
+  "generated_at": 1767459838526,
   "discovery_report": {
-    "generated_at": 1767427750525,
+    "generated_at": 1767459831780,
     "services": [
       {
         "service": "orders-service",
         "snapshot": {
-          "total_requests": 4,
+          "total_requests": 1,
           "total_errors": 0,
-          "avg_latency_ms": 2,
-          "rss_mb": 76,
+          "avg_latency_ms": 7,
+          "rss_mb": 52,
           "heap_used_mb": 27,
           "heap_used_mb_java": 27
         },
@@ -22,10 +22,10 @@
       {
         "service": "restaurants-service",
         "snapshot": {
-          "total_requests": 4,
+          "total_requests": 1,
           "total_errors": 0,
-          "avg_latency_ms": 2,
-          "rss_mb": 73,
+          "avg_latency_ms": 6,
+          "rss_mb": 52,
           "heap_used_mb": 24,
           "heap_used_mb_java": 24
         },
@@ -38,12 +38,12 @@
       {
         "service": "delivery-service",
         "snapshot": {
-          "total_requests": 4,
+          "total_requests": 1,
           "total_errors": 0,
-          "avg_latency_ms": 2,
-          "rss_mb": 77,
-          "heap_used_mb": 27,
-          "heap_used_mb_java": 27
+          "avg_latency_ms": 6,
+          "rss_mb": 51,
+          "heap_used_mb": 28,
+          "heap_used_mb_java": 28
         },
         "discovered": {
           "top_routes": [],
@@ -54,12 +54,12 @@
       {
         "service": "users-service",
         "snapshot": {
-          "total_requests": 4,
+          "total_requests": 1,
           "total_errors": 0,
-          "avg_latency_ms": 10,
-          "rss_mb": 242,
-          "heap_used_mb": 32,
-          "heap_used_mb_java": 32
+          "avg_latency_ms": 48,
+          "rss_mb": 251,
+          "heap_used_mb": 38,
+          "heap_used_mb_java": 38
         },
         "discovered": {
           "top_routes": [],
@@ -70,7 +70,7 @@
     ]
   },
   "signals_report": {
-    "generated_at": 1767427757165,
+    "generated_at": 1767459838455,
     "samples": 5,
     "signals": []
   }

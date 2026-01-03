@@ -1,10 +1,10 @@
 {
-  "generated_at": 1767427750885,
+  "generated_at": 1767459832147,
   "results": [
     {
       "service": "orders-service",
       "url": "http://localhost:3002/api/orders/telemetry",
-      "checked_at": 1767427750635,
+      "checked_at": 1767459831891,
       "missing_kpis": [],
       "coverage": {
         "latency_avg": true,
@@ -20,7 +20,7 @@
     {
       "service": "restaurants-service",
       "url": "http://localhost:3001/api/restaurants/telemetry",
-      "checked_at": 1767427750639,
+      "checked_at": 1767459831896,
       "missing_kpis": [],
       "coverage": {
         "latency_avg": true,
@@ -36,7 +36,7 @@
     {
       "service": "delivery-service",
       "url": "http://localhost:3004/api/delivery/telemetry",
-      "checked_at": 1767427750643,
+      "checked_at": 1767459831899,
       "missing_kpis": [],
       "coverage": {
         "latency_avg": true,
@@ -52,7 +52,7 @@
     {
       "service": "users-service",
       "url": "http://localhost:3003/telemetry",
-      "checked_at": 1767427750884,
+      "checked_at": 1767459832147,
       "missing_kpis": [],
       "coverage": {
         "latency_avg": true,
