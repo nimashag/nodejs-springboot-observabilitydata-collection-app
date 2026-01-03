@@ -189,6 +189,7 @@ export class TraceCorrelator {
 
   /**
    * Query logs with filters
+   * Returns both the paginated logs and the total count
    */
   async queryLogs(query: {
     traceId?: string;
@@ -197,9 +198,11 @@ export class TraceCorrelator {
     startTime?: string;
     endTime?: string;
     event?: string;
+    templateId?: string;
+    piiRedacted?: boolean;
     limit?: number;
     offset?: number;
-  }): Promise<StructuredLog[]> {
+  }): Promise<{ logs: StructuredLog[]; totalCount: number }> {
     let logs = await this.loadLogsFromFiles();
 
     // Apply filters
@@ -216,7 +219,7 @@ export class TraceCorrelator {
     }
 
     if (query.level) {
-      logs = logs.filter(log => log.level === query.level);
+      logs = logs.filter(log => log.level.toLowerCase() === query.level?.toLowerCase());
     }
 
     if (query.startTime) {
@@ -233,16 +236,32 @@ export class TraceCorrelator {
       logs = logs.filter(log => log.event.includes(query.event!));
     }
 
+    if (query.templateId) {
+      logs = logs.filter(log => 
+        log.metadata?.matchedTemplateId === query.templateId
+      );
+    }
+
+    if (query.piiRedacted !== undefined) {
+      logs = logs.filter(log => 
+        query.piiRedacted ? log.piiRedacted === true : log.piiRedacted !== true
+      );
+    }
+
     // Sort by timestamp (newest first)
     logs.sort((a, b) => 
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
+    // Get total count before pagination
+    const totalCount = logs.length;
+
     // Apply pagination
     const offset = query.offset || 0;
     const limit = query.limit || 100;
+    const paginatedLogs = logs.slice(offset, offset + limit);
 
-    return logs.slice(offset, offset + limit);
+    return { logs: paginatedLogs, totalCount };
   }
 
   /**
