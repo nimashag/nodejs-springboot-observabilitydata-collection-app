@@ -1,21 +1,22 @@
 FROM node:18-alpine
 
-WORKDIR /app
+WORKDIR /project/alert-agent-data-collect-service
 
 # Copy package files
 COPY package*.json ./
+COPY tsconfig.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 # Copy source code
-COPY . .
+COPY src ./src
 
 # Build TypeScript
 RUN npm run build
 
 # Expose port
-EXPOSE 3005
+EXPOSE 3008
 
 # Start service
 CMD ["npm", "start"]
