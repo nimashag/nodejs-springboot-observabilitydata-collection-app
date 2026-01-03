@@ -149,6 +149,7 @@ export class TraceCorrelator {
 
   /**
    * Load logs from aggregated log files
+   * Loads only the latest file (most recent run) since each run processes all logs from service files
    */
   private async loadLogsFromFiles(): Promise<StructuredLog[]> {
     const logs: StructuredLog[] = [];
@@ -162,11 +163,12 @@ export class TraceCorrelator {
       .sort()
       .reverse(); // Most recent first
 
-    // Load from recent files (last 7 days)
-    const recentFiles = files.slice(0, 7);
+    // Load only the latest file (most recent run)
+    // Since each run processes all logs from service files, the latest file contains all previous logs
+    const latestFile = files[0];
 
-    for (const file of recentFiles) {
-      const filePath = path.join(this.aggregatedLogPath, file);
+    if (latestFile) {
+      const filePath = path.join(this.aggregatedLogPath, latestFile);
       try {
         const content = fs.readFileSync(filePath, 'utf-8');
         const lines = content.split('\n').filter(line => line.trim());
@@ -180,7 +182,7 @@ export class TraceCorrelator {
           }
         }
       } catch (error) {
-        console.error(`Error reading log file ${file}:`, error);
+        console.error(`Error reading log file ${latestFile}:`, error);
       }
     }
 
