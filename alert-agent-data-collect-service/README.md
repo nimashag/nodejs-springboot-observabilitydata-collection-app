@@ -10,31 +10,49 @@ The Adaptive Alert Tuning Agent (AATA) is a self-healing component designed to a
 
 ### Implemented Components
 
-1. **Historical Incident Analyzer**
+1. **HTTP API Service** 
+
+   - RESTful API endpoints for all analysis data
+   - Authentication via API keys
+   - CORS support with configurable origins
+   - Pagination for large datasets
+   - Graceful shutdown handling
+   - Comprehensive error handling
+
+2. **Historical Incident Analyzer**
 
    - Service baseline calculation
    - False positive detection
    - Temporal pattern analysis
    - Statistical analysis (mean, std, percentiles)
 
-2. **Dynamic Threshold Adjuster**
+3. **Dynamic Threshold Adjuster**
 
    - Adaptive threshold calculation
    - Service-specific recommendations
    - Confidence scoring
    - Configuration export
 
-3. **Report Generator**
+4. **Report Generator**
 
    - Comprehensive reports
    - JSON output for automation
    - Actionable recommendations
    - Impact estimation
 
-4. **ML Models**
+5. **ML Models**
    - Alert type classifier
    - Alert predictor
    - False positive detector
+
+### API Endpoints
+
+- `GET /api/health` - Service health check (no auth required)
+- `GET /api/summary` - High-level analysis summary
+- `GET /api/alerts?page=1&limit=100` - Paginated alert data
+- `GET /api/recommendations` - Threshold recommendations
+- `GET /api/routing` - Alert routing analysis
+- `GET /api/analysis` - Complete analysis data
 
 ---
 
@@ -59,13 +77,43 @@ npm install
 npm run build
 ```
 
-### Run AATA Analysis
+### Run AATA as HTTP API Service
 
 ```bash
+# Development mode (no authentication, open CORS)
+npm start
+
+# Production mode (with authentication and CORS restrictions)
+PORT=8080 \
+API_KEY=your-secret-key \
+ALLOWED_ORIGINS=https://dashboard.example.com \
 npm start
 ```
 
-### View Results
+### Access the API
+
+```bash
+# Health check (no authentication required)
+curl http://localhost:3008/api/health
+
+# Get summary (requires authentication if API_KEY is set)
+curl -H "Authorization: Bearer your-api-key" \
+  http://localhost:3008/api/summary
+
+# Get paginated alerts
+curl -H "Authorization: Bearer your-api-key" \
+  "http://localhost:3008/api/alerts?page=1&limit=100"
+
+# Get recommendations
+curl -H "Authorization: Bearer your-api-key" \
+  http://localhost:3008/api/recommendations
+
+# Get routing analysis
+curl -H "Authorization: Bearer your-api-key" \
+  http://localhost:3008/api/routing
+```
+
+### View File-Based Results
 
 ```bash
 # Human-readable report
@@ -77,6 +125,13 @@ cat output/threshold-recommendations.json
 # Adaptive configuration
 cat output/adaptive-threshold-config.json
 ```
+
+### API Documentation
+
+See detailed API documentation:
+- **[API.md](./API.md)** - Complete API reference
+- **[QUICK-START.md](./QUICK-START.md)** - Quick reference guide
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture
 
 ---
 
