@@ -11,7 +11,9 @@ import type {
   TemplateMatchResponse,
 } from '../types/logAggregation.types';
 
-const API_BASE_URL = import.meta.env.VITE_LOG_AGGREGATION_API_URL || 'http://localhost:3005';
+// Default to nginx gateway URL for Docker deployments (http://localhost:31000)
+// For local development, set VITE_LOG_AGGREGATION_API_URL=http://localhost:3005
+const API_BASE_URL = import.meta.env.VITE_LOG_AGGREGATION_API_URL || 'http://localhost:31000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

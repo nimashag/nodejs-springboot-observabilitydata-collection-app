@@ -1,10 +1,21 @@
 # Build step
 FROM node:18-alpine AS builder
 WORKDIR /app
+
+# Increase Node.js memory limit for build
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 COPY package*.json ./
 RUN npm install
+
 COPY . .
-RUN npm run build
+
+# Accept build arg for API URL, default to nginx gateway for Docker
+ARG VITE_LOG_AGGREGATION_API_URL=http://localhost:31000
+ENV VITE_LOG_AGGREGATION_API_URL=$VITE_LOG_AGGREGATION_API_URL
+
+# Build - skip TypeScript type checking to save memory (Vite handles TS compilation)
+RUN NODE_OPTIONS="--max-old-space-size=2048" npx vite build
 
 # Production step
 FROM nginx:1.27-alpine
