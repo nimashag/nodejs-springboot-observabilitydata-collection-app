@@ -22,19 +22,27 @@ public class TelemetryInterceptor implements HandlerInterceptor {
             latencyMs = (System.nanoTime() - startNs) / 1_000_000;
         }
 
+        // ---- global counters ----
         TelemetryStore.totalRequests.incrementAndGet();
         TelemetryStore.totalLatencyMs.addAndGet(latencyMs);
 
-        if (response.getStatus() >= 400) {
+        boolean isError = response.getStatus() >= 400;
+        if (isError) {
             TelemetryStore.totalErrors.incrementAndGet();
         }
 
+        // ✅ add to rolling latency window (for p95/p99)
+        TelemetryStore.recordLatency(latencyMs);
+
+        // ---- per-route stats ----
         String path = request.getRequestURI(); // already without query
         String key = request.getMethod() + " " + path;
 
-        TelemetryStore.RouteStat stat = TelemetryStore.routes.computeIfAbsent(key, k -> new TelemetryStore.RouteStat());
+        TelemetryStore.RouteStat stat =
+                TelemetryStore.routes.computeIfAbsent(key, k -> new TelemetryStore.RouteStat());
+
         stat.count.incrementAndGet();
         stat.totalLatencyMs.addAndGet(latencyMs);
-        if (response.getStatus() >= 400) stat.errors.incrementAndGet();
+        if (isError) stat.errors.incrementAndGet();
     }
 }
