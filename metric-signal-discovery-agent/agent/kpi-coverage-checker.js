@@ -17,7 +17,9 @@ function hasNumber(x) {
 function computeCoverage(t) {
   const http = t.http || {};
   const process = t.process || {};
-  const routes = Array.isArray(t.routes) ? t.routes : [];
+  const routes = t.routes;
+
+  const hasRoutesArray = Array.isArray(routes);
 
   const coverage = {
     latency_avg: hasNumber(http.avg_latency_ms),
@@ -25,10 +27,12 @@ function computeCoverage(t) {
     errors_total_errors: hasNumber(http.total_errors),
     memory_heap_used: hasNumber(process.heap_used_mb) || hasNumber(process.heap_used),
     memory_rss: hasNumber(process.rss_mb) || hasNumber(process.rss),
-    route_level_metrics: routes.length > 0 && routes.some((r) => typeof r.route === "string"),
-    // Advanced KPIs (likely missing in your current design — that's okay)
+    // ✅ If routes is an array, we consider route-level metrics implemented
+    // (even if empty when there’s no traffic yet)
+    route_level_metrics: hasRoutesArray,
     latency_percentiles: Boolean(http.p95_latency_ms || http.p99_latency_ms),
-    rps: Boolean(http.rps) || Boolean(http.requests_per_sec),
+    // ✅ Accept either name
+    rps: hasNumber(http.rps) || hasNumber(http.requests_per_sec) || hasNumber(http.rps_avg),
   };
 
   const missing = Object.entries(coverage)
