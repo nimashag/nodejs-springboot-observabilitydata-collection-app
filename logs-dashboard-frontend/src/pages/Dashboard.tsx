@@ -30,20 +30,28 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await queryLogs({ limit: 100 });
-      const logs = response.logs;
       
-      setRecentLogs(logs.slice(0, 10));
+      // Get recent logs for display (first 10)
+      const recentResponse = await queryLogs({ limit: 10 });
+      setRecentLogs(recentResponse.logs);
       
-      const errorLogs = logs.filter((log) => log.level.toLowerCase() === 'error');
-      const warnLogs = logs.filter((log) => log.level.toLowerCase() === 'warn');
-      const services = new Set(logs.map((log) => log.service));
+      // Get total count and all services (query with high limit to get all services)
+      const allLogsResponse = await queryLogs({ limit: 50000 });
+      const allServices = new Set(
+        allLogsResponse.logs.map((log) => log.service).filter((s): s is string => Boolean(s))
+      );
+      
+      // Get error count (only need count, not logs)
+      const errorResponse = await queryLogs({ level: 'error', limit: 1, offset: 0 });
+      
+      // Get warning count (only need count, not logs)
+      const warnResponse = await queryLogs({ level: 'warn', limit: 1, offset: 0 });
       
       setStats({
-        total: response.count,
-        errors: errorLogs.length,
-        warnings: warnLogs.length,
-        services,
+        total: allLogsResponse.count,
+        errors: errorResponse.count,
+        warnings: warnResponse.count,
+        services: allServices,
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);

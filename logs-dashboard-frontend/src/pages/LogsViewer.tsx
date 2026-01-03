@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { queryLogs } from '../api/logAggregationApi';
-import type { StructuredLog, LogQueryParams } from '../types/logAggregation.types';
+import { queryLogs, getTemplates } from '../api/logAggregationApi';
+import type { StructuredLog, LogQueryParams, LogTemplate } from '../types/logAggregation.types';
 import LogFilters from '../components/logs/LogFilters';
 import LogCard from '../components/logs/LogCard';
 import LogDetailModal from '../components/logs/LogDetailModal';
@@ -27,15 +27,18 @@ export default function LogsViewer() {
     level: searchParams.get('level') || undefined,
     event: searchParams.get('event') || undefined,
     traceId: searchParams.get('traceId') || undefined,
+    templateId: searchParams.get('templateId') || undefined,
     limit: initialPageSize,
   });
   const [services, setServices] = useState<string[]>([]);
+  const [templates, setTemplates] = useState<LogTemplate[]>([]);
   const [page, setPage] = useState(parseInt(searchParams.get('page') || '1', 10));
   const [totalCount, setTotalCount] = useState(0);
 
-  // Load services only once on mount
+  // Load services and templates only once on mount
   useEffect(() => {
     loadServices();
+    loadTemplates();
   }, []);
 
   // Load logs when filters, page, or pageSize change
@@ -56,6 +59,7 @@ export default function LogsViewer() {
         level: undefined,
         event: undefined,
         traceId: undefined,
+        templateId: undefined,
       });
       const uniqueServices = Array.from(
         new Set(response.logs.map((log) => log.service).filter(Boolean))
@@ -71,6 +75,7 @@ export default function LogsViewer() {
           level: undefined,
           event: undefined,
           traceId: undefined,
+          templateId: undefined,
         });
         const uniqueServices = Array.from(
           new Set(fallbackResponse.logs.map((log) => log.service).filter(Boolean))
@@ -79,6 +84,15 @@ export default function LogsViewer() {
       } catch (fallbackError) {
         console.error('Error loading services with fallback:', fallbackError);
       }
+    }
+  };
+
+  const loadTemplates = async () => {
+    try {
+      const templatesData = await getTemplates();
+      setTemplates(templatesData);
+    } catch (error) {
+      console.error('Error loading templates:', error);
     }
   };
 
@@ -181,6 +195,7 @@ export default function LogsViewer() {
         filters={filters}
         onFiltersChange={handleFiltersChange}
         services={services}
+        templates={templates}
       />
 
       <div className="mb-4 flex items-center justify-between">

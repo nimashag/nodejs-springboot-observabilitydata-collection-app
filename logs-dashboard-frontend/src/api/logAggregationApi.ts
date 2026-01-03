@@ -46,8 +46,8 @@ export const getRootCause = async (traceId: string): Promise<RootCauseAnalysis> 
 // Templates
 export const getTemplates = async (service?: string): Promise<LogTemplate[]> => {
   const params = service ? { service } : {};
-  const response = await api.get<LogTemplate[]>('/api/templates', { params });
-  return response.data;
+  const response = await api.get<{ count: number; templates: LogTemplate[] }>('/api/templates', { params });
+  return response.data.templates || [];
 };
 
 export const getTemplate = async (id: string): Promise<LogTemplate> => {

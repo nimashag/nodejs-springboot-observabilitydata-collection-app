@@ -29,6 +29,7 @@ ChartJS.register(
 
 export default function Analytics() {
   const [logs, setLogs] = useState<StructuredLog[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,8 +39,10 @@ export default function Analytics() {
   const loadAnalyticsData = async () => {
     try {
       setLoading(true);
-      const response = await queryLogs({ limit: 1000 });
+      // Load all logs for analytics (use high limit to get all logs)
+      const response = await queryLogs({ limit: 50000 });
       setLogs(response.logs);
+      setTotalCount(response.count);
     } catch (error) {
       console.error('Error loading analytics data:', error);
     } finally {
@@ -166,7 +169,7 @@ export default function Analytics() {
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <p className="text-sm text-gray-600">Total Logs</p>
-          <p className="text-2xl font-bold text-gray-900">{logs.length}</p>
+          <p className="text-2xl font-bold text-gray-900">{totalCount.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <p className="text-sm text-gray-600">Unique Services</p>
@@ -175,9 +178,9 @@ export default function Analytics() {
           </p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Error Rate</p>
+          <p className="text-sm text-gray-600">Error Count</p>
           <p className="text-2xl font-bold text-red-600">
-            {logsByLevel.error || 0}
+            {(logsByLevel.error || 0).toLocaleString()}
           </p>
         </div>
       </div>

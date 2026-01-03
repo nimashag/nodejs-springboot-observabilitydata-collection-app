@@ -21,6 +21,7 @@ export class LogController {
         startTime,
         endTime,
         event,
+        templateId,
         limit,
         offset,
       } = req.query;
@@ -32,14 +33,15 @@ export class LogController {
         startTime: startTime as string | undefined,
         endTime: endTime as string | undefined,
         event: event as string | undefined,
+        templateId: templateId as string | undefined,
         limit: limit ? parseInt(limit as string, 10) : undefined,
         offset: offset ? parseInt(offset as string, 10) : undefined,
       };
 
-      const logs = await this.traceCorrelator.queryLogs(query);
+      const { logs, totalCount } = await this.traceCorrelator.queryLogs(query);
 
       res.json({
-        count: logs.length,
+        count: totalCount,
         logs,
         query,
       });

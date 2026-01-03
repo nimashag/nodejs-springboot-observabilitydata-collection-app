@@ -39,6 +39,7 @@ export interface LogQuery {
   startTime?: string;
   endTime?: string;
   event?: string;
+  templateId?: string;
   limit?: number;
   offset?: number;
 }
