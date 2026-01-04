@@ -102,6 +102,7 @@ services:
     ports:
       - "31005:3005"
     environment:
+      - TEMPLATE_MINING_LOG_LIMIT=5000
       - DELIVERY_SERVICE_LOG_PATH=/app/service-logs/delivery-service
       - ORDERS_SERVICE_LOG_PATH=/app/service-logs/orders-service
       - RESTAURANTS_SERVICE_LOG_PATH=/app/service-logs/restaurants-service
@@ -115,6 +116,12 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3005/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   logs-dashboard-frontend:
     image: my-app/logs-dashboard-frontend:latest
