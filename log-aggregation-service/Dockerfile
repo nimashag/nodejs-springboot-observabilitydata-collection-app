@@ -15,7 +15,7 @@ COPY . .
 RUN npm run build
 
 # Set Node.js memory limit
-ENV NODE_OPTIONS="--max-old-space-size=2048"
+ENV NODE_OPTIONS="--max-old-space-size=1024"
 
 # Expose port
 EXPOSE 3005
