@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import "./index.css";
 import { api } from "./lib/api";
 import { usePoll } from "./hooks/usePoll";
@@ -8,6 +8,82 @@ import { parsePromSuggestions } from "./lib/parsePromSuggestions";
 
 type NavKey = "overview" | "signals" | "kpi" | "plan" | "prom" | "settings";
 type NavItem = { key: NavKey; label: string };
+
+/* ---------------- Settings Model ---------------- */
+
+type AppSettings = {
+  pollingEnabled: boolean;
+  intervals: {
+    healthMs: number;
+    signalsMs: number;
+    kpiMs: number;
+    planMs: number;
+    promMs: number;
+  };
+  ui: {
+    defaultPromView: "raw" | "structured";
+  };
+};
+
+const SETTINGS_KEY = "metric_agent_ui_settings_v1";
+
+function clampMs(n: number, min: number, max: number) {
+  if (!Number.isFinite(n)) return min;
+  return Math.max(min, Math.min(max, Math.floor(n)));
+}
+
+function loadSettings(): AppSettings {
+  const defaults: AppSettings = {
+    pollingEnabled: true,
+    intervals: {
+      healthMs: 3000,
+      signalsMs: 2500,
+      kpiMs: 5000,
+      planMs: 9000,
+      promMs: 12000,
+    },
+    ui: {
+      defaultPromView: "raw",
+    },
+  };
+
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return defaults;
+    const parsed = JSON.parse(raw);
+
+    const merged: AppSettings = {
+      pollingEnabled: typeof parsed?.pollingEnabled === "boolean" ? parsed.pollingEnabled : defaults.pollingEnabled,
+      intervals: {
+        healthMs: clampMs(Number(parsed?.intervals?.healthMs ?? defaults.intervals.healthMs), 500, 60000),
+        signalsMs: clampMs(Number(parsed?.intervals?.signalsMs ?? defaults.intervals.signalsMs), 500, 60000),
+        kpiMs: clampMs(Number(parsed?.intervals?.kpiMs ?? defaults.intervals.kpiMs), 500, 60000),
+        planMs: clampMs(Number(parsed?.intervals?.planMs ?? defaults.intervals.planMs), 500, 60000),
+        promMs: clampMs(Number(parsed?.intervals?.promMs ?? defaults.intervals.promMs), 500, 60000),
+      },
+      ui: {
+        defaultPromView:
+          parsed?.ui?.defaultPromView === "structured" || parsed?.ui?.defaultPromView === "raw"
+            ? parsed.ui.defaultPromView
+            : defaults.ui.defaultPromView,
+      },
+    };
+
+    return merged;
+  } catch {
+    return defaults;
+  }
+}
+
+function saveSettings(s: AppSettings) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  } catch {
+    // ignore
+  }
+}
+
+/* ---------------- Utils ---------------- */
 
 function cn(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(" ");
@@ -29,6 +105,8 @@ function severityRank(s?: string) {
   return 0;
 }
 
+/* ---------------- App ---------------- */
+
 export default function App() {
   const navItems: NavItem[] = useMemo(
     () => [
@@ -43,6 +121,14 @@ export default function App() {
   );
 
   const [active, setActive] = useState<NavKey>("overview");
+
+  const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
+
+  useEffect(() => {
+    saveSettings(settings);
+  }, [settings]);
+
+  const onJump = (k: NavKey) => setActive(k);
 
   return (
     <div className="app">
@@ -81,9 +167,7 @@ export default function App() {
 
       <main className="main">
         <header className="topbar">
-          <div className="pageTitle">
-            {navItems.find((x) => x.key === active)?.label ?? "Dashboard"}
-          </div>
+          <div className="pageTitle">{navItems.find((x) => x.key === active)?.label ?? "Dashboard"}</div>
 
           <div className="topbarRight">
             <div className="search">
@@ -94,12 +178,14 @@ export default function App() {
         </header>
 
         <section className="content">
-          {active === "overview" && <Overview />}
-          {active === "signals" && <SignalsPage />}
-          {active === "kpi" && <KpiPage />}
-          {active === "plan" && <PlanPage />}
-          {active === "prom" && <PromPage />}
-          {active === "settings" && <SettingsPage />}
+          {active === "overview" && <Overview settings={settings} />}
+          {active === "signals" && <SignalsPage settings={settings} />}
+          {active === "kpi" && <KpiPage settings={settings} />}
+          {active === "plan" && <PlanPage settings={settings} />}
+          {active === "prom" && <PromPage settings={settings} />}
+          {active === "settings" && (
+            <SettingsPage settings={settings} onChange={setSettings} onJump={onJump} />
+          )}
         </section>
       </main>
     </div>
@@ -116,8 +202,8 @@ function Card({
 }: {
   title: string;
   subtitle?: string;
-  right?: React.ReactNode;
-  children: React.ReactNode;
+  right?: ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="card">
@@ -142,7 +228,7 @@ function ErrorBox({ text }: { text: string }) {
   );
 }
 
-function Muted({ children }: { children: React.ReactNode }) {
+function Muted({ children }: { children: ReactNode }) {
   return <div className="muted">{children}</div>;
 }
 
@@ -151,7 +237,7 @@ function Badge({
   children,
 }: {
   kind: "neutral" | "ok" | "warn" | "crit";
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return <span className={cn("badge", `badge-${kind}`)}>{children}</span>;
 }
@@ -160,8 +246,8 @@ function Toolbar({
   left,
   right,
 }: {
-  left?: React.ReactNode;
-  right?: React.ReactNode;
+  left?: ReactNode;
+  right?: ReactNode;
 }) {
   return (
     <div className="toolbar">
@@ -178,7 +264,7 @@ function Select({
 }: {
   value: string;
   onChange: (v: string) => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
@@ -191,10 +277,12 @@ function TextInput({
   value,
   onChange,
   placeholder,
+  type,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  type?: string;
 }) {
   return (
     <input
@@ -202,128 +290,278 @@ function TextInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
+      type={type}
     />
+  );
+}
+
+/* ---------------- Mini Charts (Overview) ---------------- */
+
+function Sparkline({ values, height = 44 }: { values: number[]; height?: number }) {
+  const w = 260;
+  const h = height;
+  if (!values.length) return <div className="muted">No data yet</div>;
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = Math.max(1e-9, max - min);
+
+  const pts = values
+    .map((v, i) => {
+      const x = (i / Math.max(1, values.length - 1)) * (w - 2) + 1;
+      const y = (1 - (v - min) / span) * (h - 2) + 1;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  return (
+    <svg className="spark" width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+      <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function BarList({ items }: { items: Array<{ label: string; value: number }> }) {
+  const max = Math.max(1, ...items.map((x) => x.value));
+  return (
+    <div className="barList">
+      {items.map((it) => (
+        <div className="barRow" key={it.label}>
+          <div className="barLabel mono">{it.label}</div>
+          <div className="barTrack">
+            <div className="barFill" style={{ width: `${(it.value / max) * 100}%` }} />
+          </div>
+          <div className="barVal mono">{it.value}</div>
+        </div>
+      ))}
+    </div>
   );
 }
 
 /* ---------------- Pages ---------------- */
 
-function Overview() {
-  const health = usePoll(api.health, { intervalMs: 3000 });
-  const signals = usePoll(api.signals, { intervalMs: 2500 });
-  const kpi = usePoll(api.kpiCoverage, { intervalMs: 5000 });
-  const plan = usePoll(api.updatePlan, { intervalMs: 7000 });
+function Overview({ settings }: { settings: AppSettings }) {
+  const pollOn = settings.pollingEnabled;
+
+  const health = usePoll(api.health, { intervalMs: settings.intervals.healthMs, enabled: pollOn });
+  const signals = usePoll(api.signals, { intervalMs: settings.intervals.signalsMs, enabled: pollOn });
+  const kpi = usePoll(api.kpiCoverage, { intervalMs: settings.intervals.kpiMs, enabled: pollOn });
+  const plan = usePoll(api.updatePlan, { intervalMs: settings.intervals.planMs, enabled: pollOn });
 
   const criticalCount =
     signals.data?.signals?.filter((s: any) => s?.signal && s?.severity === "critical").length ?? 0;
 
+  const totalSignals = signals.data?.signals?.length ?? 0;
+
   const missingKpiServices =
-    kpi.data?.results?.filter((r) => (r.missing_kpis || []).length > 0).length ?? 0;
+    kpi.data?.results?.filter((r: any) => (r.missing_kpis || []).length > 0).length ?? 0;
 
   const totalRules = plan.data?.actions?.length ?? 0;
 
+  const [hist, setHist] = useState<
+    Array<{ t: number; critical: number; total: number; missingSvc: number; actions: number }>
+  >([]);
+
+  useEffect(() => {
+    const hasAny =
+      !!signals.data?.generated_at || !!kpi.data?.generated_at || !!plan.data?.generated_at || !!health.data?.ts;
+    if (!hasAny) return;
+
+    setHist((prev) => {
+      const next = [
+        ...prev,
+        {
+          t: Date.now(),
+          critical: criticalCount,
+          total: totalSignals,
+          missingSvc: missingKpiServices,
+          actions: totalRules,
+        },
+      ];
+      return next.slice(-30);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signals.data?.generated_at, kpi.data?.generated_at, plan.data?.generated_at]);
+
+  const sevBars = useMemo(() => {
+    const list = signals.data?.signals ?? [];
+    let crit = 0,
+      warn = 0,
+      info = 0,
+      other = 0;
+    for (const s of list as any[]) {
+      const sev = String(s?.severity ?? "");
+      if (sev === "critical") crit++;
+      else if (sev === "warning") warn++;
+      else if (sev === "info") info++;
+      else other++;
+    }
+    return [
+      { label: "critical", value: crit },
+      { label: "warning", value: warn },
+      { label: "info", value: info },
+      { label: "other", value: other },
+    ];
+  }, [signals.data?.generated_at]);
+
+  const topMissing = useMemo(() => {
+    const rows = (kpi.data?.results ?? []) as any[];
+    return rows
+      .map((r) => ({
+        label: String(r.service ?? "—"),
+        value: Array.isArray(r.missing_kpis) ? r.missing_kpis.length : 0,
+      }))
+      .filter((x) => x.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+  }, [kpi.data?.generated_at]);
+
+  const seriesCritical = hist.map((x) => x.critical);
+  const seriesMissing = hist.map((x) => x.missingSvc);
+
   return (
-    <div className="grid">
-      <Card title="Status" subtitle="Agent health">
-        {health.error ? (
-          <ErrorBox text={health.error} />
-        ) : (
-          <div className="kv">
-            <div className="kvRow">
-              <div className="kvKey">Agent</div>
-              <div className="kvVal">
-                <span className="status ok" /> Running
+    <>
+      <div className="grid">
+        <Card title="Status" subtitle="Agent health">
+          {health.error ? (
+            <ErrorBox text={health.error} />
+          ) : (
+            <div className="kv">
+              <div className="kvRow">
+                <div className="kvKey">Agent</div>
+                <div className="kvVal">
+                  <span className="status ok" /> Running
+                </div>
+              </div>
+              <div className="kvRow">
+                <div className="kvKey">Health</div>
+                <div className="kvVal">{health.data?.ok ? "ok" : "—"}</div>
+              </div>
+              <div className="kvRow">
+                <div className="kvKey">Last</div>
+                <div className="kvVal">{formatTime(health.data?.ts)}</div>
+              </div>
+              {!settings.pollingEnabled ? (
+                <div className="muted">Polling is OFF (Settings)</div>
+              ) : null}
+            </div>
+          )}
+        </Card>
+
+        <Card title="Signals" subtitle="Latest anomalies">
+          {signals.error ? (
+            <ErrorBox text={signals.error} />
+          ) : (
+            <div className="kv">
+              <div className="kvRow">
+                <div className="kvKey">Critical</div>
+                <div className="kvVal">{criticalCount}</div>
+              </div>
+              <div className="kvRow">
+                <div className="kvKey">Total signals</div>
+                <div className="kvVal">{totalSignals}</div>
+              </div>
+              <div className="kvRow">
+                <div className="kvKey">Generated</div>
+                <div className="kvVal">{formatTime(signals.data?.generated_at)}</div>
               </div>
             </div>
-            <div className="kvRow">
-              <div className="kvKey">Health</div>
-              <div className="kvVal">{health.data?.ok ? "ok" : "—"}</div>
-            </div>
-            <div className="kvRow">
-              <div className="kvKey">Last</div>
-              <div className="kvVal">{formatTime(health.data?.ts)}</div>
-            </div>
-          </div>
-        )}
-      </Card>
+          )}
+        </Card>
 
-      <Card title="Signals" subtitle="Latest anomalies">
-        {signals.error ? (
-          <ErrorBox text={signals.error} />
-        ) : (
-          <div className="kv">
-            <div className="kvRow">
-              <div className="kvKey">Critical</div>
-              <div className="kvVal">{criticalCount}</div>
+        <Card title="KPI Coverage" subtitle="Coverage checker">
+          {kpi.error ? (
+            <ErrorBox text={kpi.error} />
+          ) : (
+            <div className="kv">
+              <div className="kvRow">
+                <div className="kvKey">Services missing KPIs</div>
+                <div className="kvVal">{missingKpiServices}</div>
+              </div>
+              <div className="kvRow">
+                <div className="kvKey">Services checked</div>
+                <div className="kvVal">{kpi.data?.results?.length ?? 0}</div>
+              </div>
+              <div className="kvRow">
+                <div className="kvKey">Generated</div>
+                <div className="kvVal">{formatTime(kpi.data?.generated_at)}</div>
+              </div>
             </div>
-            <div className="kvRow">
-              <div className="kvKey">Total signals</div>
-              <div className="kvVal">{signals.data?.signals?.length ?? 0}</div>
-            </div>
-            <div className="kvRow">
-              <div className="kvKey">Generated</div>
-              <div className="kvVal">{formatTime(signals.data?.generated_at)}</div>
-            </div>
-          </div>
-        )}
-      </Card>
+          )}
+        </Card>
 
-      <Card title="KPI Coverage" subtitle="Coverage checker">
-        {kpi.error ? (
-          <ErrorBox text={kpi.error} />
-        ) : (
-          <div className="kv">
-            <div className="kvRow">
-              <div className="kvKey">Services missing KPIs</div>
-              <div className="kvVal">{missingKpiServices}</div>
+        <Card title="Update Plan" subtitle="Auto-telemetry actions">
+          {plan.error ? (
+            <ErrorBox text={plan.error} />
+          ) : (
+            <div className="kv">
+              <div className="kvRow">
+                <div className="kvKey">Total actions</div>
+                <div className="kvVal">{totalRules}</div>
+              </div>
+              <div className="kvRow">
+                <div className="kvKey">Generated</div>
+                <div className="kvVal">{formatTime(plan.data?.generated_at)}</div>
+              </div>
+              <div className="kvRow">
+                <div className="kvKey">What it means</div>
+                <div className="kvVal">Routes → KPIs</div>
+              </div>
             </div>
-            <div className="kvRow">
-              <div className="kvKey">Services checked</div>
-              <div className="kvVal">{kpi.data?.results?.length ?? 0}</div>
-            </div>
-            <div className="kvRow">
-              <div className="kvKey">Generated</div>
-              <div className="kvVal">{formatTime(kpi.data?.generated_at)}</div>
-            </div>
-          </div>
-        )}
-      </Card>
+          )}
+        </Card>
+      </div>
 
-      <Card title="Update Plan" subtitle="Auto-telemetry actions">
-        {plan.error ? (
-          <ErrorBox text={plan.error} />
-        ) : (
-          <div className="kv">
-            <div className="kvRow">
-              <div className="kvKey">Total actions</div>
-              <div className="kvVal">{totalRules}</div>
+      <div className="grid" style={{ marginTop: 14 }}>
+        <Card title="Trends" subtitle="Last samples (local history)">
+          <div className="chartGrid">
+            <div className="chartCard">
+              <div className="chartTitle">Critical signals</div>
+              <div className="chartSub mono">{seriesCritical.at(-1) ?? 0}</div>
+              <Sparkline values={seriesCritical} />
             </div>
-            <div className="kvRow">
-              <div className="kvKey">Generated</div>
-              <div className="kvVal">{formatTime(plan.data?.generated_at)}</div>
-            </div>
-            <div className="kvRow">
-              <div className="kvKey">What it means</div>
-              <div className="kvVal">Routes → KPIs</div>
+
+            <div className="chartCard">
+              <div className="chartTitle">Services missing KPIs</div>
+              <div className="chartSub mono">{seriesMissing.at(-1) ?? 0}</div>
+              <Sparkline values={seriesMissing} />
             </div>
           </div>
-        )}
-      </Card>
-    </div>
+          <Muted>These mini-trends update whenever API refreshes.</Muted>
+        </Card>
+
+        <Card title="Breakdown" subtitle="What needs attention right now">
+          <div style={{ display: "grid", gap: 14 }}>
+            <div>
+              <div className="chartTitle">Signals by severity</div>
+              <BarList items={sevBars} />
+            </div>
+
+            <div>
+              <div className="chartTitle">Top services missing KPIs</div>
+              {!topMissing.length ? <Muted>Nothing missing ✅</Muted> : <BarList items={topMissing} />}
+            </div>
+          </div>
+        </Card>
+      </div>
+    </>
   );
 }
 
-function SignalsPage() {
+function SignalsPage({ settings }: { settings: AppSettings }) {
   const [enabled, setEnabled] = useState(true);
-  const [intervalMs, setIntervalMs] = useState("2000");
+  const [intervalMs, setIntervalMs] = useState(String(settings.intervals.signalsMs));
 
   const [q, setQ] = useState("");
   const [svc, setSvc] = useState("all");
   const [sev, setSev] = useState("all");
   const [sort, setSort] = useState("severity_desc");
 
-  const pollMs = Math.max(500, Number(intervalMs) || 2000);
-  const { data, error, loading } = usePoll(api.signals, { intervalMs: pollMs, enabled });
+  const pollMs = Math.max(500, Number(intervalMs) || settings.intervals.signalsMs);
+  const { data, error, loading } = usePoll(api.signals, {
+    intervalMs: pollMs,
+    enabled: settings.pollingEnabled && enabled,
+  });
 
   const raw = (data?.signals ?? []).filter((x: any) => x && (x.signal || x.error));
 
@@ -356,7 +594,7 @@ function SignalsPage() {
 
   const headRight = (
     <div className="row">
-      <button className={cn("btn", enabled && "btnActive")} onClick={() => setEnabled((x) => !x)}>
+      <button className={cn("btn", enabled && settings.pollingEnabled && "btnActive")} onClick={() => setEnabled((x) => !x)}>
         {enabled ? "Live" : "Paused"}
       </button>
       <Select value={intervalMs} onChange={setIntervalMs}>
@@ -427,6 +665,7 @@ function SignalsPage() {
           right={<div className="meta">Generated: {formatTime(data?.generated_at)}</div>}
         />
 
+        {!settings.pollingEnabled ? <Muted>Global polling is OFF (Settings).</Muted> : null}
         {error ? <ErrorBox text={error} /> : null}
         {loading && !data ? <Muted>Loading…</Muted> : null}
 
@@ -536,24 +775,27 @@ function SignalsPage() {
   );
 }
 
-function KpiPage() {
+function KpiPage({ settings }: { settings: AppSettings }) {
   const [enabled, setEnabled] = useState(true);
   const [q, setQ] = useState("");
   const [showOnlyMissing, setShowOnlyMissing] = useState(true);
 
-  const { data, error, loading } = usePoll(api.kpiCoverage, { intervalMs: 5000, enabled });
+  const { data, error, loading } = usePoll(api.kpiCoverage, {
+    intervalMs: settings.intervals.kpiMs,
+    enabled: settings.pollingEnabled && enabled,
+  });
 
   const rows = useMemo(() => {
     const all = data?.results ?? [];
     const qq = q.trim().toLowerCase();
     return all
-      .filter((r) => (showOnlyMissing ? (r.missing_kpis ?? []).length > 0 : true))
-      .filter((r) => {
+      .filter((r: any) => (showOnlyMissing ? (r.missing_kpis ?? []).length > 0 : true))
+      .filter((r: any) => {
         if (!qq) return true;
         const blob = `${r.service} ${(r.missing_kpis ?? []).join(" ")} ${r.url}`.toLowerCase();
         return blob.includes(qq);
       })
-      .sort((a, b) => (b.missing_kpis?.length ?? 0) - (a.missing_kpis?.length ?? 0));
+      .sort((a: any, b: any) => (b.missing_kpis?.length ?? 0) - (a.missing_kpis?.length ?? 0));
   }, [data?.generated_at, q, showOnlyMissing]);
 
   const [selected, setSelected] = useState<any | null>(null);
@@ -565,7 +807,7 @@ function KpiPage() {
         subtitle="Shows missing KPIs per service"
         right={
           <div className="row">
-            <button className={cn("btn", enabled && "btnActive")} onClick={() => setEnabled((x) => !x)}>
+            <button className={cn("btn", enabled && settings.pollingEnabled && "btnActive")} onClick={() => setEnabled((x) => !x)}>
               {enabled ? "Live" : "Paused"}
             </button>
             <button className="btn" onClick={() => downloadJson(`kpi_coverage_${Date.now()}.json`, data ?? {})}>
@@ -589,6 +831,7 @@ function KpiPage() {
           right={<div className="meta">Generated: {formatTime(data?.generated_at)}</div>}
         />
 
+        {!settings.pollingEnabled ? <Muted>Global polling is OFF (Settings).</Muted> : null}
         {error ? <ErrorBox text={error} /> : null}
         {loading && !data ? <Muted>Loading…</Muted> : null}
 
@@ -600,7 +843,7 @@ function KpiPage() {
             <div>URL</div>
           </div>
 
-          {rows.map((r, idx) => {
+          {rows.map((r: any, idx: number) => {
             const missing = r.missing_kpis ?? [];
             const ok = missing.length === 0;
             return (
@@ -626,10 +869,7 @@ function KpiPage() {
         onClose={() => setSelected(null)}
       >
         <pre className="code">{JSON.stringify(selected, null, 2)}</pre>
-        <button
-          className="btn"
-          onClick={() => downloadJson(`kpi_${selected?.service ?? "service"}_${Date.now()}.json`, selected)}
-        >
+        <button className="btn" onClick={() => downloadJson(`kpi_${selected?.service ?? "service"}_${Date.now()}.json`, selected)}>
           Download this service report
         </button>
       </Drawer>
@@ -637,13 +877,16 @@ function KpiPage() {
   );
 }
 
-function PlanPage() {
+function PlanPage({ settings }: { settings: AppSettings }) {
   const [enabled, setEnabled] = useState(false);
   const [q, setQ] = useState("");
   const [svc, setSvc] = useState("all");
   const [intent, setIntent] = useState("all");
 
-  const { data, error, loading } = usePoll(api.updatePlan, { intervalMs: 9000, enabled });
+  const { data, error, loading } = usePoll(api.updatePlan, {
+    intervalMs: settings.intervals.planMs,
+    enabled: settings.pollingEnabled && enabled,
+  });
 
   const actions = data?.actions ?? [];
 
@@ -661,10 +904,10 @@ function PlanPage() {
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
-    return actions
-      .filter((a: any) => (svc === "all" ? true : String(a.service) === svc))
-      .filter((a: any) => (intent === "all" ? true : String(a.intent) === intent))
-      .filter((a: any) => {
+    return (actions as any[])
+      .filter((a) => (svc === "all" ? true : String(a.service) === svc))
+      .filter((a) => (intent === "all" ? true : String(a.intent) === intent))
+      .filter((a) => {
         if (!qq) return true;
         const kpis = Array.isArray(a.required_kpis) ? a.required_kpis.map((x: any) => x?.name).join(" ") : "";
         const blob = `${a.service} ${a.route} ${a.intent} ${kpis}`.toLowerCase();
@@ -674,6 +917,19 @@ function PlanPage() {
 
   const [selected, setSelected] = useState<any | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState("50");
+
+  useEffect(() => {
+    setPage(1);
+  }, [q, svc, intent, data?.generated_at]);
+
+  const size = Math.max(10, Math.min(200, Number(pageSize) || 50));
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / size));
+  const safePage = Math.max(1, Math.min(page, totalPages));
+  const pageRows = filtered.slice((safePage - 1) * size, safePage * size);
+
   return (
     <>
       <Card
@@ -681,7 +937,7 @@ function PlanPage() {
         subtitle="Auto-telemetry actions (intent → required KPIs)"
         right={
           <div className="row">
-            <button className={cn("btn", enabled && "btnActive")} onClick={() => setEnabled((x) => !x)}>
+            <button className={cn("btn", enabled && settings.pollingEnabled && "btnActive")} onClick={() => setEnabled((x) => !x)}>
               {enabled ? "Live" : "Load"}
             </button>
             <button className="btn" onClick={() => downloadJson(`telemetry_update_plan_${Date.now()}.json`, data ?? {})}>
@@ -733,6 +989,7 @@ function PlanPage() {
           right={<div className="meta">Actions: {actions.length}</div>}
         />
 
+        {!settings.pollingEnabled ? <Muted>Global polling is OFF (Settings).</Muted> : null}
         {error ? <ErrorBox text={error} /> : null}
         {loading && !data && enabled ? <Muted>Loading…</Muted> : null}
         {!enabled ? <Muted>Paused by default (plan is large). Click “Load”.</Muted> : null}
@@ -747,7 +1004,7 @@ function PlanPage() {
               <div>Conf</div>
             </div>
 
-            {filtered.slice(0, 120).map((a: any, idx: number) => (
+            {pageRows.map((a: any, idx: number) => (
               <div className="tRow tPlan" key={idx} onClick={() => setSelected(a)}>
                 <div className="mono">{a.service ?? "—"}</div>
                 <div className="mono">{a.route ?? "—"}</div>
@@ -763,7 +1020,38 @@ function PlanPage() {
           </div>
         ) : null}
 
-        {enabled ? <Muted>Showing {Math.min(filtered.length, 120)} / {filtered.length} matches</Muted> : null}
+        {enabled ? (
+          <Toolbar
+            left={
+              <div className="row">
+                <button className="btn" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                  ← Prev
+                </button>
+                <button
+                  className="btn"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  Next →
+                </button>
+                <div className="meta mono">
+                  Page {safePage} / {totalPages} • Total {total}
+                </div>
+              </div>
+            }
+            right={
+              <div className="row">
+                <div className="meta">Rows per page</div>
+                <Select value={pageSize} onChange={setPageSize}>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="150">150</option>
+                </Select>
+              </div>
+            }
+          />
+        ) : null}
       </Card>
 
       <Drawer
@@ -781,15 +1069,22 @@ function PlanPage() {
   );
 }
 
-function PromPage() {
+function PromPage({ settings }: { settings: AppSettings }) {
   const [enabled, setEnabled] = useState(false);
-  const { data, error, loading } = usePoll(api.promSuggestions, { intervalMs: 12000, enabled });
 
-  const [promView, setPromView] = useState<"raw" | "structured">("raw");
+  const { data, error, loading } = usePoll(api.promSuggestions, {
+    intervalMs: settings.intervals.promMs,
+    enabled: settings.pollingEnabled && enabled,
+  });
+
+  const [promView, setPromView] = useState<"raw" | "structured">(settings.ui.defaultPromView);
   const [promSearch, setPromSearch] = useState("");
 
-  const promText = String(data ?? "");
+  useEffect(() => {
+    setPromView(settings.ui.defaultPromView);
+  }, [settings.ui.defaultPromView]);
 
+  const promText = String(data ?? "");
   const promBlocks = useMemo(() => parsePromSuggestions(promText), [promText]);
 
   const promFiltered = useMemo(() => {
@@ -810,17 +1105,14 @@ function PromPage() {
       subtitle="Prometheus-style naming + labels (derived suggestions)"
       right={
         <div className="row">
-          <button className={cn("btn", enabled && "btnActive")} onClick={() => setEnabled((x) => !x)}>
+          <button className={cn("btn", enabled && settings.pollingEnabled && "btnActive")} onClick={() => setEnabled((x) => !x)}>
             {enabled ? "Live" : "Load"}
           </button>
 
           <button className={cn("btn", promView === "raw" && "btnActive")} onClick={() => setPromView("raw")}>
             Raw
           </button>
-          <button
-            className={cn("btn", promView === "structured" && "btnActive")}
-            onClick={() => setPromView("structured")}
-          >
+          <button className={cn("btn", promView === "structured" && "btnActive")} onClick={() => setPromView("structured")}>
             Structured
           </button>
 
@@ -830,6 +1122,7 @@ function PromPage() {
         </div>
       }
     >
+      {!settings.pollingEnabled ? <Muted>Global polling is OFF (Settings).</Muted> : null}
       {error ? <ErrorBox text={error} /> : null}
       {loading && !data && enabled ? <Muted>Loading…</Muted> : null}
       {!enabled ? <Muted>Click “Load” to fetch the file.</Muted> : null}
@@ -839,11 +1132,7 @@ function PromPage() {
           <Toolbar
             left={
               <div className="row">
-                <TextInput
-                  value={promSearch}
-                  onChange={setPromSearch}
-                  placeholder="Search… (service/method/path/intent/metric text)"
-                />
+                <TextInput value={promSearch} onChange={setPromSearch} placeholder="Search… (service/method/path/intent/metric text)" />
               </div>
             }
             right={
@@ -897,15 +1186,269 @@ function PromPage() {
   );
 }
 
-function SettingsPage() {
+/* ---------------- Settings Page (Best) ---------------- */
+
+type DiagRow = {
+  key: string;
+  label: string;
+  ok?: boolean;
+  ms?: number;
+  at?: number;
+  error?: string;
+};
+
+function SettingsPage({
+  settings,
+  onChange,
+  onJump,
+}: {
+  settings: AppSettings;
+  onChange: (s: AppSettings) => void;
+  onJump: (k: NavKey) => void;
+}) {
+  const [diag, setDiag] = useState<DiagRow[]>([]);
+  const [diagRunning, setDiagRunning] = useState(false);
+
+  const setPollingEnabled = (v: boolean) => onChange({ ...settings, pollingEnabled: v });
+
+  const setInterval = (key: keyof AppSettings["intervals"], v: string) => {
+    const n = clampMs(Number(v), 500, 60000);
+    onChange({ ...settings, intervals: { ...settings.intervals, [key]: n } });
+  };
+
+  async function runDiagnostics() {
+    setDiagRunning(true);
+
+    const tests: Array<{ key: string; label: string; fn: () => Promise<any> }> = [
+      { key: "health", label: "Health", fn: () => api.health() },
+      { key: "signals", label: "Signals", fn: () => api.signals() },
+      { key: "kpi", label: "KPI Coverage", fn: () => api.kpiCoverage() },
+      { key: "plan", label: "Update Plan", fn: () => api.updatePlan() },
+      { key: "prom", label: "Prom Suggestions", fn: () => api.promSuggestions() },
+    ];
+
+    const out: DiagRow[] = [];
+
+    for (const t of tests) {
+      const t0 = performance.now();
+      try {
+        await t.fn();
+        const ms = Math.round(performance.now() - t0);
+        out.push({ key: t.key, label: t.label, ok: true, ms, at: Date.now() });
+      } catch (e: any) {
+        const ms = Math.round(performance.now() - t0);
+        out.push({
+          key: t.key,
+          label: t.label,
+          ok: false,
+          ms,
+          at: Date.now(),
+          error: String(e?.message ?? e ?? "error"),
+        });
+      }
+    }
+
+    setDiag(out);
+    setDiagRunning(false);
+  }
+
+  async function exportEverything() {
+    const [signalsRes, kpiRes, planRes, promRes] = await Promise.allSettled([
+      api.signals(),
+      api.kpiCoverage(),
+      api.updatePlan(),
+      api.promSuggestions(),
+    ]);
+
+    const signals = signalsRes.status === "fulfilled" ? signalsRes.value : { generated_at: Date.now(), signals: [] };
+    const kpi = kpiRes.status === "fulfilled" ? kpiRes.value : {};
+    const plan = planRes.status === "fulfilled" ? planRes.value : {};
+    const prom = promRes.status === "fulfilled" ? String(promRes.value ?? "") : "";
+
+    downloadJson(`signals_${Date.now()}.json`, signals);
+    downloadJson(`kpi_coverage_${Date.now()}.json`, kpi);
+    downloadJson(`update_plan_${Date.now()}.json`, plan);
+    downloadText(`prom_suggestions_${Date.now()}.txt`, prom);
+  }
+
+  async function copyDebug() {
+    const payload = {
+      ts: Date.now(),
+      settings,
+      diagnostics: diag,
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      alert("Copied debug info ✅");
+    } catch {
+      alert("Copy failed (browser blocked clipboard).");
+    }
+  }
+
+  const intervals = settings.intervals;
+
   return (
-    <Card title="Settings" subtitle="Quick actions coming next">
-      <div className="empty">
-        <div className="emptyTitle">Next</div>
-        <div className="emptySub">
-          If you want, we’ll add real “Run steps” buttons (start scripts from UI) using a tiny node API endpoint.
+    <div className="grid" style={{ gridTemplateColumns: "1fr", gap: 12 }}>
+      <Card
+        title="Global Controls"
+        subtitle="Master switches for the whole UI"
+        right={
+          <div className="row">
+            <button
+              className={cn("btn", settings.pollingEnabled && "btnActive")}
+              onClick={() => setPollingEnabled(!settings.pollingEnabled)}
+            >
+              {settings.pollingEnabled ? "Polling ON" : "Polling OFF"}
+            </button>
+            <button className="btn" onClick={() => onJump("signals")}>
+              Go Signals →
+            </button>
+            <button className="btn" onClick={() => onJump("prom")}>
+              Go Prom →
+            </button>
+          </div>
+        }
+      >
+        <Muted>If you’re debugging backend, turn polling OFF so the UI stops firing requests.</Muted>
+      </Card>
+
+      <Card title="Intervals" subtitle="Default polling intervals (ms)">
+        <div className="kv">
+          <div className="kvRow">
+            <div className="kvKey">Health</div>
+            <div className="kvVal">
+              <TextInput value={String(intervals.healthMs)} onChange={(v) => setInterval("healthMs", v)} type="number" />
+            </div>
+          </div>
+
+          <div className="kvRow">
+            <div className="kvKey">Signals</div>
+            <div className="kvVal">
+              <TextInput value={String(intervals.signalsMs)} onChange={(v) => setInterval("signalsMs", v)} type="number" />
+            </div>
+          </div>
+
+          <div className="kvRow">
+            <div className="kvKey">KPI Coverage</div>
+            <div className="kvVal">
+              <TextInput value={String(intervals.kpiMs)} onChange={(v) => setInterval("kpiMs", v)} type="number" />
+            </div>
+          </div>
+
+          <div className="kvRow">
+            <div className="kvKey">Update Plan</div>
+            <div className="kvVal">
+              <TextInput value={String(intervals.planMs)} onChange={(v) => setInterval("planMs", v)} type="number" />
+            </div>
+          </div>
+
+          <div className="kvRow">
+            <div className="kvKey">Prom Suggestions</div>
+            <div className="kvVal">
+              <TextInput value={String(intervals.promMs)} onChange={(v) => setInterval("promMs", v)} type="number" />
+            </div>
+          </div>
         </div>
-      </div>
-    </Card>
+
+        <Muted>Limits: min 500ms, max 60,000ms.</Muted>
+      </Card>
+
+      <Card
+        title="UI Preferences"
+        subtitle="Saved in localStorage"
+        right={
+          <div className="row">
+            <button className="btn" onClick={() => onChange(loadSettings())}>
+              Reset defaults
+            </button>
+          </div>
+        }
+      >
+        <Toolbar
+          left={
+            <div className="row">
+              <div className="meta">Default Prom view:</div>
+              <button
+                className={cn("btn", settings.ui.defaultPromView === "raw" && "btnActive")}
+                onClick={() => onChange({ ...settings, ui: { ...settings.ui, defaultPromView: "raw" } })}
+              >
+                Raw
+              </button>
+              <button
+                className={cn("btn", settings.ui.defaultPromView === "structured" && "btnActive")}
+                onClick={() => onChange({ ...settings, ui: { ...settings.ui, defaultPromView: "structured" } })}
+              >
+                Structured
+              </button>
+            </div>
+          }
+        />
+      </Card>
+
+      <Card
+        title="Diagnostics"
+        subtitle="Ping endpoints and see if backend is alive"
+        right={
+          <div className="row">
+            <button className={cn("btn", diagRunning && "btnActive")} onClick={runDiagnostics} disabled={diagRunning}>
+              {diagRunning ? "Running…" : "Run diagnostics"}
+            </button>
+            <button className="btn" onClick={copyDebug} disabled={!diag.length}>
+              Copy debug info
+            </button>
+          </div>
+        }
+      >
+        {!diag.length ? (
+          <Muted>Click “Run diagnostics” to test all endpoints.</Muted>
+        ) : (
+          <div className="table" style={{ marginTop: 8 }}>
+            <div className="tHead" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}>
+              <div>Endpoint</div>
+              <div>Status</div>
+              <div>Latency</div>
+              <div>Checked</div>
+            </div>
+
+            {diag.map((d) => (
+              <div className="tRow" key={d.key} style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}>
+                <div className="mono">{d.label}</div>
+                <div>{d.ok ? <Badge kind="ok">ok</Badge> : <Badge kind="crit">fail</Badge>}</div>
+                <div className="mono">{typeof d.ms === "number" ? `${d.ms}ms` : "—"}</div>
+                <div className="mono">{formatTime(d.at)}</div>
+              </div>
+            ))}
+
+            {diag.some((d) => d.error) ? (
+              <div style={{ marginTop: 10 }}>
+                <div className="cardTitle" style={{ marginBottom: 6 }}>
+                  Errors
+                </div>
+                <pre className="code" style={{ margin: 0 }}>
+                  {diag
+                    .filter((d) => d.error)
+                    .map((d) => `${d.label}: ${d.error}`)
+                    .join("\n")}
+                </pre>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </Card>
+
+      <Card
+        title="Exports"
+        subtitle="One-click export bundle"
+        right={
+          <div className="row">
+            <button className="btn" onClick={exportEverything}>
+              Export everything
+            </button>
+          </div>
+        }
+      >
+        <Muted>This pulls fresh data once (best effort) and downloads 4 files: signals, kpi coverage, update plan, prom txt.</Muted>
+      </Card>
+    </div>
   );
 }
