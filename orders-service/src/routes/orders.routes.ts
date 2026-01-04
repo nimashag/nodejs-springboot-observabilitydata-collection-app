@@ -10,13 +10,43 @@ const router = Router();
 //Telemetry data
 router.get("/telemetry", getTelemetry);
 
-// DEBUG: intentionally slow endpoint to test anomaly detection
-//router.get("/debug/slow", async (req, res) => {
-//  const ms = Number(req.query.ms ?? 1200);
-//  await new Promise((r) => setTimeout(r, ms));
-//  res.json({ ok: true, delayed_ms: ms });
-//});
+// ===============================
+// DEBUG ROUTES (VIVA / DEMO ONLY)
+// Enable with: ENABLE_DEBUG_ROUTES=true
+// ===============================
+const DEBUG_ON = String(process.env.ENABLE_DEBUG_ROUTES).toLowerCase() === "true";
 
+// Slow endpoint → latency spike
+router.get("/debug/slow", async (req, res) => {
+  if (!DEBUG_ON) return res.status(404).json({ ok: false });
+
+  const ms = Math.min(15000, Number(req.query.ms ?? 1200));
+  await new Promise((r) => setTimeout(r, ms));
+  res.json({ ok: true, delayed_ms: ms });
+});
+
+// Fail endpoint → error burst
+router.get("/debug/fail", (req, res) => {
+  if (!DEBUG_ON) return res.status(404).json({ ok: false });
+
+  const code = Math.max(400, Math.min(599, Number(req.query.code ?? 500)));
+  res.status(code).json({ ok: false, error: "forced_failure", code });
+});
+
+// Mixed chaos
+router.get("/debug/mix", async (req, res) => {
+  if (!DEBUG_ON) return res.status(404).json({ ok: false });
+
+  const roll = Math.random();
+  if (roll < 0.4) {
+    await new Promise((r) => setTimeout(r, 800));
+    return res.json({ ok: true, slow: true });
+  }
+  if (roll < 0.8) {
+    return res.status(500).json({ ok: false, error: "random_failure" });
+  }
+  res.json({ ok: true, normal: true });
+});
 
 router.post('/', authenticate, authorizeRoles("customer"), ctrl.create);
 router.get('/', ctrl.getAll);
