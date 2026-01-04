@@ -1,26 +1,26 @@
 {
-  "generated_at": 1767534783190,
+  "generated_at": 1767541392493,
   "samples": 10,
   "signals": [
     {
-      "service": "restaurants-service",
-      "signal": "error_burst",
+      "service": "orders-service",
+      "signal": "latency_spike",
       "severity": "critical",
       "confidence": 0.99,
-      "metric": "error_delta_per_interval",
-      "current_delta": 120,
-      "baseline_mean": 3,
-      "baseline_std": 10,
-      "z_score": 11.37,
-      "top_error_routes": [
+      "metric": "avg_latency_ms",
+      "current": 1709,
+      "baseline_mean": 2,
+      "baseline_std": 1,
+      "z_score": 1790.68,
+      "top_slow_routes": [
         {
-          "route": "GET /api/restaurants/debug/fail",
-          "errors": 120,
-          "count": 120,
-          "avg_latency_ms": 1
+          "route": "GET /api/orders/debug/slow",
+          "avg_latency_ms": 1709,
+          "count": 30,
+          "errors": 0
         }
       ],
-      "timestamp": 1767534769567
+      "timestamp": 1767541379433
     }
   ]
 }
