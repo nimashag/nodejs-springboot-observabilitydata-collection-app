@@ -1,4 +1,4 @@
-#create request-level metrics based on log data
+#create request-level metrics based on log data for anomaly detection model testing 
 
 #!/usr/bin/env python3
 import csv

@@ -1,3 +1,4 @@
+# In here I take rusiru's json samples and convert to csv for easier analysis
 #!/usr/bin/env python3
 import json
 import csv

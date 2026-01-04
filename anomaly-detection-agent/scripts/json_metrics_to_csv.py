@@ -3,10 +3,10 @@ import json
 import csv
 from pathlib import Path
 
-# ✅ Correct input path (based on your screenshot)
+# Correct input path 
 INPUT_JSON = "data/raw/metrics/service_request_metrics.json"
 
-# ✅ Outputs
+# Outputs
 OUT_DIR = Path("data/metrics")
 OUT_SNAPSHOT = OUT_DIR / "service_snapshot.csv"
 OUT_ROUTES = OUT_DIR / "service_routes.csv"
