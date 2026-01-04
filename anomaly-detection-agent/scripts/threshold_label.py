@@ -4,7 +4,7 @@
 import csv
 from pathlib import Path
 
-INPUT_CSV = "data/merged/logs_with_metrics_only_matches.csv"
+INPUT_CSV = "data/merged/logs_with_metrics_clean.csv"
 OUT_CSV = "data/merged/logs_with_metrics_only_matches_labeled.csv"
 
 Path("data/merged").mkdir(parents=True, exist_ok=True)
@@ -13,7 +13,7 @@ Path("data/merged").mkdir(parents=True, exist_ok=True)
 # Thresholds (adjust for testing)
 # -----------------------------
 THRESHOLDS = {
-    "duration_ms": 2000,        # slow request threshold (ms)
+    "duration_ms": 3000,        # slow request threshold (ms)
     "status_5xx": 500,          # >=500 is server error
     "cpu_percent": 80,          # high CPU %
     "memory_mb": 200,           # high memory MB
