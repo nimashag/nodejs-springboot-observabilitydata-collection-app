@@ -318,18 +318,18 @@ const AlertData = () => {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-black"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4 bg-primary-600 text-white rounded-full " />
               Previous
             </button>
             <button
               onClick={() => setPage(p => p + 1)}
               disabled={filteredAlerts.length < 100}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-black"
             >
               Next
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 bg-primary-600 text-white rounded-full" />
             </button>
           </div>
         </div>
