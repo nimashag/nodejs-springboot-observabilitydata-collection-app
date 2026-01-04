@@ -14,6 +14,9 @@ COPY . .
 # Build TypeScript
 RUN npm run build
 
+# Set Node.js memory limit
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 # Expose port
 EXPOSE 3005
 
