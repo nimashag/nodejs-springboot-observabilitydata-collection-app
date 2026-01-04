@@ -4,6 +4,7 @@ import { api } from "./lib/api";
 import { usePoll } from "./hooks/usePoll";
 import { Drawer } from "./components/Drawer";
 import { downloadCsv, downloadJson, downloadText } from "./lib/download";
+import { parsePromSuggestions } from "./lib/parsePromSuggestions";
 
 type NavKey = "overview" | "signals" | "kpi" | "plan" | "prom" | "settings";
 type NavItem = { key: NavKey; label: string };
@@ -466,7 +467,9 @@ function SignalsPage() {
           {!filtered.length ? <Muted>No matching signals ✅</Muted> : null}
         </div>
 
-        <Muted>Showing {Math.min(filtered.length, 200)} / {raw.length} signals</Muted>
+        <Muted>
+          Showing {Math.min(filtered.length, 200)} / {raw.length} signals
+        </Muted>
       </Card>
 
       <Drawer
@@ -611,7 +614,9 @@ function KpiPage() {
           })}
         </div>
 
-        <Muted>Services: {data?.results?.length ?? 0} | Showing: {rows.length}</Muted>
+        <Muted>
+          Services: {data?.results?.length ?? 0} | Showing: {rows.length}
+        </Muted>
       </Card>
 
       <Drawer
@@ -621,7 +626,10 @@ function KpiPage() {
         onClose={() => setSelected(null)}
       >
         <pre className="code">{JSON.stringify(selected, null, 2)}</pre>
-        <button className="btn" onClick={() => downloadJson(`kpi_${selected?.service ?? "service"}_${Date.now()}.json`, selected)}>
+        <button
+          className="btn"
+          onClick={() => downloadJson(`kpi_${selected?.service ?? "service"}_${Date.now()}.json`, selected)}
+        >
           Download this service report
         </button>
       </Drawer>
@@ -777,6 +785,25 @@ function PromPage() {
   const [enabled, setEnabled] = useState(false);
   const { data, error, loading } = usePoll(api.promSuggestions, { intervalMs: 12000, enabled });
 
+  const [promView, setPromView] = useState<"raw" | "structured">("raw");
+  const [promSearch, setPromSearch] = useState("");
+
+  const promText = String(data ?? "");
+
+  const promBlocks = useMemo(() => parsePromSuggestions(promText), [promText]);
+
+  const promFiltered = useMemo(() => {
+    const q = promSearch.trim().toLowerCase();
+    if (!q) return promBlocks;
+
+    return promBlocks.filter((b) => {
+      const hay =
+        `${b.service} ${b.method ?? ""} ${b.path ?? ""} ${b.intent ?? ""} ${b.conf ?? ""} ` +
+        b.lines.map((l) => l.text).join(" ");
+      return hay.toLowerCase().includes(q);
+    });
+  }, [promBlocks, promSearch]);
+
   return (
     <Card
       title="Prom Suggestions"
@@ -786,7 +813,18 @@ function PromPage() {
           <button className={cn("btn", enabled && "btnActive")} onClick={() => setEnabled((x) => !x)}>
             {enabled ? "Live" : "Load"}
           </button>
-          <button className="btn" onClick={() => downloadText(`prom_suggestions_${Date.now()}.txt`, data ?? "")}>
+
+          <button className={cn("btn", promView === "raw" && "btnActive")} onClick={() => setPromView("raw")}>
+            Raw
+          </button>
+          <button
+            className={cn("btn", promView === "structured" && "btnActive")}
+            onClick={() => setPromView("structured")}
+          >
+            Structured
+          </button>
+
+          <button className="btn" onClick={() => downloadText(`prom_suggestions_${Date.now()}.txt`, promText)}>
             Export TXT
           </button>
         </div>
@@ -795,7 +833,66 @@ function PromPage() {
       {error ? <ErrorBox text={error} /> : null}
       {loading && !data && enabled ? <Muted>Loading…</Muted> : null}
       {!enabled ? <Muted>Click “Load” to fetch the file.</Muted> : null}
-      {enabled ? <pre className="code">{data ?? ""}</pre> : null}
+
+      {enabled ? (
+        <>
+          <Toolbar
+            left={
+              <div className="row">
+                <TextInput
+                  value={promSearch}
+                  onChange={setPromSearch}
+                  placeholder="Search… (service/method/path/intent/metric text)"
+                />
+              </div>
+            }
+            right={
+              <div className="meta">
+                {promView === "structured"
+                  ? `Blocks: ${promFiltered.length} / ${promBlocks.length}`
+                  : `Lines: ${promText.split(/\r?\n/).filter(Boolean).length}`}
+              </div>
+            }
+          />
+
+          {promView === "raw" ? (
+            <pre className="code">{promText}</pre>
+          ) : (
+            <div>
+              {!promFiltered.length ? <Muted>No matches ✅</Muted> : null}
+
+              {promFiltered.map((b, idx) => (
+                <div key={`${b.service}-${b.routeLine}-${idx}`} className="card" style={{ marginBottom: 12 }}>
+                  <div className="cardHeader">
+                    <div>
+                      <div className="cardTitle">
+                        <span className="mono">{b.service}</span>{" "}
+                        <span className="muted">
+                          {b.method ? `${b.method} ` : ""}
+                          {b.path ?? ""}
+                        </span>
+                      </div>
+                      <div className="cardSub mono">
+                        intent: {b.intent ?? "—"} • conf: {b.conf ?? "—"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="cardBody">
+                    <div className="mono" style={{ marginBottom: 8 }}>
+                      {b.routeLine}
+                    </div>
+
+                    <pre className="code" style={{ margin: 0 }}>
+                      {b.lines.map((l) => l.text).join("\n")}
+                    </pre>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : null}
     </Card>
   );
 }
