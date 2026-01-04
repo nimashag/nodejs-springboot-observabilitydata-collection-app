@@ -1,0 +1,11 @@
+request_id,level,service,event,generated_at,duration_ms,cpu_percent,memory_mb,db_query_time_ms,status_code,anomaly_label,anomaly_score,anomaly_reasons
+51ae920e-e382-497e-a208-21af98549759,error,restaurants-service,jvm.gc.pause,1767304360968.0,11436.04,46.6,863.64,390.68,500.0,1,3,duration_ms>=3000;db_query_time_ms>=300;status_code>=500
+7e80c6a7-e99b-458d-a917-e319b198c9ee,info,restaurants-service,restaurant.list.start,1767304360968.0,555.73,62.35,86.35,272.47,200.0,0,0,
+6361e320-77d3-4704-a406-9d33726957c0,info,restaurants-service,restaurant.list.start,1767304360968.0,1613.63,62.14,77.8,340.67,304.0,1,1,db_query_time_ms>=300
+7e80c6a7-e99b-458d-a917-e319b198c9ee,info,restaurants-service,http.request.received,1767304360968.0,555.73,62.35,86.35,272.47,200.0,0,0,
+4258b3fc-01b3-4a6a-9072-59de121a6599,warn,restaurants-service,memory.pressure,1767304360968.0,3706.53,83.28,613.87,74.19,200.0,1,2,duration_ms>=3000;cpu>=80
+63b67f59-496c-4ecf-959d-a2e0e9e862b7,info,orders-service,order.service.get_by_id.success,1767304360968.0,66.27,55.39,76.44,262.11,304.0,0,0,
+6361e320-77d3-4704-a406-9d33726957c0,info,restaurants-service,restaurant.list.start,1767304360968.0,1613.63,62.14,77.8,340.67,304.0,1,1,db_query_time_ms>=300
+63b67f59-496c-4ecf-959d-a2e0e9e862b7,info,orders-service,http.request.received,1767304360968.0,66.27,55.39,76.44,262.11,304.0,0,0,
+63b67f59-496c-4ecf-959d-a2e0e9e862b7,info,orders-service,http.request.received,1767304360968.0,66.27,55.39,76.44,262.11,304.0,0,0,
+4baca0ab-c3fa-415b-981a-64ea28786c31,error,orders-service,http.request.completed,1767304360968.0,11851.03,104.54,344.29,141.31,502.0,1,3,duration_ms>=3000;cpu>=80;status_code>=500

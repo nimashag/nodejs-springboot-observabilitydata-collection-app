@@ -12,7 +12,7 @@ from sklearn.metrics import (
 # CONFIG
 # -------------------------
 MODEL_PATH = "models/random_forest_anomaly_classifier.joblib"
-TEST_DATA = "data/test/logs_test2.csv"   # <-- your test CSV
+TEST_DATA = "data/test/logs_test2.csv"   # <--  test CSV
 
 FEATURES = ["level", "status_code", "anomaly_score"]
 TARGET = "anomaly_label"
