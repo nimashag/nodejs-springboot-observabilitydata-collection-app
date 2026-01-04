@@ -10,11 +10,8 @@ RUN npm install
 
 COPY . .
 
-# Accept build arg for API URL, default to nginx gateway for Docker
-ARG VITE_LOG_AGGREGATION_API_URL=http://localhost:31000
-ENV VITE_LOG_AGGREGATION_API_URL=$VITE_LOG_AGGREGATION_API_URL
-
 # Build - skip TypeScript type checking to save memory (Vite handles TS compilation)
+# Note: API URL is determined dynamically at runtime based on window.location
 RUN NODE_OPTIONS="--max-old-space-size=2048" npx vite build
 
 # Production step
