@@ -16,8 +16,15 @@ function getApiBaseUrl(): string {
 
   // For remote deployments (EC2, etc.), use nginx gateway on the same host
   // Use port 31000 (nginx gateway) on the same hostname
+  // Always use http (not https) for the API gateway
+  const apiProtocol = protocol === 'https:' ? 'https:' : 'http:';
   const nginxPort = '31000';
-  return `${protocol}//${hostname}:${nginxPort}`;
+  const apiUrl = `${apiProtocol}//${hostname}:${nginxPort}`;
+  
+  // Debug logging (remove in production if needed)
+  console.log('[FrontendAPI] Detected hostname:', hostname, 'Using API URL:', apiUrl);
+  
+  return apiUrl;
 }
 
 export const apiBase = getApiBaseUrl();
