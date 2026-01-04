@@ -5,10 +5,80 @@ import {
   AlertCircle,
   CheckCircle,
   Download,
-  RefreshCw
+  RefreshCw,
+  Clock,
+  Activity,
+  Zap
 } from 'lucide-react'
 import { apiService, ThresholdRecommendation, AdaptiveConfig } from '../services/api'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+
+interface ThresholdInfo {
+  name: string
+  key: string
+  description: string
+  defaultValue: string
+  category: 'error' | 'latency' | 'availability'
+  icon: any
+  color: string
+}
+
+const THRESHOLD_INFO: ThresholdInfo[] = [
+  {
+    name: 'Error Burst Threshold',
+    key: 'error_burst_threshold',
+    description: 'Number of errors in a time window that triggers an alert',
+    defaultValue: '5 errors',
+    category: 'error',
+    icon: AlertCircle,
+    color: 'text-red-600'
+  },
+  {
+    name: 'Error Burst Window',
+    key: 'error_burst_window',
+    description: 'Time window for counting error bursts',
+    defaultValue: '1 minute',
+    category: 'error',
+    icon: Clock,
+    color: 'text-red-600'
+  },
+  {
+    name: 'High Latency Threshold',
+    key: 'high_latency_threshold',
+    description: 'Maximum acceptable response time before alerting',
+    defaultValue: '3 seconds',
+    category: 'latency',
+    icon: Clock,
+    color: 'text-yellow-600'
+  },
+  {
+    name: 'High Latency Count',
+    key: 'high_latency_count',
+    description: 'Number of consecutive slow requests to trigger alert',
+    defaultValue: '3 requests',
+    category: 'latency',
+    icon: Zap,
+    color: 'text-yellow-600'
+  },
+  {
+    name: 'Availability Error Rate',
+    key: 'availability_error_rate',
+    description: 'Acceptable error rate percentage for availability monitoring',
+    defaultValue: '50%',
+    category: 'availability',
+    icon: Activity,
+    color: 'text-green-600'
+  },
+  {
+    name: 'Metrics Window',
+    key: 'metrics_window',
+    description: 'Time window for calculating availability metrics',
+    defaultValue: '5 minutes',
+    category: 'availability',
+    icon: Clock,
+    color: 'text-green-600'
+  }
+]
 
 const ThresholdConfig = () => {
   const [recommendations, setRecommendations] = useState<ThresholdRecommendation[]>([])
@@ -68,6 +138,39 @@ const ThresholdConfig = () => {
     a.click()
   }
 
+  const formatValue = (value: number, key: string): string => {
+    if (key === 'error_burst_window' || key === 'metrics_window') {
+      if (value >= 60000) return `${(value / 60000).toFixed(1)} min`
+      if (value >= 1000) return `${(value / 1000).toFixed(1)} sec`
+      return `${value} ms`
+    }
+    if (key === 'high_latency_threshold') {
+      if (value >= 1000) return `${(value / 1000).toFixed(1)} sec`
+      return `${value} ms`
+    }
+    if (key === 'availability_error_rate') {
+      // Value is 0.5 for 50%, so multiply by 100
+      return `${(value * 100).toFixed(0)}%`
+    }
+    if (key === 'error_burst_threshold' || key === 'high_latency_count') {
+      return `${value}`
+    }
+    return `${value}`
+  }
+
+  const getCategoryBadge = (category: string) => {
+    switch (category) {
+      case 'error':
+        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Error</span>
+      case 'latency':
+        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Latency</span>
+      case 'availability':
+        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Availability</span>
+      default:
+        return null
+    }
+  }
+
   // Prepare chart data - comparison of current vs recommended
   const chartData = recommendations
     .filter(rec => rec.alert_type === 'error')
@@ -91,7 +194,7 @@ const ThresholdConfig = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Threshold Configuration</h1>
-          <p className="text-gray-600 mt-1">Adaptive threshold recommendations and configuration</p>
+          <p className="text-gray-600 mt-1">Monitor and manage alert thresholds across all services</p>
         </div>
         <div className="flex gap-3">
           <button
@@ -118,190 +221,209 @@ const ThresholdConfig = () => {
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-primary-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Recommendations</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{recommendations.length}</p>
-            </div>
-            <div className="bg-primary-100 p-3 rounded-lg">
-              <TrendingUp className="w-8 h-8 text-primary-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">High Confidence</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
-                {recommendations.filter(r => r.confidence === 'high').length}
-              </p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Services Covered</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
-                {new Set(recommendations.map(r => r.service_name)).size}
-              </p>
-            </div>
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <Settings className="w-8 h-8 text-purple-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Threshold Comparison Chart */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-primary-600" />
-          Error Threshold Comparison (Current vs Recommended)
-        </h3>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="service" angle={-45} textAnchor="end" height={100} />
-            <YAxis label={{ value: 'Threshold Value', angle: -90, position: 'insideLeft' }} />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="current" fill="#ef4444" name="Current Threshold" />
-            <Bar dataKey="recommended" fill="#0ea5e9" name="Recommended Threshold" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Recommendations Table */}
+      {/* Threshold Types Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Threshold Recommendations</h3>
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Settings className="w-5 h-5 text-primary-600" />
+            Threshold Types
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">Configuration parameters for alert monitoring</p>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Service
+                  Category
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Alert Type
+                  Threshold Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Current
+                  Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Recommended
+                  Default Value
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Change
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Confidence
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Samples
+                  Current Values
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {recommendations.map((rec, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {rec.service_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {rec.alert_type}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {rec.current_threshold}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-semibold text-primary-600">
-                      {rec.recommended_threshold}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-600">
-                        +{rec.adjustment_percentage.toFixed(0)}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full ${getConfidenceColor(rec.confidence)}`}>
-                      {getConfidenceIcon(rec.confidence)}
-                      {rec.confidence}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {rec.based_on_samples}
-                  </td>
-                </tr>
-              ))}
+              {THRESHOLD_INFO.map((threshold, index) => {
+                const Icon = threshold.icon
+                return (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getCategoryBadge(threshold.category)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <Icon className={`w-5 h-5 ${threshold.color}`} />
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">{threshold.name}</div>
+                          <div className="text-xs text-gray-500 font-mono">{threshold.key}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-600 max-w-md">{threshold.description}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-bold text-primary-600">{threshold.defaultValue}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {config && (
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(config.thresholds).map(([serviceName, serviceThresholds]) => {
+                            const value = (serviceThresholds as any)[threshold.key]
+                            if (value === undefined) return null
+                            return (
+                              <div key={serviceName} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
+                                <span className="text-gray-600">{serviceName.replace('-service', '')}:</span>
+                                <span className="font-semibold text-gray-900">{formatValue(value, threshold.key)}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Rationale Details */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendation Rationale</h3>
-        <div className="space-y-4">
-          {recommendations.map((rec, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="font-semibold text-gray-900">
-                    {rec.service_name} - {rec.alert_type}
-                  </h4>
-                  <p className="text-sm text-gray-600 mt-1">{rec.rationale}</p>
-                </div>
-                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getConfidenceColor(rec.confidence)}`}>
-                  {rec.confidence}
-                </span>
-              </div>
-            </div>
-          ))}
+      {/* Threshold Comparison Chart */}
+      {chartData.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary-600" />
+            Error Threshold Comparison (Current vs Recommended)
+          </h3>
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="service" angle={-45} textAnchor="end" height={100} />
+              <YAxis label={{ value: 'Threshold Value', angle: -90, position: 'insideLeft' }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="current" fill="#ef4444" name="Current Threshold" />
+              <Bar dataKey="recommended" fill="#0ea5e9" name="Recommended Threshold" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-      </div>
+      )}
 
-      {/* Current Configuration */}
+      {/* Recommendations Table */}
+      {recommendations.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Threshold Recommendations</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Service
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Alert Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Current
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Recommended
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Change
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Confidence
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rationale
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {recommendations.map((rec, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {rec.service_name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {rec.alert_type}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {rec.current_threshold}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-primary-600">
+                        {rec.recommended_threshold}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-600">
+                          +{rec.adjustment_percentage.toFixed(0)}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full ${getConfidenceColor(rec.confidence)}`}>
+                        {getConfidenceIcon(rec.confidence)}
+                        {rec.confidence}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 max-w-md">
+                      {rec.rationale}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Current Configuration by Service */}
       {config && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Configuration</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Configuration by Service</h3>
           <div className="text-sm text-gray-600 mb-4">
             Generated at: {new Date(config.generated_at).toLocaleString()}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(config.thresholds).map(([service, thresholds]) => (
-              <div key={service} className="border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-3">{service}</h4>
+              <div key={service} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-primary-600" />
+                  {service}
+                </h4>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Error Burst Threshold:</span>
-                    <span className="font-medium text-gray-900">{thresholds.error_burst_threshold}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Error Burst:</span>
+                    <span className="font-medium text-gray-900">{thresholds.error_burst_threshold} errors</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">Burst Window:</span>
-                    <span className="font-medium text-gray-900">{thresholds.error_burst_window}ms</span>
+                    <span className="font-medium text-gray-900">{formatValue(thresholds.error_burst_window, 'error_burst_window')}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Latency Threshold:</span>
-                    <span className="font-medium text-gray-900">{thresholds.high_latency_threshold}ms</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Latency:</span>
+                    <span className="font-medium text-gray-900">{formatValue(thresholds.high_latency_threshold, 'high_latency_threshold')}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Availability Rate:</span>
-                    <span className="font-medium text-gray-900">{(thresholds.availability_error_rate * 100).toFixed(0)}%</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Availability:</span>
+                    <span className="font-medium text-gray-900">{formatValue(thresholds.availability_error_rate, 'availability_error_rate')}</span>
                   </div>
                 </div>
               </div>
@@ -314,4 +436,3 @@ const ThresholdConfig = () => {
 }
 
 export default ThresholdConfig
-

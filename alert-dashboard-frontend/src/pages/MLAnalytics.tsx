@@ -124,7 +124,7 @@ const MLAnalytics = () => {
       </div>
 
       {/* Training Info */}
-      <div className="bg-gradient-to-r from-primary-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+      {/* <div className="bg-gradient-to-r from-primary-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
         <div className="flex items-center gap-3 mb-4">
           <Brain className="w-8 h-8" />
           <div>
@@ -152,7 +152,7 @@ const MLAnalytics = () => {
             <p className="text-lg font-semibold mt-1">{report.hyperparameter_tuning.cv_folds}</p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Model Performance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -370,7 +370,7 @@ const MLAnalytics = () => {
       </div>
 
       {/* Model Files */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      {/* <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Model Files</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
@@ -396,7 +396,7 @@ const MLAnalytics = () => {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }
