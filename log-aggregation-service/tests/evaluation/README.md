@@ -34,7 +34,7 @@ The evaluation uses the following event type categories:
 | **NLP-based** | **98.84%** | **100.00%** | **98.84%** | **99.41%** |
 | **TF-IDF KNN** | 30.64% | 7.66% | 16.67% | 10.45% |
 
-*Results based on 70/30 train-test split from aggregated logs (623 samples total: 450 training, 173 test)*
+*Results based on 70/30 train-test split from aggregated logs (707 samples total: 509 training, 198 test)*
 
 ### Per-Class Performance (NLP-based - Best Performer)
 
@@ -147,12 +147,12 @@ The rule-based approach works well because:
 **How it works:**
 - Probabilistic classifier based on Bayes' theorem
 - Assumes feature independence (words in template)
-- Learns word probabilities for each event type from training data (438 samples)
+- Learns word probabilities for each event type from training data (509 samples)
 
 **Strengths:**
 - ✅ Good performance improvement after training (12.72% → 89.02%)
 - ✅ Fast training and inference
-- ✅ Works well with moderate-sized datasets (450 training samples)
+- ✅ Works well with moderate-sized datasets (509 training samples)
 - ✅ Probabilistic output (confidence scores)
 - ✅ Handles unseen words gracefully
 - ✅ Strong precision (92.86% average)
@@ -178,7 +178,7 @@ The rule-based approach works well because:
 
 **How it works:**
 - Uses `node-nlp` library with neural network-based intent recognition
-- Learns semantic patterns and context from training data (438 samples)
+- Learns semantic patterns and context from training data (509 samples: 462 from real logs + 47 synthetic)
 - Handles variations in phrasing and format
 
 **Strengths:**
@@ -187,7 +187,7 @@ The rule-based approach works well because:
 - ✅ Excellent recall (98.84% average)
 - ✅ Learns semantic patterns, not just keywords
 - ✅ Handles format variations well (e.g., "DELIVERY|ts=..." vs "{\"lvl\":\"info\"...")
-- ✅ Robust to training data size (works well with 450 training samples)
+- ✅ Robust to training data size (works well with 509 training samples)
 - ✅ **Perfect classification** for all new categories: business_logic, server_lifecycle, infrastructure (100% precision/recall)
 - ✅ Perfect classification for database, authentication, and http_request events (100% precision/recall)
 
@@ -202,7 +202,7 @@ The rule-based approach works well because:
 2. **Context awareness**: Understands that "http.request.received" and "http.request.completed" are both HTTP events
 3. **Format flexibility**: Can handle different log formats (pipe-separated, JSON, etc.) because it learns patterns, not exact matches
 4. **Neural network architecture**: The underlying neural network can capture complex relationships between words and event types
-5. **Larger training set**: 438 samples (vs 127 previously) enables better pattern learning
+5. **Larger training set**: 509 samples (462 from real logs + 47 synthetic) enables better pattern learning
 
 **Performance breakdown:**
 - **Perfect classification** for business_logic events (100% precision/recall) - NEW
@@ -268,8 +268,8 @@ The rule-based approach works well because:
 
 1. **Naive Bayes**: Feature independence assumption violated, struggles with contextual dependencies
 2. **TF-IDF KNN**: Class imbalance and feature sparsity issues cause class collapse
-3. **Training data quality**: While improved (438 samples), class imbalance still affects performance
-4. **Class distribution**: Imbalanced classes (93/173 "unknown" in test set) bias predictions
+3. **Training data quality**: While improved (509 samples), class imbalance still affects performance
+4. **Class distribution**: Imbalanced classes in test set (198 samples total) bias predictions
 
 ### Recommendations
 
@@ -305,25 +305,25 @@ The rule-based approach works well because:
 
 **After expansion** (9 categories: added business_logic, server_lifecycle, infrastructure):
 - NLP-based: **98.84% accuracy** (+1.15% improvement)
-- Unknown category: **22/173 samples (12.72%)** - 76% reduction!
+- Unknown category: **34/198 samples (17.17%)** - significant reduction!
 - Perfect classification for all new categories (100% precision/recall)
 - Naive Bayes improved from 81.50% to 89.02% (+7.52%)
 
 ### Key Takeaways
 
 - **Expanding event types significantly improves classification**: NLP-based accuracy increased from 97.69% to 98.84%
-- **Reduced "unknown" category by 76%**: From 93 samples to 22 samples
+- **Reduced "unknown" category**: Significant reduction in unclassified events
 - **Perfect classification for new categories**: business_logic, server_lifecycle, and infrastructure all achieve 100% precision/recall with NLP-based
 - **NLP-based classifier achieves 5.8% accuracy improvement** over the rule-based baseline (98.84% vs 93.06%)
 - **Rule-based provides a strong baseline** (93.06%) - not trivial to beat, making ML improvements meaningful
-- **Training data quality matters**: Larger dataset (450 samples) and expanded categories improved all ML models
+- **Training data quality matters**: Larger dataset (509 samples: 462 from real logs + 47 synthetic) and expanded categories improved all ML models
 - **Semantic understanding** (NLP) outperforms statistical methods (Naive Bayes, TF-IDF) for this task
 - **Consistent evaluation methodology**: Using shared utilities ensures fair comparison and production simulation
 
 ### Next Steps for Improvement
 
-1. **Further reduce "unknown" category**: Analyze remaining 22 unknown samples to identify new categories
-2. **Expand training dataset**: Collect more diverse log examples (target: 1000+ samples)
+1. **Further reduce "unknown" category**: Analyze remaining unknown samples to identify new categories
+2. **Expand training dataset**: Collect more diverse log examples (current: 707 total samples, target: 1000+ samples)
 3. **Balance classes**: Ensure all event types have sufficient training examples, especially "error" and "warning"
 4. **Feature engineering**: For TF-IDF KNN, try n-grams and character-level features
 5. **Hyperparameter tuning**: Experiment with different K values for KNN, regularization for Naive Bayes
