@@ -17,15 +17,15 @@ OUTPUT_DIR = BASE_DIR.parent / 'output'
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 print("=" * 80)
-print("📊 Exporting Alert Data to CSV")
+print("Exporting Alert Data to CSV")
 print("=" * 80)
 
 # Load JSON data
-print(f"\n📂 Loading data from: {DATA_FILE}")
+print(f"\nLoading data from: {DATA_FILE}")
 with open(DATA_FILE, 'r') as f:
     alerts = json.load(f)
 
-print(f"✓ Loaded {len(alerts)} alert records")
+print(f"Loaded {len(alerts)} alert records")
 
 # Convert to DataFrame
 df = pd.DataFrame(alerts)
@@ -34,7 +34,7 @@ df = pd.DataFrame(alerts)
 df['timestamp'] = pd.to_datetime(df['timestamp'])
 df = df.sort_values('timestamp').reset_index(drop=True)
 
-print(f"\n📋 Data Summary:")
+print(f"\nData Summary:")
 print(f"   Total Records: {len(df)}")
 print(f"   Date Range: {df['timestamp'].min()} to {df['timestamp'].max()}")
 print(f"   Services: {df['service_name'].nunique()}")
@@ -44,10 +44,10 @@ print(f"   Columns: {len(df.columns)}")
 # Export to CSV
 csv_file = OUTPUT_DIR / 'alert-data-collection.csv'
 df.to_csv(csv_file, index=False, encoding='utf-8')
-print(f"\n✅ Exported to: {csv_file}")
+print(f"\nExported to: {csv_file}")
 
 # Create summary statistics CSV
-print("\n📊 Creating summary statistics...")
+print("\nCreating summary statistics...")
 
 summary_data = []
 
@@ -115,22 +115,22 @@ for state in df['alert_state'].unique():
 summary_df = pd.DataFrame(summary_data)
 summary_csv = OUTPUT_DIR / 'alert-data-summary.csv'
 summary_df.to_csv(summary_csv, index=False, encoding='utf-8')
-print(f"✅ Summary exported to: {summary_csv}")
+print(f"Summary exported to: {summary_csv}")
 
 # Create service-specific CSVs
-print("\n📁 Creating service-specific CSV files...")
+print("\nCreating service-specific CSV files...")
 for service in df['service_name'].unique():
     service_df = df[df['service_name'] == service]
     service_file = OUTPUT_DIR / f'alert-data-{service}.csv'
     service_df.to_csv(service_file, index=False, encoding='utf-8')
-    print(f"   ✓ {service}: {len(service_df)} records → {service_file.name}")
+    print(f"   {service}: {len(service_df)} records → {service_file.name}")
 
 print("\n" + "=" * 80)
-print("🎉 CSV Export Complete!")
+print("CSV Export Complete!")
 print("=" * 80)
-print(f"\n📁 Files created:")
+print(f"\nFiles created:")
 print(f"   1. alert-data-collection.csv (all data)")
 print(f"   2. alert-data-summary.csv (statistics)")
 print(f"   3. alert-data-<service>.csv (per service)")
-print(f"\n✨ Ready for analysis in Excel, Tableau, or any CSV tool!")
+print(f"\nReady for analysis in Excel, Tableau, or any CSV tool!")
 
