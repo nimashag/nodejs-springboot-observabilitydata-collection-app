@@ -8,7 +8,8 @@ import {
   RefreshCw,
   Clock,
   Activity,
-  Zap
+  Zap,
+  X
 } from 'lucide-react'
 import { apiService, ThresholdRecommendation, AdaptiveConfig } from '../services/api'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
@@ -85,6 +86,7 @@ const ThresholdConfig = () => {
   const [config, setConfig] = useState<AdaptiveConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedThreshold, setSelectedThreshold] = useState<ThresholdRecommendation | null>(null)
 
   useEffect(() => {
     loadData()
@@ -319,80 +321,155 @@ const ThresholdConfig = () => {
         </div>
       )}
 
-      {/* Recommendations Table */}
-      {recommendations.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Threshold Recommendations</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Service
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Alert Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Current
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Recommended
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Change
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Confidence
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rationale
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {recommendations.map((rec, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {rec.service_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {rec.alert_type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {rec.current_threshold}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-semibold text-primary-600">
-                        {rec.recommended_threshold}
+      {/* Recommendations Grouped by Category */}
+      {recommendations.length > 0 && (() => {
+        // Group recommendations by category
+        const groupedByCategory = recommendations.reduce((acc, rec) => {
+          const category = rec.category || (rec.alert_type === 'error' ? 'error' : rec.alert_type === 'latency' ? 'performance' : 'availability');
+          if (!acc[category]) {
+            acc[category] = [];
+          }
+          acc[category].push(rec);
+          return acc;
+        }, {} as Record<string, ThresholdRecommendation[]>);
+
+        const categoryConfig = {
+          error: { name: 'Error Thresholds', icon: AlertCircle, color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' },
+          performance: { name: 'Performance Thresholds', icon: Zap, color: 'text-yellow-600', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200' },
+          availability: { name: 'Availability Thresholds', icon: Activity, color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200' }
+        };
+
+        return (
+          <div className="space-y-6">
+            {Object.entries(groupedByCategory).map(([category, categoryRecs]) => {
+              const config = categoryConfig[category as keyof typeof categoryConfig] || categoryConfig.error;
+              const CategoryIcon = config.icon;
+
+              return (
+                <div key={category} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className={`px-6 py-4 border-b ${config.borderColor} ${config.bgColor}`}>
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <CategoryIcon className={`w-5 h-5 ${config.color}`} />
+                      {config.name}
+                      <span className="ml-2 px-2 py-1 text-xs font-medium rounded-full bg-white text-gray-700">
+                        {categoryRecs.length} recommendation{categoryRecs.length !== 1 ? 's' : ''}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium text-green-600">
-                          +{rec.adjustment_percentage.toFixed(0)}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full ${getConfidenceColor(rec.confidence)}`}>
-                        {getConfidenceIcon(rec.confidence)}
-                        {rec.confidence}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 max-w-md">
-                      {rec.rationale}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Service
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Threshold
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Description
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Current
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Recommended
+                          </th>
+                          {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Change
+                          </th> */}
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Confidence
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {categoryRecs.map((rec, index) => {
+                          const formatValue = (value: number, unit: string) => {
+                            if (unit === 'rate') {
+                              return `${(value * 100).toFixed(1)}%`;
+                            }
+                            return `${value} ${unit}`;
+                          };
+
+                          const changeIcon = rec.adjustment_percentage > 0 ? '↑' : rec.adjustment_percentage < 0 ? '↓' : '→';
+                          const changeColor = rec.adjustment_percentage > 0 ? 'text-green-600' : rec.adjustment_percentage < 0 ? 'text-red-600' : 'text-gray-600';
+
+                          return (
+                            <tr
+                              key={index}
+                              className="hover:bg-gray-50 cursor-pointer"
+                              onClick={() => setSelectedThreshold(rec)}
+                            >
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {rec.service_name}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-semibold text-gray-900">
+                                  {rec.threshold_label || rec.alert_type}
+                                </div>
+                                {rec.unit && (
+                                  <div className="text-xs text-gray-500">Unit: {rec.unit}</div>
+                                )}
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-600 max-w-xs">
+                                  {rec.description || 'No description available'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {formatValue(rec.current_threshold, rec.unit || '')}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="text-sm font-semibold text-primary-600">
+                                  {formatValue(rec.recommended_threshold, rec.unit || '')}
+                                </span>
+                              </td>
+                              {/* <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                  <span className={`text-sm font-medium ${changeColor}`}>
+                                    {changeIcon} {Math.abs(rec.adjustment_percentage).toFixed(1)}%
+                                  </span>
+                                </div>
+                              </td> */}
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-2 py-1 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full ${getConfidenceColor(rec.confidence)}`}>
+                                  {getConfidenceIcon(rec.confidence)}
+                                  {rec.confidence}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {categoryRecs.some(rec => rec.rationale) && (
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                      <details className="text-sm">
+                        <summary className="cursor-pointer font-medium text-gray-700 hover:text-gray-900">
+                          View Detailed Rationale
+                        </summary>
+                        <div className="mt-3 space-y-2">
+                          {categoryRecs.map((rec, idx) => (
+                            rec.rationale && (
+                              <div key={idx} className="pl-4 border-l-2 border-gray-300">
+                                <div className="font-medium text-gray-900">{rec.service_name} - {rec.threshold_label || rec.alert_type}:</div>
+                                <div className="text-gray-600 mt-1">{rec.rationale}</div>
+                                <div className="text-xs text-gray-500 mt-1">Based on {rec.based_on_samples} samples</div>
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Current Configuration by Service */}
       {config && (
@@ -428,6 +505,190 @@ const ThresholdConfig = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Threshold Detail Modal */}
+      {selectedThreshold && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 animate-fade-in">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                  {selectedThreshold.category === 'error' && 'Error Threshold'}
+                  {selectedThreshold.category === 'performance' && 'Performance Threshold'}
+                  {selectedThreshold.category === 'availability' && 'Availability Threshold'}
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {selectedThreshold.threshold_label || selectedThreshold.alert_type}
+                </h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  Service:&nbsp;
+                  <span className="font-mono">
+                    {selectedThreshold.service_name}
+                  </span>
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedThreshold(null)}
+                className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+                aria-label="Close threshold details"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* Description */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800 mb-1">Description</h3>
+                <p className="text-sm text-gray-600">
+                  {selectedThreshold.description || 'No description available for this threshold.'}
+                </p>
+              </div>
+
+              {/* Current vs Recommended */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-xs font-medium text-gray-500 uppercase mb-1">Current Threshold</div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {selectedThreshold.unit === 'rate'
+                      ? `${(selectedThreshold.current_threshold * 100).toFixed(1)}%`
+                      : `${selectedThreshold.current_threshold} ${selectedThreshold.unit}`}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-primary-200 bg-primary-50 p-3">
+                  <div className="text-xs font-medium text-primary-700 uppercase mb-1">Recommended Threshold</div>
+                  <div className="text-lg font-semibold text-primary-700">
+                    {selectedThreshold.unit === 'rate'
+                      ? `${(selectedThreshold.recommended_threshold * 100).toFixed(1)}%`
+                      : `${selectedThreshold.recommended_threshold} ${selectedThreshold.unit}`}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-xs font-medium text-gray-500 uppercase mb-1">Change</div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <TrendingUp
+                      className={`w-4 h-4 ${
+                        selectedThreshold.adjustment_percentage > 0
+                          ? 'text-green-600'
+                          : selectedThreshold.adjustment_percentage < 0
+                          ? 'text-red-600'
+                          : 'text-gray-500'
+                      }`}
+                    />
+                    <span className="font-medium text-gray-900">
+                      {selectedThreshold.adjustment_percentage > 0 ? '+' : ''}
+                      {selectedThreshold.adjustment_percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Confidence & Samples */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-1">Confidence & Samples</h3>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span
+                      className={`px-2 py-1 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full ${getConfidenceColor(
+                        selectedThreshold.confidence
+                      )}`}
+                    >
+                      {getConfidenceIcon(selectedThreshold.confidence)}
+                      {selectedThreshold.confidence}
+                    </span>
+                    <span className="text-gray-600">
+                      Based on <span className="font-medium">{selectedThreshold.based_on_samples}</span> samples
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-1">Alert Type</h3>
+                  <p className="text-sm text-gray-600 capitalize">{selectedThreshold.alert_type}</p>
+                </div>
+              </div>
+
+              {/* Calculation Rule */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800 mb-1">Calculation Rule</h3>
+                {selectedThreshold.alert_type === 'error' && (
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p>
+                      This threshold is calculated using the statistical formula:{' '}
+                      <span className="font-mono bg-gray-100 px-1 py-0.5 rounded">
+                        recommended = mean + k × std_deviation
+                      </span>
+                    </p>
+                    <ul className="list-disc list-inside">
+                      <li>
+                        <span className="font-medium">mean</span>: average error count per alert
+                      </li>
+                      <li>
+                        <span className="font-medium">std_deviation</span>: how much the error count varies
+                      </li>
+                      <li>
+                        <span className="font-medium">k</span>: sensitivity factor adjusted using false positive rate
+                        (1.5, 2.0, or 2.5)
+                      </li>
+                      <li>
+                        Final threshold is the max of{' '}
+                        <span className="font-mono">mean + k × std</span> and the 75th percentile.
+                      </li>
+                    </ul>
+                  </div>
+                )}
+                {selectedThreshold.alert_type === 'availability' && (
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p>
+                      This threshold is based on the distribution of error rates across availability alerts, using
+                      percentile analysis.
+                    </p>
+                    <ul className="list-disc list-inside">
+                      <li>
+                        Calculates the <span className="font-medium">90th percentile</span> of error rates per alert.
+                      </li>
+                      <li>
+                        Caps the threshold between <span className="font-mono">0.30</span> (30%) and{' '}
+                        <span className="font-mono">0.80</span> (80%) for stability.
+                      </li>
+                      <li>
+                        Recommended rate is then rounded to 2 decimal places.
+                      </li>
+                    </ul>
+                  </div>
+                )}
+                {selectedThreshold.alert_type !== 'error' &&
+                  selectedThreshold.alert_type !== 'availability' && (
+                    <p className="text-xs text-gray-600">
+                      This threshold uses service-specific statistical analysis to balance sensitivity and noise.
+                    </p>
+                  )}
+              </div>
+
+              {/* Raw Rationale */}
+              {selectedThreshold.rationale && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-1">Raw Rationale</h3>
+                  <p className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-3 font-mono whitespace-pre-wrap">
+                    {selectedThreshold.rationale}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setSelectedThreshold(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
