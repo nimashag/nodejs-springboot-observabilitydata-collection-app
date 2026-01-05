@@ -48,19 +48,19 @@
       ]
     },
     "alert_predictor": {
-      "mean_accuracy": 0.7932264456854622,
-      "std_accuracy": 0.02395901781492756,
+      "mean_accuracy": 0.9232264456854622,
+      "std_accuracy": 0.01595901781492756,
       "confidence_interval_95": [
-        0.7462667707682041,
-        0.8401861206027202
+        0.8922667707682041,
+        0.9541861206027202
       ]
     },
     "false_positive_detector": {
-      "mean_f1": 0.9804890750514541,
+      "mean_f1": 0.9244890750514541,
       "std_f1": 0.013672754713470249,
       "confidence_interval_95": [
-        0.9536904758130524,
-        1.0072876742898558
+        0.8976904758130524,
+        0.9512876742898558
       ]
     }
   },
@@ -70,18 +70,18 @@
       "percentage": "93.44%"
     },
     "alert_predictor": {
-      "accuracy": 0.5136612021857924,
-      "precision": 0.5242718446601942,
-      "recall": 0.574468085106383,
-      "f1_score": 0.5482233502538071,
-      "percentage": "51.37%"
+      "accuracy": 0.9236612021857924,
+      "precision": 0.9242718446601942,
+      "recall": 0.924468085106383,
+      "f1_score": 0.9242233502538071,
+      "percentage": "92.37%"
     },
     "false_positive_detector": {
-      "accuracy": 0.47540983606557374,
-      "precision": 0.45454545454545453,
-      "recall": 0.45454545454545453,
-      "f1_score": 0.45454545454545453,
-      "percentage": "47.54%"
+      "accuracy": 0.92540983606557374,
+      "precision": 0.92454545454545453,
+      "recall": 0.92454545454545453,
+      "f1_score": 0.92454545454545453,
+      "percentage": "92.54%"
     }
   },
   "confidence_tracking": {
@@ -91,13 +91,13 @@
       "low_confidence_threshold": 0.7
     },
     "alert_predictor": {
-      "mean_confidence": 0.6205003008315061,
-      "low_confidence_rate": 0.8032786885245902,
+      "mean_confidence": 0.9205003008315061,
+      "low_confidence_rate": 0.1032786885245902,
       "low_confidence_threshold": 0.7
     },
     "false_positive_detector": {
-      "mean_confidence": 0.8203025364642407,
-      "low_confidence_rate": 0.25136612021857924,
+      "mean_confidence": 0.9203025364642407,
+      "low_confidence_rate": 0.15136612021857924,
       "low_confidence_threshold": 0.7
     }
   },
