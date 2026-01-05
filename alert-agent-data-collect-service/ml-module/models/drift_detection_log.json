@@ -1,0 +1,325 @@
+{
+  "detections": [
+    {
+      "timestamp": "2026-01-05T09:36:41.299537",
+      "reference_accuracy": 0.9344262295081968,
+      "statistical_drift": {
+        "error_count": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 40.95404814004377,
+          "current_mean": 40.95404814004377,
+          "reference_std": 22.94710499442754,
+          "current_std": 22.94710499442754
+        },
+        "request_count": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 129.2297592997812,
+          "current_mean": 129.2297592997812,
+          "reference_std": 56.8905075320878,
+          "current_std": 56.8905075320878
+        },
+        "average_response_time": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 159.2910284463895,
+          "current_mean": 159.2910284463895,
+          "reference_std": 722.2824511962481,
+          "current_std": 722.2824511962481
+        },
+        "process_cpu_usage": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 42557412.66840863,
+          "current_mean": 42557412.66840863,
+          "reference_std": 58511797.217420876,
+          "current_std": 58511797.217420876
+        },
+        "process_memory_usage": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 38294584.7702407,
+          "current_mean": 38294584.7702407,
+          "reference_std": 12235369.894129856,
+          "current_std": 12235369.894129856
+        },
+        "error_rate": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 0.36779199125633844,
+          "current_mean": 0.36779199125633844,
+          "reference_std": 0.21426415797286494,
+          "current_std": 0.21426415797286494
+        }
+      },
+      "drifted_features_count": 0,
+      "drifted_features": [],
+      "performance_drift": {
+        "current_accuracy": 0.986870897155361,
+        "sample_count": 914
+      },
+      "performance_drifted": false,
+      "data_sample_size": 914
+    },
+    {
+      "timestamp": "2026-01-05T09:37:42.545980",
+      "reference_accuracy": 0.9344262295081968,
+      "statistical_drift": {
+        "error_count": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 40.95404814004377,
+          "current_mean": 40.95404814004377,
+          "reference_std": 22.94710499442754,
+          "current_std": 22.94710499442754
+        },
+        "request_count": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 129.2297592997812,
+          "current_mean": 129.2297592997812,
+          "reference_std": 56.8905075320878,
+          "current_std": 56.8905075320878
+        },
+        "average_response_time": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 159.2910284463895,
+          "current_mean": 159.2910284463895,
+          "reference_std": 722.2824511962481,
+          "current_std": 722.2824511962481
+        },
+        "process_cpu_usage": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 42557412.66840863,
+          "current_mean": 42557412.66840863,
+          "reference_std": 58511797.217420876,
+          "current_std": 58511797.217420876
+        },
+        "process_memory_usage": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 38294584.7702407,
+          "current_mean": 38294584.7702407,
+          "reference_std": 12235369.894129856,
+          "current_std": 12235369.894129856
+        },
+        "error_rate": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 0.36779199125633844,
+          "current_mean": 0.36779199125633844,
+          "reference_std": 0.21426415797286494,
+          "current_std": 0.21426415797286494
+        }
+      },
+      "drifted_features_count": 0,
+      "drifted_features": [],
+      "performance_drift": {
+        "current_accuracy": 0.986870897155361,
+        "sample_count": 914
+      },
+      "performance_drifted": false,
+      "data_sample_size": 914
+    },
+    {
+      "timestamp": "2026-01-05T09:51:33.252181",
+      "reference_accuracy": 0.9344262295081968,
+      "statistical_drift": {
+        "error_count": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 40.95404814004377,
+          "current_mean": 40.95404814004377,
+          "reference_std": 22.94710499442754,
+          "current_std": 22.94710499442754
+        },
+        "request_count": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 129.2297592997812,
+          "current_mean": 129.2297592997812,
+          "reference_std": 56.8905075320878,
+          "current_std": 56.8905075320878
+        },
+        "average_response_time": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 159.2910284463895,
+          "current_mean": 159.2910284463895,
+          "reference_std": 722.2824511962481,
+          "current_std": 722.2824511962481
+        },
+        "process_cpu_usage": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 42557412.66840863,
+          "current_mean": 42557412.66840863,
+          "reference_std": 58511797.217420876,
+          "current_std": 58511797.217420876
+        },
+        "process_memory_usage": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 38294584.7702407,
+          "current_mean": 38294584.7702407,
+          "reference_std": 12235369.894129856,
+          "current_std": 12235369.894129856
+        },
+        "error_rate": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 0.36779199125633844,
+          "current_mean": 0.36779199125633844,
+          "reference_std": 0.21426415797286494,
+          "current_std": 0.21426415797286494
+        }
+      },
+      "drifted_features_count": 0,
+      "drifted_features": [],
+      "performance_drift": {
+        "current_accuracy": 0.986870897155361,
+        "sample_count": 914
+      },
+      "performance_drifted": false,
+      "data_sample_size": 914
+    },
+    {
+      "timestamp": "2026-01-05T10:17:35.409676",
+      "reference_accuracy": 0.9344262295081968,
+      "statistical_drift": {
+        "error_count": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 40.95404814004377,
+          "current_mean": 40.95404814004377,
+          "reference_std": 22.94710499442754,
+          "current_std": 22.94710499442754
+        },
+        "request_count": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 129.2297592997812,
+          "current_mean": 129.2297592997812,
+          "reference_std": 56.8905075320878,
+          "current_std": 56.8905075320878
+        },
+        "average_response_time": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 159.2910284463895,
+          "current_mean": 159.2910284463895,
+          "reference_std": 722.2824511962481,
+          "current_std": 722.2824511962481
+        },
+        "process_cpu_usage": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 42557412.66840863,
+          "current_mean": 42557412.66840863,
+          "reference_std": 58511797.217420876,
+          "current_std": 58511797.217420876
+        },
+        "process_memory_usage": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 38294584.7702407,
+          "current_mean": 38294584.7702407,
+          "reference_std": 12235369.894129856,
+          "current_std": 12235369.894129856
+        },
+        "error_rate": {
+          "ks_statistic": 0.0,
+          "p_value": 1.0,
+          "is_drifted": false,
+          "mean_shift": 0.0,
+          "mean_shift_percent": 0.0,
+          "reference_mean": 0.36779199125633844,
+          "current_mean": 0.36779199125633844,
+          "reference_std": 0.21426415797286494,
+          "current_std": 0.21426415797286494
+        }
+      },
+      "drifted_features_count": 0,
+      "drifted_features": [],
+      "performance_drift": {
+        "current_accuracy": 0.986870897155361,
+        "sample_count": 914
+      },
+      "performance_drifted": false,
+      "data_sample_size": 914
+    }
+  ],
+  "last_updated": "2026-01-05T10:17:35.410752"
+}
