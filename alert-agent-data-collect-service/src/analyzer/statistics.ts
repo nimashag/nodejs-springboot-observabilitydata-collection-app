@@ -25,7 +25,7 @@ export class Statistics {
   static stdDev(values: number[]): number {
     if (values.length === 0) return 0;
     const avg = this.mean(values);
-    const squareDiffs = values.map(value => Math.pow(value - avg, 2));
+    const squareDiffs = values.map((value) => Math.pow(value - avg, 2));
     return Math.sqrt(this.mean(squareDiffs));
   }
 
@@ -55,4 +55,3 @@ export class Statistics {
     return Math.max(...values);
   }
 }
-
