@@ -5,124 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Anomaly Incident Dashboard</title>
 
-  <!-- Bootstrap (quick nice UI) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
     body { background: #f6f7fb; }
     .page-title { font-weight: 800; letter-spacing: -0.5px; }
     .subtle { color: #6b7280; font-size: 0.9rem; }
-    .card { border: 0; border-radius: 16px; box-shadow: 0 10px 30px rgba(20, 20, 50, 0.06); }
-    .badge-soft { background: rgba(13,110,253,.10); color: #0d6efd; border: 1px solid rgba(13,110,253,.18); }
-    .table thead th { position: sticky; top: 0; background: #fff; z-index: 2; }
-    .table td, .table th { vertical-align: middle; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.9rem; }
+    .card { border: 0; border-radius: 16px; box-shadow: 0 10px 30px rgba(20,20,50,.06); }
+    .mono { font-family: ui-monospace, Menlo, Monaco, Consolas, monospace; font-size: .9rem; }
+    .table thead th { position: sticky; top: 0; background: #fff; }
   </style>
 </head>
 
 <body>
-  <div class="container py-4">
+<div class="container py-4">
 
-    <!-- Header -->
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
-      <div>
-        <h1 class="page-title mb-1">📊 Anomaly Incident Dashboard</h1>
-        <div class="subtle">
-          Generated: <span class="mono">{{ generated_at }}</span>
-          &nbsp;|&nbsp; Input: <span class="mono">{{ input_path }}</span>
-        </div>
-      </div>
-      <div class="mt-3 mt-md-0">
-        <span class="badge badge-soft p-2">Model: <span class="mono">{{ model_path }}</span></span>
-      </div>
-    </div>
-
-    <!-- Top cards -->
-    <div class="row g-3 mb-3">
-      <div class="col-12 col-md-4">
-        <div class="card p-3">
-          <div class="subtle mb-2">Counts</div>
-          <div class="d-flex gap-2 flex-wrap">
-            <span class="badge text-bg-danger p-2">Anomalies: {{ anomalies_count }}</span>
-            <span class="badge text-bg-success p-2">Normals: {{ normals_count }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 col-md-8">
-        <div class="card p-3">
-          <div class="subtle mb-2">Incident Story (Auto-Generated)</div>
-          <div style="white-space: pre-wrap;">{{ incident_story }}</div>
-          <hr class="my-3">
-          <div class="subtle">
-            <b>Top services:</b> {{ top_services }} <br/>
-            <b>Top events:</b> {{ top_events }} <br/>
-            <b>Top status:</b> {{ top_status }} <br/>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Incidents Table -->
-    <div class="card p-3">
-      <div class="d-flex align-items-center justify-content-between mb-2">
-        <h5 class="mb-0">Incidents</h5>
-        <div class="subtle">Showing anomalous request groups</div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead>
-            <tr>
-              <th>Request ID</th>
-              <th>Service</th>
-              <th>Status</th>
-              <th>Level</th>
-              <th>Level Encoded</th>
-              <th>Events</th>
-              <th>Reason</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for inc in incidents %}
-              <tr>
-                <td class="mono">{{ inc.request_id }}</td>
-                <td>{{ inc.service }}</td>
-                <td>
-                  {% if inc.status_code >= 500 %}
-                    <span class="badge text-bg-danger">{{ inc.status_code }}</span>
-                  {% elif inc.status_code >= 400 %}
-                    <span class="badge text-bg-warning">{{ inc.status_code }}</span>
-                  {% else %}
-                    <span class="badge text-bg-secondary">{{ inc.status_code }}</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% set lvl = (inc.level or "")|lower %}
-                  {% if lvl == "error" %}
-                    <span class="badge text-bg-danger">error</span>
-                  {% elif lvl == "warn" %}
-                    <span class="badge text-bg-warning text-dark">warn</span>
-                  {% else %}
-                    <span class="badge text-bg-info text-dark">info</span>
-                  {% endif %}
-                </td>
-                <td class="mono">{{ inc.level_encoded }}</td>
-                <td class="mono">{{ inc.events }}</td>
-                <td style="max-width: 520px;">
-                  <span class="mono">{{ inc.reason }}</span>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="subtle mt-3">
-      Tip: Use the “Level” + “Status” combo to explain severity clearly to your panel.
-    </div>
-
+  <div class="mb-4">
+    <h1 class="page-title">Anomaly Incident Dashboard</h1>
+    <div class="subtle" id="meta">Loading...</div>
   </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card p-3">
+        <div class="subtle mb-2">Counts</div>
+        <div id="counts"></div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="card p-3">
+        <div class="subtle mb-2">Incident Story (Auto-Generated)</div>
+        <div id="story"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-3">
+    <div class="d-flex justify-content-between mb-2">
+      <h5>Incidents</h5>
+      <div class="subtle">Showing anomalous request groups</div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Level</th>
+            <th>Level Encoded</th>
+            <th>Events</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody id="incidentsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
