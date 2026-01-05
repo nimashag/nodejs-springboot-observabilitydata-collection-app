@@ -11,6 +11,11 @@ export interface AdaptiveThreshold {
   confidence: 'high' | 'medium' | 'low';
   rationale: string;
   based_on_samples: number;
+  // Enhanced labeling fields
+  threshold_label: string;
+  description: string;
+  unit: string;
+  category: 'error' | 'performance' | 'availability';
 }
 
 export interface ThresholdConfig {
@@ -110,7 +115,11 @@ export class ThresholdAdjuster {
       adjustment_percentage: ((recommendedThreshold - currentThreshold) / currentThreshold) * 100,
       confidence: errorCounts.length > 20 ? 'high' : errorCounts.length > 10 ? 'medium' : 'low',
       rationale: `Statistical analysis: mean=${mean.toFixed(1)}, std=${std.toFixed(1)}, p75=${p75.toFixed(1)}, FP rate=${(fpRate * 100).toFixed(1)}%, k=${k}`,
-      based_on_samples: errorCounts.length
+      based_on_samples: errorCounts.length,
+      threshold_label: 'Error Burst Threshold',
+      description: 'Maximum number of errors allowed within the time window before triggering an alert',
+      unit: 'errors',
+      category: 'error'
     };
   }
 
@@ -145,7 +154,11 @@ export class ThresholdAdjuster {
       adjustment_percentage: ((recommendedRate - currentRate) / currentRate) * 100,
       confidence: availAlerts.length > 15 ? 'high' : availAlerts.length > 8 ? 'medium' : 'low',
       rationale: `Percentile analysis: mean=${(mean * 100).toFixed(1)}%, p90=${(p90 * 100).toFixed(1)}%, p95=${(p95 * 100).toFixed(1)}%`,
-      based_on_samples: availAlerts.length
+      based_on_samples: availAlerts.length,
+      threshold_label: 'Availability Error Rate Threshold',
+      description: 'Maximum acceptable error rate (0.0 to 1.0) before triggering an availability alert',
+      unit: 'rate',
+      category: 'availability'
     };
   }
 
@@ -157,6 +170,15 @@ export class ThresholdAdjuster {
       ? ThresholdAdjuster.CURRENT_THRESHOLDS.ERROR_BURST_THRESHOLD
       : ThresholdAdjuster.CURRENT_THRESHOLDS.AVAILABILITY_ERROR_RATE;
 
+    const label = alertType === 'error' 
+      ? 'Error Burst Threshold'
+      : 'Availability Error Rate Threshold';
+    const description = alertType === 'error'
+      ? 'Maximum number of errors allowed within the time window before triggering an alert'
+      : 'Maximum acceptable error rate (0.0 to 1.0) before triggering an availability alert';
+    const unit = alertType === 'error' ? 'errors' : 'rate';
+    const category = alertType === 'error' ? 'error' : 'availability';
+
     return {
       service_name: serviceName,
       alert_type: alertType,
@@ -165,7 +187,11 @@ export class ThresholdAdjuster {
       adjustment_percentage: 0,
       confidence: 'low',
       rationale: 'Insufficient data for adjustment (< 5 samples)',
-      based_on_samples: 0
+      based_on_samples: 0,
+      threshold_label: label,
+      description: description,
+      unit: unit,
+      category: category
     };
   }
 
@@ -193,6 +219,25 @@ export class ThresholdAdjuster {
       generated_at: new Date().toISOString(),
       thresholds
     };
+  }
+
+  /**
+   * Group thresholds by category
+   */
+  groupThresholdsByCategory(thresholds: AdaptiveThreshold[]): Record<string, AdaptiveThreshold[]> {
+    const grouped: Record<string, AdaptiveThreshold[]> = {
+      error: [],
+      performance: [],
+      availability: []
+    };
+
+    thresholds.forEach(threshold => {
+      if (grouped[threshold.category]) {
+        grouped[threshold.category].push(threshold);
+      }
+    });
+
+    return grouped;
   }
 
   /**
