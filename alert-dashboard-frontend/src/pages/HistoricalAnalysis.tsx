@@ -254,7 +254,7 @@ const HistoricalAnalysis = () => {
       </div>
 
       {/* False Positive Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="">
         <div className="bg-white rounded-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-primary-600" />
@@ -287,7 +287,7 @@ const HistoricalAnalysis = () => {
         </div>
 
         {/* Hourly Distribution */}
-        <div className="bg-white rounded-lg p-6">
+        {/* <div className="bg-white rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-primary-600" />
             Hourly Alert Distribution
@@ -301,7 +301,7 @@ const HistoricalAnalysis = () => {
               <Bar dataKey="count" fill="#0ea5e9" />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </div> */}
       </div>
 
       {/* Recommendations */}
