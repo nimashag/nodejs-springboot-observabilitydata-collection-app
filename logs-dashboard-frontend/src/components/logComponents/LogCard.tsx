@@ -33,11 +33,28 @@ export default function LogCard({ log, onClick }: LogCardProps) {
         <span className="text-sm font-semibold text-gray-700">{log.event}</span>
       </div>
       <div className="text-sm text-gray-600 truncate">{log.raw}</div>
-      {log.traceId && (
-        <div className="mt-2 text-xs text-blue-600">
-          Trace: {log.traceId.substring(0, 8)}...
-        </div>
-      )}
+      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+        {log.traceId && (
+          <span className="text-blue-600 font-mono">
+            Trace: {log.traceId.substring(0, 8)}...
+          </span>
+        )}
+        {log.spanId && (
+          <span className="text-purple-600 font-mono">
+            Span: {log.spanId.substring(0, 8)}...
+          </span>
+        )}
+        {log.requestId && (
+          <span className="text-green-600 font-mono">
+            Request: {log.requestId.substring(0, 8)}...
+          </span>
+        )}
+        {log.sessionId && (
+          <span className="text-orange-600 font-mono">
+            Session: {log.sessionId.substring(0, 8)}...
+          </span>
+        )}
+      </div>
     </div>
   );
 }

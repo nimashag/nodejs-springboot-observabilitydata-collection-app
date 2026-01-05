@@ -201,6 +201,7 @@ export class TraceCorrelator {
     endTime?: string;
     event?: string;
     templateId?: string;
+    sessionId?: string;
     piiRedacted?: boolean;
     limit?: number;
     offset?: number;
@@ -242,6 +243,10 @@ export class TraceCorrelator {
       logs = logs.filter(log => 
         log.metadata?.matchedTemplateId === query.templateId
       );
+    }
+
+    if (query.sessionId) {
+      logs = logs.filter(log => log.sessionId === query.sessionId);
     }
 
     if (query.piiRedacted !== undefined) {
