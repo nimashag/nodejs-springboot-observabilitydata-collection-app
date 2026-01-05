@@ -4,6 +4,8 @@ import joblib
 from pathlib import Path
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+import warnings
+warnings.filterwarnings('ignore')
 
 # Load data
 data_file = Path(__file__).parent.parent / 'output' / 'combined-alert-history.json'
