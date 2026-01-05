@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import AlertData from './pages/AlertData'
 import ThresholdConfig from './pages/ThresholdConfig'
 import MLAnalytics from './pages/MLAnalytics'
+import HistoricalAnalysis from './pages/HistoricalAnalysis'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/alert-data" element={<AlertData />} />
           <Route path="/threshold-config" element={<ThresholdConfig />} />
           <Route path="/ml-analytics" element={<MLAnalytics />} />
+          <Route path="/historical-analysis" element={<HistoricalAnalysis />} />
         </Routes>
       </Layout>
     </Router>

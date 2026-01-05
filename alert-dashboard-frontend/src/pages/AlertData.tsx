@@ -45,10 +45,18 @@ const AlertData = () => {
       const alertsArray = response.data || response.alerts || (Array.isArray(response) ? response : [])
       
       // Sort by timestamp in descending order (most recent first)
-      const sortedAlerts = alertsArray.sort((a: Alert, b: Alert) => {
-        const dateA = new Date(a.timestamp).getTime()
-        const dateB = new Date(b.timestamp).getTime()
-        return dateB - dateA // Descending order
+      // Use normalized_timestamp if available (more reliable), otherwise parse timestamp string
+      const sortedAlerts = [...alertsArray].sort((a: Alert, b: Alert) => {
+        // Try normalized_timestamp first (Unix timestamp in milliseconds)
+        const timeA = (a as any).normalized_timestamp 
+          ? (a as any).normalized_timestamp 
+          : new Date(a.timestamp).getTime()
+        const timeB = (b as any).normalized_timestamp 
+          ? (b as any).normalized_timestamp 
+          : new Date(b.timestamp).getTime()
+        
+        // Descending order: newest first (larger timestamp first)
+        return timeB - timeA
       })
       
       setAlerts(sortedAlerts)
@@ -61,29 +69,50 @@ const AlertData = () => {
     }
   }
 
+  // All supported alert types in the system
+  const allSupportedTypes = ['error', 'latency', 'availability', 'resource', 'traffic', 'security', 'performance']
+  
   // Get unique values for filters with safe array check
   const services = alerts && Array.isArray(alerts) 
     ? ['all', ...Array.from(new Set(alerts.map(a => a.service_name)))]
     : ['all']
-  const types = alerts && Array.isArray(alerts)
-    ? ['all', ...Array.from(new Set(alerts.map(a => a.alert_type)))]
-    : ['all']
+  
+  // Combine types from data with all supported types to ensure all options are available
+  const dataTypes = alerts && Array.isArray(alerts)
+    ? Array.from(new Set(alerts.map(a => a.alert_type)))
+    : []
+  const types = ['all', ...Array.from(new Set([...allSupportedTypes, ...dataTypes]))]
+  
   const severities = alerts && Array.isArray(alerts)
     ? ['all', ...Array.from(new Set(alerts.map(a => a.severity)))]
     : ['all']
 
   // Filter alerts with safe array check
-  const filteredAlerts = (alerts && Array.isArray(alerts) ? alerts : []).filter(alert => {
-    const matchesSearch = searchTerm === '' || 
-      Object.values(alert).some(val => 
-        String(val).toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    const matchesService = filterService === 'all' || alert.service_name === filterService
-    const matchesType = filterType === 'all' || alert.alert_type === filterType
-    const matchesSeverity = filterSeverity === 'all' || alert.severity === filterSeverity
+  const filteredAlerts = (alerts && Array.isArray(alerts) ? alerts : [])
+    .filter(alert => {
+      const matchesSearch = searchTerm === '' || 
+        Object.values(alert).some(val => 
+          String(val).toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      const matchesService = filterService === 'all' || alert.service_name === filterService
+      const matchesType = filterType === 'all' || alert.alert_type === filterType
+      const matchesSeverity = filterSeverity === 'all' || alert.severity === filterSeverity
 
-    return matchesSearch && matchesService && matchesType && matchesSeverity
-  })
+      return matchesSearch && matchesService && matchesType && matchesSeverity
+    })
+    // Sort filtered results by timestamp in descending order (most recent first)
+    .sort((a: Alert, b: Alert) => {
+      // Try normalized_timestamp first (Unix timestamp in milliseconds)
+      const timeA = (a as any).normalized_timestamp 
+        ? (a as any).normalized_timestamp 
+        : new Date(a.timestamp).getTime()
+      const timeB = (b as any).normalized_timestamp 
+        ? (b as any).normalized_timestamp 
+        : new Date(b.timestamp).getTime()
+      
+      // Descending order: newest first (larger timestamp first)
+      return timeB - timeA
+    })
 
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {

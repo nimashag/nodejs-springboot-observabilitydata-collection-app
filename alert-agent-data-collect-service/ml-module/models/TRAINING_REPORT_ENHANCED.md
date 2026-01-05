@@ -1,6 +1,6 @@
 # Enhanced ML Model Training Report
 
-**Training Date:** 2026-01-05 10:16:52  
+**Training Date:** 2026-01-05 18:40:27  
 **Pipeline Version:** Enhanced v2.0 with Hyperparameter Tuning
 
 ---
@@ -116,18 +116,18 @@ medium        4
 
 ## Top 10 Most Important Features
 
-| Rank | Feature | Importance |
-|------|---------|------------|
-| 1 | error_burst_5min | 0.0939 |
-| 2 | process_memory_usage | 0.0872 |
-| 3 | error_rate_change | 0.0839 |
-| 4 | average_response_time | 0.0741 |
-| 5 | error_rate | 0.0732 |
-| 6 | error_count_rolling_std | 0.0699 |
-| 7 | request_count | 0.0650 |
-| 8 | time_since_last_alert | 0.0642 |
-| 9 | response_time_rolling_std | 0.0532 |
-| 10 | response_time_rolling_mean | 0.0522 |
+| Rank | Feature                    | Importance |
+|------|----------------------------|------------|
+| 1    | error_burst_5min           | 0.0939     |
+| 2    | process_memory_usage       | 0.0872     |
+| 3    | error_rate_change          | 0.0839     |
+| 4    | average_response_time      | 0.0741     |
+| 5    | error_rate                 | 0.0732     |
+| 6    | error_count_rolling_std    | 0.0699     |
+| 7    | request_count              | 0.0650     |
+| 8    | time_since_last_alert      | 0.0642     |
+| 9    | response_time_rolling_std  | 0.0532     |
+| 10   | response_time_rolling_mean | 0.0522     |
 
 ---
 

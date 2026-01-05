@@ -55,6 +55,10 @@ export interface ThresholdRecommendation {
   confidence: string;
   rationale: string;
   based_on_samples: number;
+  threshold_label: string;
+  description: string;
+  unit: string;
+  category: 'error' | 'performance' | 'availability';
 }
 
 export interface AdaptiveConfig {
@@ -135,6 +139,41 @@ export interface MLModelReport {
   };
 }
 
+export interface ServiceBaseline {
+  service_name: string;
+  total_alerts: number;
+  avg_error_count: number;
+  avg_response_time: number;
+  avg_alert_duration: number;
+  false_positive_rate: number;
+  alert_rate_per_hour: number;
+  avg_cpu_usage: number;
+  avg_memory_usage: number;
+}
+
+export interface FalsePositiveIndicators {
+  quick_resolves: any[];
+  repetitive_count: number;
+  estimated_fp_rate: number;
+}
+
+export interface TemporalPattern {
+  peak_hours: number[];
+  peak_days: number[];
+  hourly_distribution: Record<number, number>;
+  daily_distribution: Record<number, number>;
+}
+
+export interface HistoricalAnalysisReport {
+  generated_at: string;
+  total_alerts_analyzed: number;
+  time_range: { start: string; end: string };
+  service_baselines: Record<string, ServiceBaseline>;
+  false_positive_analysis: FalsePositiveIndicators;
+  temporal_patterns: TemporalPattern;
+  recommendations: string[];
+}
+
 export const apiService = {
   // Get alert summary
   getAlertSummary: async (): Promise<AlertSummary> => {
@@ -176,6 +215,30 @@ export const apiService = {
   getAlerts: async (page: number = 1, limit: number = 100) => {
     const response = await api.get(`/api/alerts?page=${page}&limit=${limit}`);
     return response.data;
+  },
+
+  // Get historical analysis report
+  getHistoricalAnalysis: async (): Promise<HistoricalAnalysisReport> => {
+    try {
+      const response = await api.get('/api/analysis');
+      if (!response.data || !response.data.analysis_report) {
+        throw new Error('Invalid response: analysis_report not found');
+      }
+      return response.data.analysis_report;
+    } catch (error: any) {
+      console.error('Error fetching historical analysis:', error);
+      // Provide more helpful error messages
+      if (error.response) {
+        // Server responded with error status
+        throw new Error(`Server error: ${error.response.status} - ${error.response.statusText}`);
+      } else if (error.request) {
+        // Request was made but no response received
+        throw new Error('Network error: Unable to reach the server. Please check if the alert-agent service is running.');
+      } else {
+        // Something else happened
+        throw new Error(error.message || 'Failed to load historical analysis');
+      }
+    }
   },
 
   // Health check

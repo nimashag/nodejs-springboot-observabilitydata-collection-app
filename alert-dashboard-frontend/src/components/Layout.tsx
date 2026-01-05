@@ -5,7 +5,8 @@ import {
   AlertTriangle, 
   Settings, 
   Brain,
-  Activity
+  Activity,
+  History
 } from 'lucide-react'
 
 interface LayoutProps {
@@ -18,6 +19,7 @@ const Layout = ({ children }: LayoutProps) => {
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/alert-data', icon: AlertTriangle, label: 'Alert Data' },
+    { path: '/historical-analysis', icon: History, label: 'Historical Analysis' },
     { path: '/threshold-config', icon: Settings, label: 'Threshold Config' },
     { path: '/ml-analytics', icon: Brain, label: 'Analytics' },
   ]
