@@ -218,7 +218,7 @@ export class HistoricalAnalyzer {
     // High false positive rate
     if (report.false_positive_analysis.estimated_fp_rate > 0.3) {
       recommendations.push(
-        `⚠️ High false positive rate detected (${(report.false_positive_analysis.estimated_fp_rate * 100).toFixed(1)}%). Consider increasing alert thresholds.`
+        `High false positive rate detected (${(report.false_positive_analysis.estimated_fp_rate * 100).toFixed(1)}%). Consider increasing alert thresholds.`
       );
     }
 
@@ -226,13 +226,13 @@ export class HistoricalAnalyzer {
     for (const [service, baseline] of Object.entries(report.service_baselines)) {
       if (baseline.false_positive_rate > 0.4) {
         recommendations.push(
-          `🔧 ${service}: ${(baseline.false_positive_rate * 100).toFixed(1)}% false positive rate. Recommend threshold adjustment.`
+          `${service}: ${(baseline.false_positive_rate * 100).toFixed(1)}% false positive rate. Recommend threshold adjustment.`
         );
       }
       
       if (baseline.alert_rate_per_hour > 10) {
         recommendations.push(
-          `📊 ${service}: High alert rate (${baseline.alert_rate_per_hour.toFixed(1)}/hour). Consider alert suppression or threshold tuning.`
+          `${service}: High alert rate (${baseline.alert_rate_per_hour.toFixed(1)}/hour). Consider alert suppression or threshold tuning.`
         );
       }
     }
@@ -240,19 +240,19 @@ export class HistoricalAnalyzer {
     // Repetitive alerts
     if (report.false_positive_analysis.repetitive_count > 50) {
       recommendations.push(
-        `🔁 ${report.false_positive_analysis.repetitive_count} repetitive alert patterns detected. Consider alert suppression rules.`
+        `${report.false_positive_analysis.repetitive_count} repetitive alert patterns detected. Consider alert suppression rules.`
       );
     }
 
     // Temporal patterns
     if (report.temporal_patterns.peak_hours.length > 0) {
       recommendations.push(
-        `📅 Peak alert hours detected: ${report.temporal_patterns.peak_hours.join(', ')}. Consider time-based threshold adjustments.`
+        `Peak alert hours detected: ${report.temporal_patterns.peak_hours.join(', ')}. Consider time-based threshold adjustments.`
       );
     }
 
     if (recommendations.length === 0) {
-      recommendations.push('✅ Alert patterns appear normal. Continue monitoring.');
+      recommendations.push('Alert patterns appear normal. Continue monitoring.');
     }
 
     return recommendations;
