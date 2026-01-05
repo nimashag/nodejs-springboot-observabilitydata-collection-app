@@ -44,6 +44,10 @@ The Adaptive Alert Tuning Agent (AATA) is a self-healing component designed to a
    - Alert type classifier
    - Alert predictor
    - False positive detector
+   - Model confidence tracking
+   - Drift detection
+   - Periodic retraining
+   - Error burst detection features
 
 ### API Endpoints
 
@@ -90,28 +94,6 @@ ALLOWED_ORIGINS=https://dashboard.example.com \
 npm start
 ```
 
-### Access the API
-
-```bash
-# Health check (no authentication required)
-curl http://localhost:3008/api/health
-
-# Get summary (requires authentication if API_KEY is set)
-curl -H "Authorization: Bearer your-api-key" \
-  http://localhost:3008/api/summary
-
-# Get paginated alerts
-curl -H "Authorization: Bearer your-api-key" \
-  "http://localhost:3008/api/alerts?page=1&limit=100"
-
-# Get recommendations
-curl -H "Authorization: Bearer your-api-key" \
-  http://localhost:3008/api/recommendations
-
-# Get routing analysis
-curl -H "Authorization: Bearer your-api-key" \
-  http://localhost:3008/api/routing
-```
 
 ### View File-Based Results
 
@@ -144,12 +126,78 @@ cd ml-module
 python train_enhanced.py
 ```
 
+This script trains three ML models:
+- **Alert Type Classifier**: Classifies alert types (error, latency, availability)
+- **Alert Predictor**: Predicts alert triggers
+- **False Positive Detector**: Identifies false positive alerts
+
+Features include:
+- Hyperparameter tuning with GridSearchCV
+- Cross-validation with confidence intervals
+- Error burst detection features
+- Model confidence tracking
+- Feature importance analysis
+
 ### Test Model Accuracy
 
 ```bash
 cd ml-module
 python test_models.py
 ```
+
+### Periodic Retraining
+
+Automatically retrain models based on time or drift detection:
+
+```bash
+# Check if retraining is needed (does not train)
+cd ml-module
+python retrain_periodic.py --check-only
+
+# Perform retraining if needed
+python retrain_periodic.py
+
+# Force retraining (skip checks)
+python retrain_periodic.py --force
+
+# Custom thresholds
+python retrain_periodic.py --days-threshold 14 --min-accuracy-drop 0.03
+```
+
+**Setup Cron Job** (Linux/Mac):
+```bash
+# Add to crontab (retrain weekly, every Sunday at 2 AM)
+0 2 * * 0 cd /path/to/alert-agent-data-collect-service/ml-module && python retrain_periodic.py >> retrain.log 2>&1
+```
+
+### Drift Detection
+
+Monitor model performance and data distribution changes:
+
+```bash
+cd ml-module
+python drift_detection.py
+```
+
+This script detects:
+- **Statistical Drift**: Data distribution changes using Kolmogorov-Smirnov test
+- **Performance Drift**: Model accuracy degradation on recent data
+- Results are logged to `models/drift_detection_log.json`
+
+### Inference with Confidence Tracking
+
+Use models with confidence scores:
+
+```bash
+cd ml-module
+python inference_with_confidence.py
+```
+
+This demonstrates:
+- Making predictions with confidence scores
+- Tracking low-confidence predictions
+- Logging confidence metrics over time
+- Results logged to `models/confidence_tracking.json`
 
 ### Export Data to CSV
 
