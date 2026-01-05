@@ -27,7 +27,10 @@ export default function LogsViewer() {
     level: searchParams.get('level') || undefined,
     event: searchParams.get('event') || undefined,
     traceId: searchParams.get('traceId') || undefined,
+    sessionId: searchParams.get('sessionId') || undefined,
     templateId: searchParams.get('templateId') || undefined,
+    startTime: searchParams.get('startTime') || undefined,
+    endTime: searchParams.get('endTime') || undefined,
     piiRedacted: searchParams.get('piiRedacted') === 'true' ? true : searchParams.get('piiRedacted') === 'false' ? false : undefined,
     limit: initialPageSize,
   });

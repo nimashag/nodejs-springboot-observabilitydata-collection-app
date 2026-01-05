@@ -78,26 +78,44 @@ export default function LogDetailModal({ log, isOpen, onClose }: LogDetailModalP
                     {log.traceId && (
                       <div>
                         <label className="text-sm font-medium text-gray-500">Trace ID</label>
-                        <p className="text-sm text-gray-900 font-mono">{log.traceId}</p>
+                        <p className="text-sm text-gray-900 font-mono break-all">{log.traceId}</p>
+                      </div>
+                    )}
+                    {log.spanId && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Span ID</label>
+                        <p className="text-sm text-gray-900 font-mono break-all">{log.spanId}</p>
                       </div>
                     )}
                     {log.requestId && (
                       <div>
                         <label className="text-sm font-medium text-gray-500">Request ID</label>
-                        <p className="text-sm text-gray-900 font-mono">{log.requestId}</p>
+                        <p className="text-sm text-gray-900 font-mono break-all">{log.requestId}</p>
+                      </div>
+                    )}
+                    {log.sessionId && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Session ID</label>
+                        <p className="text-sm text-gray-900 font-mono break-all">{log.sessionId}</p>
                       </div>
                     )}
                     {log.sourceFile && (
                       <div>
                         <label className="text-sm font-medium text-gray-500">Source File</label>
-                        <p className="text-sm text-gray-900">{log.sourceFile}</p>
+                        <p className="text-sm text-gray-900 break-all">{log.sourceFile}</p>
                       </div>
                     )}
-                    {log.piiRedacted && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">PII Redacted</label>
+                      <p className="text-sm text-gray-900">
+                        {log.piiRedacted ? 'Yes' : 'No'}
+                      </p>
+                    </div>
+                    {log.piiDetected && log.piiDetected.length > 0 && (
                       <div>
-                        <label className="text-sm font-medium text-gray-500">PII Status</label>
+                        <label className="text-sm font-medium text-gray-500">PII Detected Types</label>
                         <p className="text-sm text-gray-900">
-                          Redacted: {log.piiDetected?.join(', ') || 'N/A'}
+                          {log.piiDetected.join(', ')}
                         </p>
                       </div>
                     )}

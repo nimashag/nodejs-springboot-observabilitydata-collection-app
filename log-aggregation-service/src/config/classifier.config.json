@@ -1,5 +1,5 @@
 {
-    "classifier": "rule-based",
+    "classifier": "nlp-based",
     "options": {
         "k": 3
     },
