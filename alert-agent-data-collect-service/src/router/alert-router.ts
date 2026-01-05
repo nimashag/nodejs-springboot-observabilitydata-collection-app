@@ -278,28 +278,28 @@ export class AlertRouter {
     // High suppression rate
     if (summary.suppressed > summary.total_alerts * 0.3) {
       recommendations.push(
-        `✅ High suppression rate (${(summary.suppressed/summary.total_alerts*100).toFixed(1)}%) - effectively filtering noise`
+        `High suppression rate (${(summary.suppressed/summary.total_alerts*100).toFixed(1)}%) - effectively filtering noise`
       );
     }
 
     // Too many admin notifications
     if (summary.admin_notifications > summary.total_alerts * 0.2) {
       recommendations.push(
-        `⚠️ ${summary.admin_notifications} admin notifications (${(summary.admin_notifications/summary.total_alerts*100).toFixed(1)}%) - consider stricter routing policies`
+        `Warning: ${summary.admin_notifications} admin notifications (${(summary.admin_notifications/summary.total_alerts*100).toFixed(1)}%) - consider stricter routing policies`
       );
     }
 
     // Good balance
     if (summary.admin_notifications <= summary.total_alerts * 0.1) {
       recommendations.push(
-        `✅ Excellent admin notification rate (${(summary.admin_notifications/summary.total_alerts*100).toFixed(1)}%) - only critical issues reach admins`
+        `Excellent admin notification rate (${(summary.admin_notifications/summary.total_alerts*100).toFixed(1)}%) - only critical issues reach admins`
       );
     }
 
     // Escalations
     if (summary.escalated > 0) {
       recommendations.push(
-        `🚨 ${summary.escalated} alerts escalated - requires immediate senior attention`
+        `${summary.escalated} alerts escalated - requires immediate senior attention`
       );
     }
 

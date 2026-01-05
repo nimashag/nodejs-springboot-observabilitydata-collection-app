@@ -11,12 +11,12 @@ export class ReportGenerator {
     thresholdRecommendations: AdaptiveThreshold[],
     outputPath: string
   ): void {
-    let markdown = `# 🤖 Adaptive Alert Tuning Agent (AATA) Report\n\n`;
+    let markdown = `# Adaptive Alert Tuning Agent (AATA) Report\n\n`;
     markdown += `**Generated:** ${new Date().toISOString()}\n\n`;
     markdown += `---\n\n`;
 
     // Executive Summary
-    markdown += `## 📊 Executive Summary\n\n`;
+    markdown += `## Executive Summary\n\n`;
     markdown += `- **Total Alerts Analyzed:** ${analysisReport.total_alerts_analyzed}\n`;
     markdown += `- **Time Range:** ${analysisReport.time_range.start} to ${analysisReport.time_range.end}\n`;
     markdown += `- **Services Analyzed:** ${Object.keys(analysisReport.service_baselines).length}\n`;
@@ -25,7 +25,7 @@ export class ReportGenerator {
     markdown += `- **Repetitive Alert Patterns:** ${analysisReport.false_positive_analysis.repetitive_count}\n\n`;
 
     // Service Baselines
-    markdown += `## 🎯 Service Baselines\n\n`;
+    markdown += `## Service Baselines\n\n`;
     markdown += `| Service | Total Alerts | Avg Error Count | Avg Response Time | FP Rate | Alert Rate/Hour |\n`;
     markdown += `|---------|--------------|-----------------|-------------------|---------|------------------|\n`;
     
@@ -35,7 +35,7 @@ export class ReportGenerator {
     markdown += `\n`;
 
     // Threshold Recommendations
-    markdown += `## ⚙️ Adaptive Threshold Recommendations\n\n`;
+    markdown += `## Adaptive Threshold Recommendations\n\n`;
     markdown += `| Service | Alert Type | Current | Recommended | Change | Confidence | Samples |\n`;
     markdown += `|---------|------------|---------|-------------|--------|------------|----------|\n`;
     
@@ -49,7 +49,7 @@ export class ReportGenerator {
     markdown += `\n`;
 
     // Detailed Recommendations
-    markdown += `### 📝 Detailed Rationale\n\n`;
+    markdown += `### Detailed Rationale\n\n`;
     for (const rec of thresholdRecommendations) {
       markdown += `**${rec.service_name} - ${rec.alert_type}:**\n`;
       markdown += `- ${rec.rationale}\n`;
@@ -58,7 +58,7 @@ export class ReportGenerator {
     }
 
     // Temporal Patterns
-    markdown += `## 📅 Temporal Patterns\n\n`;
+    markdown += `## Temporal Patterns\n\n`;
     
     if (analysisReport.temporal_patterns.peak_hours.length > 0) {
       markdown += `**Peak Hours (UTC):** ${analysisReport.temporal_patterns.peak_hours.join(', ')}\n\n`;
@@ -87,14 +87,14 @@ export class ReportGenerator {
     markdown += `\`\`\`\n\n`;
 
     // Recommendations
-    markdown += `## 💡 Actionable Recommendations\n\n`;
+    markdown += `## Actionable Recommendations\n\n`;
     for (const recommendation of analysisReport.recommendations) {
       markdown += `- ${recommendation}\n`;
     }
     markdown += `\n`;
 
     // Impact Estimation
-    markdown += `## 📈 Expected Impact\n\n`;
+    markdown += `## Expected Impact\n\n`;
     const avgFpRate = analysisReport.false_positive_analysis.estimated_fp_rate;
     const totalAlerts = analysisReport.total_alerts_analyzed;
     const estimatedReduction = avgFpRate * 0.4; // 40% reduction target
@@ -109,7 +109,7 @@ export class ReportGenerator {
     markdown += `- **Operator Efficiency:** Improved by reducing alert fatigue\n\n`;
 
     // Implementation Guide
-    markdown += `## 🚀 Implementation Guide\n\n`;
+    markdown += `## Implementation Guide\n\n`;
     markdown += `### Step 1: Review Recommendations\n`;
     markdown += `Review the threshold recommendations above and validate they align with your operational requirements.\n\n`;
     
@@ -130,12 +130,12 @@ export class ReportGenerator {
 
     // Footer
     markdown += `---\n\n`;
-    markdown += `## 📊 Data Sources\n\n`;
+    markdown += `## Data Sources\n\n`;
     markdown += `- **Alert Data Files:** Combined from all microservices\n`;
     markdown += `- **Analysis Period:** ${analysisReport.time_range.start} to ${analysisReport.time_range.end}\n`;
     markdown += `- **Services Monitored:** ${Object.keys(analysisReport.service_baselines).join(', ')}\n\n`;
     
-    markdown += `## 🔬 Methodology\n\n`;
+    markdown += `## Methodology\n\n`;
     markdown += `**Historical Analysis:**\n`;
     markdown += `- Statistical analysis (mean, standard deviation, percentiles)\n`;
     markdown += `- False positive detection (quick resolves < 30s)\n`;
