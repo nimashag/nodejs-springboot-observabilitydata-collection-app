@@ -1,6 +1,5 @@
 """
 ML Model Inference with Confidence Tracking
-Example script showing how to use models with confidence scores
 """
 
 import sys
