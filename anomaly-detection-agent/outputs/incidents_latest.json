@@ -1,18 +1,18 @@
 {
-  "generated_at": "2026-01-05T18:36:05.714349Z",
+  "generated_at": "2026-01-06T06:07:26.899872Z",
   "input_csv": "data/test/logs_test.csv",
   "model_path": "model_experiments/models/random_forest/rf_model.pkl",
   "total_rows": 10,
   "predicted_anomaly_count": 5,
   "predicted_normal_count": 5,
-  "predicted_anomaly_request_count": 4,
+  "predicted_anomaly_request_count": 5,
   "incident_story": {
     "title": "Incident Story (Auto-Generated)",
-    "summary": "4 anomalous request(s) detected. Most impacted service: restaurants-service.",
+    "summary": "5 anomalous request(s) detected. Most impacted service: restaurants-service.",
     "top_services": [
       [
         "restaurants-service",
-        3
+        4
       ],
       [
         "orders-service",
@@ -20,6 +20,10 @@
       ]
     ],
     "top_events": [
+      [
+        "restaurant.list.start",
+        2
+      ],
       [
         "http.request.completed",
         1
@@ -29,25 +33,21 @@
         1
       ],
       [
-        "restaurant.list.start",
-        1
-      ],
-      [
         "memory.pressure",
         1
       ]
     ],
     "top_status_codes": [
       [
+        "304",
+        2
+      ],
+      [
         "502",
         1
       ],
       [
         "500",
-        1
-      ],
-      [
-        "304",
         1
       ],
       [
@@ -91,7 +91,19 @@
         "restaurant.list.start"
       ],
       "reason": "db_query_time_ms>=300",
-      "row_count": 2
+      "row_count": 1
+    },
+    {
+      "request_id": "6361e320-77d3-4704-a406-9d33726957c1",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "restaurant.list.start"
+      ],
+      "reason": "db_query_time_ms>=300",
+      "row_count": 1
     },
     {
       "request_id": "4258b3fc-01b3-4a6a-9072-59de121a6599",
