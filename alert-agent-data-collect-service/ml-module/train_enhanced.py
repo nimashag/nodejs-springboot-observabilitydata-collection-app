@@ -222,7 +222,7 @@ print(f"Test samples: {len(X_test)}")
 # ============================================================================
 # STEP 7: HYPERPARAMETER TUNING
 # ============================================================================
-print("\nSTEP 7: Hyperparameter Tuning (This may take a few minutes)...")
+print("\nSTEP 7: Hyperparameter Tuning ")
 
 # Define parameter grids (optimized for better performance)
 # Enhanced parameter grids - balanced between performance and training time
