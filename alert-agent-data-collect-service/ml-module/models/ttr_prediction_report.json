@@ -1,0 +1,171 @@
+{
+  "training_timestamp": "2026-02-05T15:50:30.377431",
+  "dataset_size": 457,
+  "ttr_statistics": {
+    "mean_seconds": 488.0581991247265,
+    "median_seconds": 143.813,
+    "std_seconds": 2293.6515317639496,
+    "min_seconds": 0.405,
+    "max_seconds": 33537.73
+  },
+  "model_performance": {
+    "mae_seconds": 575.9891195009247,
+    "mae_minutes": 9.599818658348745,
+    "r2_score": -2.381348894281788
+  },
+  "top_features": [
+    {
+      "feature": "error_rate_ma",
+      "importance": 0.42624480037224255
+    },
+    {
+      "feature": "error_count",
+      "importance": 0.18917613931934085
+    },
+    {
+      "feature": "hour_of_day",
+      "importance": 0.15525345385515849
+    },
+    {
+      "feature": "process_memory_usage",
+      "importance": 0.052850690783857596
+    },
+    {
+      "feature": "is_peak_hours",
+      "importance": 0.04339252909141735
+    },
+    {
+      "feature": "request_count",
+      "importance": 0.03229231349621165
+    },
+    {
+      "feature": "average_response_time",
+      "importance": 0.03147093773143483
+    },
+    {
+      "feature": "service_name_encoded",
+      "importance": 0.02588637880287145
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.019630914240052255
+    },
+    {
+      "feature": "process_cpu_usage",
+      "importance": 0.012921667582048844
+    }
+  ],
+  "sla_thresholds": {
+    "P0": 15.0,
+    "P1": 60.0,
+    "P2": 240.0,
+    "P3": 1440.0
+  },
+  "resolution_patterns": {
+    "delivery-service_error": {
+      "count": 18,
+      "avg_ttr": 3170.6706111111116,
+      "median_ttr": 1132.5685,
+      "max_ttr": 33537.73,
+      "min_ttr": 63.172
+    },
+    "delivery-service_traffic": {
+      "count": 2,
+      "avg_ttr": 2161.4004999999997,
+      "median_ttr": 2161.4004999999997,
+      "max_ttr": 3574.935,
+      "min_ttr": 747.866
+    },
+    "delivery-service_resource": {
+      "count": 3,
+      "avg_ttr": 30.004333333333335,
+      "median_ttr": 30.006,
+      "max_ttr": 30.01,
+      "min_ttr": 29.997
+    },
+    "users-service_error": {
+      "count": 19,
+      "avg_ttr": 2819.9208421052626,
+      "median_ttr": 662.994,
+      "max_ttr": 33521.813,
+      "min_ttr": 22.131
+    },
+    "users-service_traffic": {
+      "count": 3,
+      "avg_ttr": 2693.2090000000003,
+      "median_ttr": 755.681,
+      "max_ttr": 7197.857,
+      "min_ttr": 126.089
+    },
+    "orders-service_availability": {
+      "count": 6,
+      "avg_ttr": 55.24466666666667,
+      "median_ttr": 9.6895,
+      "max_ttr": 295.334,
+      "min_ttr": 0.405
+    },
+    "orders-service_error": {
+      "count": 194,
+      "avg_ttr": 252.08786597938146,
+      "median_ttr": 147.3365,
+      "max_ttr": 4338.569,
+      "min_ttr": 0.439
+    },
+    "orders-service_latency": {
+      "count": 1,
+      "avg_ttr": 515.004,
+      "median_ttr": 515.004,
+      "max_ttr": 515.004,
+      "min_ttr": 515.004
+    },
+    "orders-service_traffic": {
+      "count": 4,
+      "avg_ttr": 639.742,
+      "median_ttr": 724.9875,
+      "max_ttr": 955.536,
+      "min_ttr": 153.457
+    },
+    "orders-service_resource": {
+      "count": 3,
+      "avg_ttr": 30.004,
+      "median_ttr": 30.004,
+      "max_ttr": 30.007,
+      "min_ttr": 30.001
+    },
+    "restaurants-service_availability": {
+      "count": 13,
+      "avg_ttr": 21.269384615384617,
+      "median_ttr": 5.814,
+      "max_ttr": 151.818,
+      "min_ttr": 0.5
+    },
+    "restaurants-service_error": {
+      "count": 185,
+      "avg_ttr": 228.71668648648648,
+      "median_ttr": 133.471,
+      "max_ttr": 1643.593,
+      "min_ttr": 0.426
+    },
+    "restaurants-service_latency": {
+      "count": 1,
+      "avg_ttr": 505.9,
+      "median_ttr": 505.9,
+      "max_ttr": 505.9,
+      "min_ttr": 505.9
+    },
+    "restaurants-service_traffic": {
+      "count": 2,
+      "avg_ttr": 2157.0505,
+      "median_ttr": 2157.0505,
+      "max_ttr": 3545.366,
+      "min_ttr": 768.735
+    },
+    "restaurants-service_resource": {
+      "count": 3,
+      "avg_ttr": 30.000333333333334,
+      "median_ttr": 29.999,
+      "max_ttr": 30.007,
+      "min_ttr": 29.995
+    }
+  }
+}
