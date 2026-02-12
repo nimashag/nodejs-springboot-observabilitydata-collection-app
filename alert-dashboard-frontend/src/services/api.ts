@@ -29,7 +29,37 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout
 });
+
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log(`[API] Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error('[API] Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  (response) => {
+    console.log(`[API] Response: ${response.status} ${response.config.url}`, response.data);
+    return response;
+  },
+  (error) => {
+    console.error('[API] Response Error:', error.message);
+    if (error.response) {
+      console.error('[API] Error Response:', error.response.status, error.response.data);
+    } else if (error.request) {
+      console.error('[API] No Response Received. Check if backend is running on', API_BASE_URL);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Add API key if configured
 const API_KEY = (import.meta as any).env?.VITE_API_KEY;
@@ -244,6 +274,80 @@ export const apiService = {
   // Health check
   healthCheck: async () => {
     const response = await api.get('/api/health');
+    return response.data;
+  },
+
+  // ===== NEW ADVANCED FEATURES ENDPOINTS =====
+
+  // Get adaptive learning metrics
+  getAdaptiveLearning: async () => {
+    const response = await api.get('/api/adaptive-learning');
+    return response.data;
+  },
+
+  // Get correlations and incidents
+  getCorrelations: async () => {
+    const response = await api.get('/api/correlations');
+    return response.data;
+  },
+
+  // Get incidents only
+  getIncidents: async () => {
+    const response = await api.get('/api/incidents');
+    return response.data;
+  },
+
+  // Get predictive alerts and trends
+  getPredictions: async () => {
+    const response = await api.get('/api/predictions');
+    return response.data;
+  },
+
+  // Get deduplication results
+  getDeduplication: async () => {
+    const response = await api.get('/api/deduplication');
+    return response.data;
+  },
+
+  // Get contextual thresholds
+  getContextualThresholds: async () => {
+    const response = await api.get('/api/contextual-thresholds');
+    return response.data;
+  },
+
+  // Get remediation suggestions
+  getRemediation: async () => {
+    const response = await api.get('/api/remediation');
+    return response.data;
+  },
+
+  // Get A/B testing experiments
+  getExperiments: async () => {
+    const response = await api.get('/api/experiments');
+    return response.data;
+  },
+
+  // Get all features overview
+  getFeatures: async () => {
+    const response = await api.get('/api/features');
+    return response.data;
+  },
+
+  // Get analysis summary (different from alert summary)
+  getAnalysisSummary: async () => {
+    const response = await api.get('/api/analysis-summary');
+    return response.data;
+  },
+
+  // Get routing decisions
+  getRouting: async () => {
+    const response = await api.get('/api/routing');
+    return response.data;
+  },
+
+  // Get real-time stats
+  getRealtimeStats: async () => {
+    const response = await api.get('/api/realtime-stats');
     return response.data;
   },
 };

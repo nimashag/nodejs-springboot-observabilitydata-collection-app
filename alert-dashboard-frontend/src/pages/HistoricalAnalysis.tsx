@@ -303,30 +303,6 @@ const HistoricalAnalysis = () => {
           </ResponsiveContainer>
         </div> */}
       </div>
-
-      {/* Recommendations */}
-      <div className="bg-white rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Lightbulb className="w-5 h-5 text-primary-600" />
-          Actionable Recommendations
-        </h2>
-        <div className="space-y-3">
-          {analysis.recommendations.length > 0 ? (
-            analysis.recommendations.map((recommendation, index) => (
-              <div 
-                key={index}
-                className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg"
-              >
-                <p className="text-sm text-gray-900">{recommendation}</p>
-              </div>
-            ))
-          ) : (
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">No specific recommendations at this time.</p>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   )
 }
