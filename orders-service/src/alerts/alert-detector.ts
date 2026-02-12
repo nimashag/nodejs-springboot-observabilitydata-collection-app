@@ -480,6 +480,10 @@ export class AlertDetector {
       ...this.captureContext()
     };
     
+    // Push to collector in real-time (webhook)
+    this.sendAlertToCollector(alertEvent);
+    
+    // Also write to file (backup)
     this.writeAlertEvent(alertEvent);
   }
   
@@ -506,6 +510,10 @@ export class AlertDetector {
       ...this.captureContext()
     };
     
+    // Push to collector in real-time (webhook)
+    this.sendAlertToCollector(alertEvent);
+    
+    // Also write to file (backup)
     this.writeAlertEvent(alertEvent);
   }
   
@@ -563,6 +571,30 @@ export class AlertDetector {
     };
   }
   
+  /**
+   * Send alert to collector via HTTP webhook (real-time push)
+   */
+  private async sendAlertToCollector(alertEvent: AlertEvent): Promise<void> {
+    const collectorUrl = process.env.ALERT_COLLECTOR_URL || 'http://localhost:3008/api/alerts';
+    
+    try {
+      // Non-blocking async send (fire and forget)
+      fetch(collectorUrl, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(alertEvent)
+      }).catch(err => {
+        // Silent fail - file write is backup
+        console.error(`[AlertDetector] Failed to push alert to collector: ${err.message}`);
+      });
+    } catch (err: any) {
+      // Fallback to file only
+      console.error(`[AlertDetector] Error sending alert to collector: ${err.message}`);
+    }
+  }
+
   /**
    * Write alert event to file (append-only NDJSON)
    * Uses synchronous write to prevent race conditions from concurrent alert checks

@@ -389,6 +389,10 @@ public class AlertDetector {
         alertEvent.setProcessMemoryUsage(context.processMemoryUsage);
         alertEvent.setTrafficRate(context.trafficRate);
         
+        // Push to collector in real-time (webhook)
+        sendAlertToCollector(alertEvent);
+        
+        // Also write to file (backup)
         writeAlertEvent(alertEvent);
     }
     
@@ -419,7 +423,43 @@ public class AlertDetector {
         alertEvent.setProcessMemoryUsage(context.processMemoryUsage);
         alertEvent.setTrafficRate(context.trafficRate);
         
+        // Push to collector in real-time (webhook)
+        sendAlertToCollector(alertEvent);
+        
+        // Also write to file (backup)
         writeAlertEvent(alertEvent);
+    }
+    
+    /**
+     * Send alert to collector via HTTP webhook (real-time push)
+     */
+   private void sendAlertToCollector(AlertEvent alertEvent) {
+        String envUrl = System.getenv("ALERT_COLLECTOR_URL");
+        final String collectorUrl = (envUrl == null || envUrl.isEmpty()) 
+            ? "http://localhost:3008/api/alerts" 
+            : envUrl;
+        
+        // Use async HTTP client (non-blocking)
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+                String json = objectMapper.writeValueAsString(alertEvent);
+                
+                java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create(collectorUrl))
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+                
+                client.sendAsync(request, java.net.http.HttpResponse.BodyHandlers.ofString())
+                    .exceptionally(e -> {
+                        System.err.println("[AlertDetector] Failed to push alert to collector: " + e.getMessage());
+                        return null;
+                    });
+            } catch (Exception e) {
+                System.err.println("[AlertDetector] Error sending alert to collector: " + e.getMessage());
+            }
+        });
     }
     
     private ContextMetrics captureContext() {
