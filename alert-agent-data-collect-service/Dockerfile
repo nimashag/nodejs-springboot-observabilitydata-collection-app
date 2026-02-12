@@ -15,8 +15,11 @@ COPY src ./src
 # Build TypeScript
 RUN npm run build
 
-# Expose port
-EXPOSE 3008
+# Expose port (default 3008, can be overridden by ENV PORT)
+EXPOSE ${PORT:-3008}
+
+# Environment variable defaults
+ENV PORT=3008
 
 # Start service
 CMD ["npm", "start"]

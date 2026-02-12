@@ -1,0 +1,65 @@
+{
+  "training_timestamp": "2026-02-05T15:50:29.906511",
+  "dataset_size": 949,
+  "priority_distribution": {
+    "P2": 740,
+    "P1": 154,
+    "P3": 28,
+    "P0": 27
+  },
+  "accuracy": 0.9842105263157894,
+  "top_features": [
+    {
+      "feature": "error_count",
+      "importance": 0.17097057909242402
+    },
+    {
+      "feature": "service_name_encoded",
+      "importance": 0.16801208469214268
+    },
+    {
+      "feature": "is_peak_hours",
+      "importance": 0.16193500360004365
+    },
+    {
+      "feature": "alert_frequency",
+      "importance": 0.13160159833764767
+    },
+    {
+      "feature": "severity_encoded",
+      "importance": 0.10534838092344054
+    },
+    {
+      "feature": "alert_type_encoded",
+      "importance": 0.07735201012057155
+    },
+    {
+      "feature": "request_count",
+      "importance": 0.059607784847644806
+    },
+    {
+      "feature": "hour_of_day",
+      "importance": 0.03674248562863674
+    },
+    {
+      "feature": "process_cpu_usage",
+      "importance": 0.03154590084490783
+    },
+    {
+      "feature": "process_memory_usage",
+      "importance": 0.02356849272889708
+    }
+  ],
+  "service_criticality": {
+    "users-service": 1.0,
+    "orders-service": 0.9,
+    "restaurants-service": 0.8,
+    "delivery-service": 0.85
+  },
+  "severity_weights": {
+    "critical": 1.0,
+    "high": 0.75,
+    "medium": 0.5,
+    "low": 0.25
+  }
+}

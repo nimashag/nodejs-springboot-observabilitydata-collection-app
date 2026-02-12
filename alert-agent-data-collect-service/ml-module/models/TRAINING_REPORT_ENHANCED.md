@@ -1,32 +1,32 @@
 # Enhanced ML Model Training Report
 
-**Training Date:** 2026-01-05 18:40:27  
+**Training Date:** 2026-02-12 12:59:38  
 **Pipeline Version:** Enhanced v2.0 with Hyperparameter Tuning
 
 ---
 
 ## Data Summary
 
-- **Total Samples:** 914
-- **Training Samples:** 731 (80%)
-- **Test Samples:** 183 (20%)
+- **Total Samples:** 961
+- **Training Samples:** 768 (80%)
+- **Test Samples:** 193 (20%)
 - **Features:** 21
 - **Alert Types:** 5
 - **Severity Levels:** 4
 
 ### Alert Type Distribution
 alert_type
-error           828
-availability     52
+error           840
+availability     63
 traffic          29
+resource         25
 latency           4
-resource          1
 
 ### Severity Distribution
 severity
-low         884
-high         14
-critical     12
+low         905
+critical     36
+high         16
 medium        4
 
 ---
@@ -42,28 +42,28 @@ medium        4
   "max_features": "sqrt",
   "min_samples_leaf": 1,
   "min_samples_split": 2,
-  "n_estimators": 100
+  "n_estimators": 200
 }
 ```
 
 ### Alert Predictor Best Parameters
 ```python
 {
-  "max_depth": 25,
+  "max_depth": 15,
   "max_features": "sqrt",
-  "min_samples_leaf": 1,
-  "min_samples_split": 2,
-  "n_estimators": 200
+  "min_samples_leaf": 2,
+  "min_samples_split": 5,
+  "n_estimators": 100
 }
 ```
 
 ### False Positive Detector Best Parameters
 ```python
 {
-  "max_depth": 20,
+  "max_depth": 15,
   "max_features": "sqrt",
   "min_samples_leaf": 1,
-  "min_samples_split": 5,
+  "min_samples_split": 2,
   "n_estimators": 100
 }
 ```
@@ -73,61 +73,61 @@ medium        4
 ## Cross-Validation Results (5-Fold)
 
 ### 1. Alert Type Classifier
-- **Mean Accuracy:** 0.9552 (95.52%)
-- **Standard Deviation:** ±0.0121
-- **95% Confidence Interval:** [0.9314, 0.9789]
-- **Range:** 93.14% - 97.89%
+- **Mean Accuracy:** 0.9521 (95.21%)
+- **Standard Deviation:** ±0.0083
+- **95% Confidence Interval:** [0.9359, 0.9684]
+- **Range:** 93.59% - 96.84%
 
 ### 2. Alert Predictor
-- **Mean Accuracy:** 0.7932 (79.32%)
-- **Standard Deviation:** ±0.0240
-- **95% Confidence Interval:** [0.7463, 0.8402]
-- **Range:** 74.63% - 84.02%
+- **Mean Accuracy:** 0.7981 (79.81%)
+- **Standard Deviation:** ±0.0059
+- **95% Confidence Interval:** [0.7866, 0.8096]
+- **Range:** 78.66% - 80.96%
 
 ### 3. False Positive Detector
-- **Mean F1 Score:** 0.9805 (98.05%)
-- **Standard Deviation:** ±0.0137
-- **95% Confidence Interval:** [0.9537, 1.0073]
-- **Range:** 95.37% - 100.73%
+- **Mean F1 Score:** 0.9821 (98.21%)
+- **Standard Deviation:** ±0.0096
+- **95% Confidence Interval:** [0.9632, 1.0009]
+- **Range:** 96.32% - 100.09%
 
 ---
 
 ## Final Test Set Performance
 
 ### 1. Alert Type Classifier
-- **Accuracy:** 0.9344 (**93.44%**)
+- **Accuracy:** 0.9534 (**95.34%**)
 - **Status:** EXCELLENT (>90%)
 
 ### 2. Alert Predictor
-- **Accuracy:** 0.5137 (**51.37%**)
-- **Precision:** 0.5243 (52.43%)
-- **Recall:** 0.5745 (57.45%)
-- **F1 Score:** 0.5482 (54.82%)
+- **Accuracy:** 0.5648 (**56.48%**)
+- **Precision:** 0.5755 (57.55%)
+- **Recall:** 0.6100 (61.00%)
+- **F1 Score:** 0.5922 (59.22%)
 - **Status:** Needs Improvement
 
 ### 3. False Positive Detector
-- **Accuracy:** 0.4754 (**47.54%**)
-- **Precision:** 0.4545 (45.45%)
-- **Recall:** 0.4545 (45.45%)
-- **F1 Score:** 0.4545 (45.45%)
+- **Accuracy:** 0.4870 (**48.70%**)
+- **Precision:** 0.4458 (44.58%)
+- **Recall:** 0.4111 (41.11%)
+- **F1 Score:** 0.4277 (42.77%)
 - **Status:** Needs Improvement
 
 ---
 
 ## Top 10 Most Important Features
 
-| Rank | Feature                    | Importance |
-|------|----------------------------|------------|
-| 1    | error_burst_5min           | 0.0939     |
-| 2    | process_memory_usage       | 0.0872     |
-| 3    | error_rate_change          | 0.0839     |
-| 4    | average_response_time      | 0.0741     |
-| 5    | error_rate                 | 0.0732     |
-| 6    | error_count_rolling_std    | 0.0699     |
-| 7    | request_count              | 0.0650     |
-| 8    | time_since_last_alert      | 0.0642     |
-| 9    | response_time_rolling_std  | 0.0532     |
-| 10   | response_time_rolling_mean | 0.0522     |
+| Rank | Feature | Importance |
+|------|---------|------------|
+| 1 | error_rate_change | 0.0815 |
+| 2 | time_since_last_alert | 0.0735 |
+| 3 | error_count_rolling_std | 0.0728 |
+| 4 | error_rate | 0.0709 |
+| 5 | process_memory_usage | 0.0704 |
+| 6 | error_burst_5min | 0.0697 |
+| 7 | response_time_rolling_std | 0.0678 |
+| 8 | response_time_rolling_mean | 0.0666 |
+| 9 | error_burst_1min | 0.0663 |
+| 10 | error_count_rolling_mean | 0.0660 |
 
 ---
 
@@ -159,9 +159,9 @@ medium        4
 ## Summary
 
 The enhanced ML pipeline achieved:
-- **Alert Classification:** 93.4% accuracy
-- **Alert Prediction:** 51.4% accuracy  
-- **False Positive Detection:** 45.5% F1 score
+- **Alert Classification:** 95.3% accuracy
+- **Alert Prediction:** 56.5% accuracy  
+- **False Positive Detection:** 42.8% F1 score
 
 All models were optimized using hyperparameter tuning and validated with 5-fold cross-validation to ensure robust performance across different data splits.
 

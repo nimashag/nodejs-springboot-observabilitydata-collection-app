@@ -2,22 +2,22 @@ export interface AlertEvent {
   timestamp: string;
   service_name: string;
   alert_name: string;
-  alert_type: 'error' | 'latency' | 'availability';
+  alert_type: 'error' | 'latency' | 'availability' | 'resource' | 'traffic' | 'security' | 'performance';
   alert_state: 'fired' | 'resolved';
   alert_duration?: number;
-  severity: 'low' | 'medium' | 'high';
+  severity: 'low' | 'medium' | 'high' | 'critical';
   
-  // Context fields
   request_count: number;
   error_count: number;
   average_response_time: number;
   process_cpu_usage: number;
   process_memory_usage: number;
+  event_loop_lag?: number;
+  traffic_rate?: number;
 }
 
 export interface NormalizedAlertEvent extends AlertEvent {
-  // Additional normalized fields
-  normalized_timestamp: number; // Unix timestamp in milliseconds
+  normalized_timestamp: number;
   service_type: 'nodejs' | 'java';
 }
 
