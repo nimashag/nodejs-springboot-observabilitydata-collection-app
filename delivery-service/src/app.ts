@@ -7,6 +7,7 @@ import deliveryRoutes from "./routes/delivery.routes";
 import driverRoutes from "./routes/driver.routes";
 import { requestLogger } from "./middleware/requestLogger";
 import { initializeAlertCollector, alertCollectorMiddleware } from "./collectors/alert-collector";
+import { telemetryMiddleware } from "./middleware/telemetry.middleware";
 
 dotenv.config();
 const app = express();
@@ -26,6 +27,7 @@ app.use(
 app.use(express.json());
 app.use(requestLogger);
 app.use(alertCollectorMiddleware);
+app.use(telemetryMiddleware);
 
 app.use("/api/drivers", driverRoutes);
 app.use("/api/delivery", deliveryRoutes);
