@@ -31,9 +31,9 @@ const Layout = ({ children }: LayoutProps) => {
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/alert-data', icon: AlertTriangle, label: 'Alert Data' },
-    { path: '/historical-analysis', icon: History, label: 'Historical Analysis' },
+    { path: '/service-health', icon: History, label: 'Service Health' },
     { path: '/threshold-config', icon: Sliders, label: 'Threshold Config' },
-    { path: '/ml-analytics', icon: Brain, label: 'ML Analytics' },
+    { path: '/alert-prioritization', icon: Zap, label: 'Alert Prioritization' },
     { path: '/correlations', icon: GitMerge, label: 'Correlations'},
     { path: '/settings', icon: SettingsIcon, label: 'Settings' },
   ]

@@ -6,7 +6,8 @@ import Dashboard from './pages/Dashboard'
 import AlertData from './pages/AlertData'
 import ThresholdConfig from './pages/ThresholdConfig'
 import MLAnalytics from './pages/MLAnalytics'
-import HistoricalAnalysis from './pages/HistoricalAnalysis'
+import AlertIntelligence from './pages/AlertIntelligence'
+import ServiceHealthTrends from './pages/ServiceHealthTrends'
 import Correlations from './pages/Correlations'
 import Settings from './pages/Settings'
 
@@ -21,8 +22,9 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/alert-data" element={<AlertData />} />
             <Route path="/threshold-config" element={<ThresholdConfig />} />
+            <Route path="/alert-intelligence" element={<AlertIntelligence />} />
             <Route path="/ml-analytics" element={<MLAnalytics />} />
-            <Route path="/historical-analysis" element={<HistoricalAnalysis />} />
+            <Route path="/service-health" element={<ServiceHealthTrends />} />
             <Route path="/correlations" element={<Correlations />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
