@@ -12,6 +12,7 @@ import { enhanceMongooseWithRequestId, mongooseQueryTracker } from "./middleware
 
 // Apply mongoose plugin BEFORE connecting to database
 mongoose.plugin(mongooseQueryTracker);
+import { telemetryMiddleware } from "./middleware/telemetry.middleware";
 
 dotenv.config();
 const app = express();
@@ -36,6 +37,7 @@ app.use(enhanceMongooseWithRequestId);
 
 app.use(requestLogger);
 app.use(alertCollectorMiddleware);
+app.use(telemetryMiddleware);
 
 app.use("/api/drivers", driverRoutes);
 app.use("/api/delivery", deliveryRoutes);

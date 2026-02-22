@@ -108,11 +108,12 @@ const Dashboard = () => {
         {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Alerts */}
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-primary-500">
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-primary-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Alerts</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{summary.total_alerts || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">All time</p>
             </div>
             <div className="bg-primary-100 p-3 rounded-lg">
               <AlertTriangle className="w-8 h-8 text-primary-600" />
@@ -121,13 +122,14 @@ const Dashboard = () => {
         </div>
 
         {/* Active Services */}
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Services</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {summary.alerts_by_service ? Object.keys(summary.alerts_by_service).length : 0}
               </p>
+              <p className="text-xs text-gray-500 mt-1">Monitored</p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
               <Server className="w-8 h-8 text-purple-600" />
@@ -136,11 +138,12 @@ const Dashboard = () => {
         </div>
 
         {/* Fired Alerts */}
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Fired Alerts</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{totalFired}</p>
+              <p className="text-xs text-gray-500 mt-1">Requires attention</p>
             </div>
             <div className="bg-orange-100 p-3 rounded-lg">
               <XCircle className="w-8 h-8 text-orange-600" />
@@ -149,11 +152,12 @@ const Dashboard = () => {
         </div>
 
         {/* Resolved Alerts */}
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Resolved Alerts</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{totalResolved}</p>
+              <p className="text-xs text-gray-500 mt-1">Auto-resolved</p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
               <CheckCircle className="w-8 h-8 text-green-600" />
@@ -258,12 +262,12 @@ const Dashboard = () => {
                 Running
               </span>
             </div>
-            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+            {/* <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
               <span className="font-medium text-gray-700">ML Models</span>
               <span className="px-3 py-1 bg-purple-500 text-white rounded-full text-sm font-semibold">
                 Trained
               </span>
-            </div>
+            </div> */}
             <div className="p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">Last Updated</p>
               <p className="text-lg font-semibold text-gray-900 mt-1">
@@ -273,6 +277,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
 
       {/* Service Details Table */}
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -284,9 +289,9 @@ const Dashboard = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Service Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Alert Count
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Percentage
                 </th>
@@ -306,9 +311,9 @@ const Dashboard = () => {
                         <span className="text-sm font-medium text-gray-900">{service}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-900">{count}</span>
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-full bg-gray-200 rounded-full h-2 mr-2" style={{ width: '100px' }}>

@@ -1,8 +1,3 @@
-"""
-Periodic Model Retraining Script
-Can be run via cron or scheduled job to retrain models automatically
-"""
-
 import sys
 import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')

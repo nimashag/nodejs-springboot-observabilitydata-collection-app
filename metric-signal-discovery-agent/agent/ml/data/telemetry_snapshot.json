@@ -1,0 +1,166 @@
+{
+  "timestamp": 1767465722708,
+  "results": [
+    {
+      "name": "orders-service",
+      "data": {
+        "service": "orders-service",
+        "timestamp": 1767465722455,
+        "uptime_ms": 12124664,
+        "process": {
+          "rss_mb": 64,
+          "heap_used_mb": 30
+        },
+        "http": {
+          "total_requests": 118,
+          "total_errors": 30,
+          "avg_latency_ms": 170,
+          "rps": 0.01,
+          "p95_latency_ms": 267,
+          "p99_latency_ms": 1927
+        },
+        "routes": [
+          {
+            "route": "GET /api/orders/telemetry",
+            "count": 43,
+            "errors": 0,
+            "avg_latency_ms": 1
+          },
+          {
+            "route": "GET /api/orders",
+            "count": 45,
+            "errors": 0,
+            "avg_latency_ms": 312
+          },
+          {
+            "route": "GET /api/orders/000000000000000000000000",
+            "count": 30,
+            "errors": 30,
+            "avg_latency_ms": 199
+          }
+        ]
+      }
+    },
+    {
+      "name": "restaurants-service",
+      "data": {
+        "service": "restaurants-service",
+        "timestamp": 1767465722464,
+        "uptime_ms": 12133780,
+        "process": {
+          "rss_mb": 49,
+          "heap_used_mb": 29
+        },
+        "http": {
+          "total_requests": 88,
+          "total_errors": 40,
+          "avg_latency_ms": 170,
+          "rps": 0.01,
+          "p95_latency_ms": 213,
+          "p99_latency_ms": 1980
+        },
+        "routes": [
+          {
+            "route": "GET /api/restaurants/telemetry",
+            "count": 13,
+            "errors": 0,
+            "avg_latency_ms": 2
+          },
+          {
+            "route": "GET /api/restaurants",
+            "count": 35,
+            "errors": 0,
+            "avg_latency_ms": 309
+          },
+          {
+            "route": "GET /api/restaurants/000000000000000000000000",
+            "count": 20,
+            "errors": 20,
+            "avg_latency_ms": 208
+          },
+          {
+            "route": "GET /api/restaurants/debug/fail",
+            "count": 20,
+            "errors": 20,
+            "avg_latency_ms": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "delivery-service",
+      "data": {
+        "service": "delivery-service",
+        "timestamp": 1767465722467,
+        "uptime_ms": 12154978,
+        "process": {
+          "rss_mb": 43,
+          "heap_used_mb": 31
+        },
+        "http": {
+          "total_requests": 108,
+          "total_errors": 55,
+          "avg_latency_ms": 1,
+          "rps": 0.01,
+          "p95_latency_ms": 1,
+          "p99_latency_ms": 5
+        },
+        "routes": [
+          {
+            "route": "GET /api/delivery/telemetry",
+            "count": 53,
+            "errors": 0,
+            "avg_latency_ms": 1
+          },
+          {
+            "route": "GET /api/delivery",
+            "count": 55,
+            "errors": 55,
+            "avg_latency_ms": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "users-service",
+      "data": {
+        "service": "users-service",
+        "timestamp": 1767465722472,
+        "uptime_ms": 5891374,
+        "process": {
+          "heap_used_mb": 60,
+          "heap_max_mb": 4064,
+          "rss_mb": 253
+        },
+        "http": {
+          "total_requests": 123,
+          "total_errors": 90,
+          "avg_latency_ms": 1,
+          "rps": 0.02,
+          "p95_latency_ms": 2,
+          "p99_latency_ms": 10
+        },
+        "routes": [
+          {
+            "route": "GET /error",
+            "count": 55,
+            "errors": 55,
+            "avg_latency_ms": 0
+          },
+          {
+            "route": "GET /api/users",
+            "count": 35,
+            "errors": 35,
+            "avg_latency_ms": 0
+          },
+          {
+            "route": "GET /telemetry",
+            "count": 33,
+            "errors": 0,
+            "avg_latency_ms": 2
+          }
+        ]
+      }
+    }
+  ]
+}

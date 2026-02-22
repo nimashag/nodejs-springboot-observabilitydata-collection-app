@@ -75,6 +75,39 @@ The Adaptive Alert Tuning Agent (AATA) is a self-healing component designed to a
 npm install
 ```
 
+### Configuration
+
+1. Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` file with your configuration:
+
+```bash
+# Server Configuration
+PORT=3008
+
+# Security Configuration
+API_KEY=your-secret-api-key-here
+
+# CORS Configuration (comma-separated origins)
+ALLOWED_ORIGINS=http://localhost:3000,https://dashboard.example.com
+
+# Alert Collection Configuration
+ALERT_COLLECTION_INTERVAL=60000
+```
+
+**Environment Variables:**
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `PORT` | Server port number | 3008 | No |
+| `API_KEY` | API key for webhook authentication | (empty) | No |
+| `ALLOWED_ORIGINS` | Comma-separated CORS origins | (empty) | No |
+| `ALERT_COLLECTION_INTERVAL` | Alert collection interval in ms | 60000 | No |
+
 ### Build
 
 ```bash
@@ -83,16 +116,31 @@ npm run build
 
 ### Run AATA as HTTP API Service
 
+**Option 1: Start AATA with ML Service (Recommended)**
+
 ```bash
-# Development mode (no authentication, open CORS)
+# Starts both ML service and AATA together
 npm start
 
-# Production mode (with authentication and CORS restrictions)
-PORT=8080 \
-API_KEY=your-secret-key \
-ALLOWED_ORIGINS=https://dashboard.example.com \
-npm start
+# This will:
+# 1. Build the TypeScript code
+# 2. Start ML prediction service (Python Flask on port 5001)
+# 3. Wait for ML service to be ready (automatic retry with health checks)
+# 4. Start AATA service (Node.js on port 3008)
+# 5. Both services run in parallel with color-coded logs
 ```
+
+**Option 2: Start AATA Only (Without ML)**
+
+```bash
+# Start AATA without ML predictions
+npm run start:aata-only
+
+# Or override environment variables
+PORT=8080 API_KEY=your-secret-key npm run start:aata-only
+```
+
+**Note:** When running without ML service, AATA will continue to work using statistical methods only. ML predictions (priority scoring, TTR prediction) will be disabled gracefully.
 
 
 ### View File-Based Results
@@ -202,8 +250,8 @@ This demonstrates:
 ### Export Data to CSV
 
 ```bash
-cd ml-module
-python export_to_csv.py
+cd alert-agent-data-collect-service
+python scripts/export_to_csv.py
 ```
 
 ---
@@ -293,16 +341,15 @@ alert-agent-data-collect-service/
 ├── ml-module/
 │   ├── train_enhanced.py
 │   ├── test_models.py
-│   ├── export_to_csv.py
 │   └── models/
 │       ├── alert_classifier_enhanced.joblib
 │       ├── alert_predictor_enhanced.joblib
 │       └── false_positive_detector_enhanced.joblib
+├── scripts/
+│   └── export_to_csv.py
 ├── output/
-│   ├── AATA-REPORT.md
-│   ├── threshold-recommendations.json
-│   ├── adaptive-threshold-config.json
 │   ├── alert-data-collection.csv
+│   ├── alert-summary.json
 │   └── combined-alert-history.json
 ├── package.json
 ├── tsconfig.json

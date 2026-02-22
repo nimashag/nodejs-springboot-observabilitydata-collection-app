@@ -1,0 +1,65 @@
+{
+  "generated_at": 1767459832212,
+  "recommendations": [
+    {
+      "service": "orders-service",
+      "service_type": "transactional_orders",
+      "recommended_kpis": [
+        "p95_latency_ms",
+        "p99_latency_ms",
+        "rps",
+        "error_rate",
+        "payment_webhook_error_rate",
+        "state_transition_latency",
+        "failed_order_creation_rate"
+      ],
+      "missing_kpis_detected": [],
+      "note": "KPI coverage looks complete. Next focus: alerts + thresholds + dashboards."
+    },
+    {
+      "service": "restaurants-service",
+      "service_type": "catalog_restaurants",
+      "recommended_kpis": [
+        "p95_latency_ms",
+        "p99_latency_ms",
+        "rps",
+        "error_rate",
+        "image_asset_404_rate",
+        "menu_items_read_latency",
+        "catalog_write_error_rate"
+      ],
+      "missing_kpis_detected": [],
+      "note": "KPI coverage looks complete. Next focus: alerts + thresholds + dashboards."
+    },
+    {
+      "service": "delivery-service",
+      "service_type": "workflow_delivery",
+      "recommended_kpis": [
+        "p95_latency_ms",
+        "p99_latency_ms",
+        "rps",
+        "error_rate",
+        "dispatch_assign_latency",
+        "status_update_error_rate",
+        "driver_identity_latency"
+      ],
+      "missing_kpis_detected": [],
+      "note": "KPI coverage looks complete. Next focus: alerts + thresholds + dashboards."
+    },
+    {
+      "service": "users-service",
+      "service_type": "identity_users",
+      "recommended_kpis": [
+        "p95_latency_ms",
+        "p99_latency_ms",
+        "rps",
+        "error_rate",
+        "login_failure_rate",
+        "token_validation_error_rate",
+        "profile_fetch_latency"
+      ],
+      "missing_kpis_detected": [],
+      "note": "KPI coverage looks complete. Next focus: alerts + thresholds + dashboards."
+    }
+  ]
+}

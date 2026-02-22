@@ -1,0 +1,24 @@
+{
+  "training_timestamp": "2026-02-05T15:50:30.470620",
+  "results": {
+    "priority_scoring": {
+      "status": "success",
+      "accuracy": 0.9842105263157894,
+      "r2": 0.9780126902415797
+    },
+    "ttr_prediction": {
+      "status": "success",
+      "mae_minutes": 9.599818658348745,
+      "r2": -2.381348894281788
+    },
+    "threshold_adaptation": {
+      "status": "success",
+      "models_trained": 16,
+      "patterns_learned": 72
+    },
+    "email_service": {
+      "status": "success",
+      "smtp_configured": true
+    }
+  }
+}

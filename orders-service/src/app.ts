@@ -9,6 +9,7 @@ import { enhanceMongooseWithRequestId, mongooseQueryTracker } from './middleware
 
 // Apply plugin BEFORE connecting to DB (where you do connectDB, or here if you connect inline)
 mongoose.plugin(mongooseQueryTracker);
+import { telemetryMiddleware } from "./middlewares/telemetry.middleware";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use(enhanceMongooseWithRequestId);
 
 app.use(requestLogger);
 app.use(alertCollectorMiddleware);
+app.use(telemetryMiddleware);
 
 app.use('/api/orders', orderRoutes);
 
