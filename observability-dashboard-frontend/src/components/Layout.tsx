@@ -52,9 +52,9 @@ const Layout = ({ children }: LayoutProps) => {
       label: 'Logs',
       icon: FileText,
       subItems: [
-        { path: '/logs/subpart1', label: 'Subpart 1' },
-        { path: '/logs/subpart2', label: 'Subpart 2' },
-        { path: '/logs/subpart3', label: 'Subpart 3' }
+        { path: '/logs/subpart1', label: 'Logs Viewer' },
+        { path: '/logs/subpart2', label: 'Templates' },
+        { path: '/logs/subpart3', label: 'Analytics' }
       ]
     },
     {
