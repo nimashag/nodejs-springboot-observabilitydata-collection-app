@@ -9,6 +9,7 @@ import MetricsSubpart2 from './pages/metrics/Subpart2'
 import MetricsSubpart3 from './pages/metrics/Subpart3'
 
 // Logs pages
+import LogsDashboard from './pages/logs/LogsDashboard'
 import LogsViewer from './pages/logs/LogsViewer'
 import TraceView from './pages/logs/TraceView'
 import TemplatesPage from './pages/logs/TemplatesPage'
@@ -38,6 +39,7 @@ function App() {
             <Route path="/metrics/subpart3" element={<MetricsSubpart3 />} />
             
             {/* Logs routes */}
+            <Route path="/logs/dashboard" element={<LogsDashboard />} />
             <Route path="/logs/subpart1" element={<LogsViewer />} />
             <Route path="/logs/subpart2" element={<TemplatesPage />} />
             <Route path="/logs/subpart3" element={<Analytics />} />
