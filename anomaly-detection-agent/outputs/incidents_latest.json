@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-02-22T06:16:36.454970Z",
+  "input_csv": "data/test/logs_test.csv",
+  "model_path": "model_experiments/models/random_forest/rf_model.pkl",
+  "total_rows": 10,
+  "predicted_anomaly_count": 5,
+  "predicted_normal_count": 5,
+  "predicted_anomaly_request_count": 5,
+  "incident_story": {
+    "title": "Incident Story (Auto-Generated)",
+    "summary": "5 anomalous request(s) detected. Most impacted service: restaurants-service.",
+    "top_services": [
+      [
+        "restaurants-service",
+        4
+      ],
+      [
+        "orders-service",
+        1
+      ]
+    ],
+    "top_events": [
+      [
+        "restaurant.list.start",
+        2
+      ],
+      [
+        "http.request.completed",
+        1
+      ],
+      [
+        "jvm.gc.pause",
+        1
+      ],
+      [
+        "memory.pressure",
+        1
+      ]
+    ],
+    "top_status_codes": [
+      [
+        "304",
+        2
+      ],
+      [
+        "502",
+        1
+      ],
+      [
+        "500",
+        1
+      ],
+      [
+        "200",
+        1
+      ]
+    ]
+  },
+  "incidents": [
+    {
+      "request_id": "4baca0ab-c3fa-415b-981a-64ea28786c31",
+      "service": "orders-service",
+      "status_code": 502,
+      "level": "error",
+      "level_encoded": 3,
+      "events": [
+        "http.request.completed"
+      ],
+      "reason": "duration_ms>=3000;cpu>=80;status_code>=500",
+      "row_count": 1
+    },
+    {
+      "request_id": "51ae920e-e382-497e-a208-21af98549759",
+      "service": "restaurants-service",
+      "status_code": 500,
+      "level": "error",
+      "level_encoded": 3,
+      "events": [
+        "jvm.gc.pause"
+      ],
+      "reason": "duration_ms>=3000;db_query_time_ms>=300;status_code>=500",
+      "row_count": 1
+    },
+    {
+      "request_id": "6361e320-77d3-4704-a406-9d33726957c0",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "restaurant.list.start"
+      ],
+      "reason": "db_query_time_ms>=300",
+      "row_count": 1
+    },
+    {
+      "request_id": "6361e320-77d3-4704-a406-9d33726957c1",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "restaurant.list.start"
+      ],
+      "reason": "db_query_time_ms>=300",
+      "row_count": 1
+    },
+    {
+      "request_id": "4258b3fc-01b3-4a6a-9072-59de121a6599",
+      "service": "restaurants-service",
+      "status_code": 200,
+      "level": "warn",
+      "level_encoded": 2,
+      "events": [
+        "memory.pressure"
+      ],
+      "reason": "duration_ms>=3000;cpu>=80",
+      "row_count": 1
+    }
+  ]
+}

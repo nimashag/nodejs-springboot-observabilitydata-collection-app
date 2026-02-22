@@ -1,0 +1,160 @@
+{
+  "samples": 3600,
+  "train_samples": 2975,
+  "test_samples": 625,
+  "unique_templates_total": 83,
+  "unique_templates_train": 62,
+  "unique_templates_test": 21,
+  "accuracy": 0.96,
+  "macro_f1": 0.9179487179487179,
+  "weighted_f1": 0.9651282051282051,
+  "notes": "Evaluation uses group split by route templates (prevents leakage). Training text masks common 'giveaway' keywords (webhook/menu-items/status/etc.) so classifier must generalize beyond obvious tokens.",
+  "giveaway_tokens_masked": [
+    "menu-items",
+    "menuitems",
+    "availability",
+    "webhook",
+    "callback",
+    "create-payment-intent",
+    "payment",
+    "payments",
+    "assign",
+    "respond",
+    "assigned-orders",
+    "my-deliveries",
+    "delivery",
+    "status",
+    "mark-paid",
+    "uploads",
+    "image",
+    "auth",
+    "login",
+    "register",
+    "token",
+    "profile",
+    "me",
+    "debug",
+    "fail"
+  ],
+  "classification_report": {
+    "availability_ops": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 50.0
+    },
+    "catalog_ops": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 50.0
+    },
+    "dispatch_workflow": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1-score": 0.6666666666666666,
+      "support": 25.0
+    },
+    "generic_api": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 325.0
+    },
+    "state_transition": {
+      "precision": 1.0,
+      "recall": 0.8571428571428571,
+      "f1-score": 0.9230769230769231,
+      "support": 175.0
+    },
+    "accuracy": 0.96,
+    "macro avg": {
+      "precision": 0.9,
+      "recall": 0.9714285714285713,
+      "f1-score": 0.9179487179487179,
+      "support": 625.0
+    },
+    "weighted avg": {
+      "precision": 0.98,
+      "recall": 0.96,
+      "f1-score": 0.9651282051282051,
+      "support": 625.0
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "availability_ops",
+      "catalog_ops",
+      "dispatch_workflow",
+      "external_callback",
+      "generic_api",
+      "payments",
+      "state_transition"
+    ],
+    "matrix": [
+      [
+        50,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        50,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        25,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        325,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        25,
+        0,
+        0,
+        0,
+        150
+      ]
+    ]
+  }
+}

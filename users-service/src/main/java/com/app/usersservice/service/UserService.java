@@ -6,6 +6,7 @@ import com.app.usersservice.dto.RegisterRequest;
 import com.app.usersservice.dto.UserResponse;
 import com.app.usersservice.model.User;
 import com.app.usersservice.model.UserRole;
+import com.app.usersservice.metrics.MongoQueryInterceptor;
 import com.app.usersservice.repository.UserRepository;
 import com.app.usersservice.util.JwtUtil;
 import com.app.usersservice.util.LoggingUtil;
@@ -27,6 +28,9 @@ public class UserService {
     
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired(required = false)
+    private MongoQueryInterceptor queryInterceptor;
     
     @Autowired
     private JwtUtil jwtUtil;
@@ -35,7 +39,9 @@ public class UserService {
         LoggingUtil.info(log, "user.register.start", 
             Map.of("email", request.getEmail(), "role", request.getRole().name()));
         
+        long qs = System.currentTimeMillis();
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (queryInterceptor != null) queryInterceptor.trackQuery("findByEmail", System.currentTimeMillis() - qs);
         if (existingUser.isPresent()) {
             LoggingUtil.warn(log, "user.register.duplicate", 
                 Map.of("email", request.getEmail(), "reason", "User already exists"));
@@ -51,7 +57,9 @@ public class UserService {
         user.setAddress(request.getAddress());
         
         user.hashPassword();
+        long qs2 = System.currentTimeMillis();
         User savedUser = userRepository.save(user);
+        if (queryInterceptor != null) queryInterceptor.trackQuery("save", System.currentTimeMillis() - qs2);
         
         LoggingUtil.info(log, "user.register.success", 
             Map.of("userId", savedUser.getId(), "email", savedUser.getEmail(), 
@@ -62,7 +70,9 @@ public class UserService {
         LoggingUtil.info(log, "user.login.start", 
             Map.of("email", request.getEmail()));
         
+        long qs = System.currentTimeMillis();
         Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+        if (queryInterceptor != null) queryInterceptor.trackQuery("findByEmail", System.currentTimeMillis() - qs);
         
         if (userOpt.isEmpty()) {
             LoggingUtil.warn(log, "user.login.not_found", 
@@ -92,7 +102,9 @@ public class UserService {
     public List<UserResponse> getAllUsers() {
         LoggingUtil.info(log, "user.get_all.start", Map.of());
         
+        long qs = System.currentTimeMillis();
         List<User> users = userRepository.findAll();
+        if (queryInterceptor != null) queryInterceptor.trackQuery("findAll", System.currentTimeMillis() - qs);
         List<UserResponse> userResponses = users.stream()
                 .map(UserResponse::new)
                 .collect(Collectors.toList());
@@ -107,7 +119,9 @@ public class UserService {
         LoggingUtil.info(log, "user.get_profile.start", 
             Map.of("userId", userId));
         
+        long qs = System.currentTimeMillis();
         Optional<User> userOpt = userRepository.findById(userId);
+        if (queryInterceptor != null) queryInterceptor.trackQuery("findById", System.currentTimeMillis() - qs);
         if (userOpt.isEmpty()) {
             LoggingUtil.warn(log, "user.get_profile.not_found", 
                 Map.of("userId", userId, "reason", "User not found in database"));
@@ -125,7 +139,9 @@ public class UserService {
         LoggingUtil.info(log, "user.get_by_id.start", 
             Map.of("userId", id));
         
+        long qs = System.currentTimeMillis();
         Optional<User> userOpt = userRepository.findById(id);
+        if (queryInterceptor != null) queryInterceptor.trackQuery("findById", System.currentTimeMillis() - qs);
         if (userOpt.isEmpty()) {
             LoggingUtil.warn(log, "user.get_by_id.not_found", 
                 Map.of("userId", id, "reason", "User not found in database"));
@@ -154,7 +170,9 @@ public class UserService {
         LoggingUtil.info(log, "user.update.start", 
             Map.of("userId", id, "fieldsToUpdate", updateFields));
         
+        long qs = System.currentTimeMillis();
         Optional<User> userOpt = userRepository.findById(id);
+        if (queryInterceptor != null) queryInterceptor.trackQuery("findById", System.currentTimeMillis() - qs);
         if (userOpt.isEmpty()) {
             LoggingUtil.warn(log, "user.update.not_found", 
                 Map.of("userId", id, "reason", "User not found in database"));
@@ -186,7 +204,9 @@ public class UserService {
         }
         user.setApproved(updateData.isApproved());
         
+        long qs2 = System.currentTimeMillis();
         User savedUser = userRepository.save(user);
+        if (queryInterceptor != null) queryInterceptor.trackQuery("save", System.currentTimeMillis() - qs2);
         
         Map<String, Object> successMeta = new HashMap<>();
         successMeta.put("userId", id);
@@ -208,7 +228,9 @@ public class UserService {
         LoggingUtil.info(log, "user.delete.start", 
             Map.of("userId", id));
         
+        long qs = System.currentTimeMillis();
         Optional<User> userOpt = userRepository.findById(id);
+        if (queryInterceptor != null) queryInterceptor.trackQuery("findById", System.currentTimeMillis() - qs);
         if (userOpt.isEmpty()) {
             LoggingUtil.warn(log, "user.delete.not_found", 
                 Map.of("userId", id, "reason", "User not found in database"));
@@ -216,7 +238,9 @@ public class UserService {
         }
         
         User user = userOpt.get();
+        long qs2 = System.currentTimeMillis();
         userRepository.deleteById(id);
+        if (queryInterceptor != null) queryInterceptor.trackQuery("deleteById", System.currentTimeMillis() - qs2);
         
         LoggingUtil.info(log, "user.delete.success", 
             Map.of("userId", id, "email", user.getEmail(), "role", user.getRole().name()));
