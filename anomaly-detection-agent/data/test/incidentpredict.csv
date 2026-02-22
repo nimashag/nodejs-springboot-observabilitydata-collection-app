@@ -1,0 +1,11 @@
+request_id,service,event,level,status_code,anomaly_score
+req-001,restaurants-service,http.request.completed,error,500,3.2
+req-002,restaurants-service,restaurant.list.start,info,200,0.2
+req-003,orders-service,http.request.completed,error,502,2.7
+req-004,orders-service,order.create.success,info,201,0.1
+req-005,users-service,http.request.completed,warn,429,1.6
+req-006,users-service,auth.login.success,info,200,0.0
+req-007,restaurants-service,http.request.completed,error,503,3.8
+req-008,orders-service,http.request.received,info,200,0.4
+req-009,restaurants-service,db.query.slow,warn,200,2.1
+req-010,users-service,http.request.completed,info,200,0.3
