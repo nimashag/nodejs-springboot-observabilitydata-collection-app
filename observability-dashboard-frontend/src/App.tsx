@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
+import { NotificationToast } from './components/alerts/NotificationToast'
 import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
 
 // Metrics pages
 import MetricsSubpart1 from './pages/metrics/Subpart1'
@@ -15,10 +15,18 @@ import TraceView from './pages/logs/TraceView'
 import TemplatesPage from './pages/logs/TemplatesPage'
 import Analytics from './pages/logs/Analytics'
 
+// Main Dashboard
+import MainDashboard from './pages/Dashboard'
+
 // Alerts pages
-import AlertsSubpart1 from './pages/alerts/Subpart1'
-import AlertsSubpart2 from './pages/alerts/Subpart2'
-import AlertsSubpart3 from './pages/alerts/Subpart3'
+import AlertData from './pages/alerts/AlertData'
+import AlertsDashboard from './pages/alerts/Dashboard'
+import AlertIntelligence from './pages/alerts/AlertIntelligence'
+import AlertPrioritization from './pages/alerts/AlertPrioritization'
+import ServiceHealthTrends from './pages/alerts/ServiceHealthTrends'
+import Settings from './pages/alerts/Settings'
+import ThresholdConfig from './pages/alerts/ThresholdConfig'
+import Correlations from './pages/alerts/Correlations'
 
 // Anomalies pages
 import AnomaliesSubpart1 from './pages/anomalies/Subpart1'
@@ -29,9 +37,11 @@ function App() {
   return (
     <AppProvider>
       <Router>
+        <NotificationToast />
         <Layout>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<MainDashboard />} />
             
             {/* Metrics routes */}
             <Route path="/metrics/subpart1" element={<MetricsSubpart1 />} />
@@ -46,9 +56,14 @@ function App() {
             <Route path="/logs/traces/:traceId" element={<TraceView />} />
             
             {/* Alerts routes */}
-            <Route path="/alerts/subpart1" element={<AlertsSubpart1 />} />
-            <Route path="/alerts/subpart2" element={<AlertsSubpart2 />} />
-            <Route path="/alerts/subpart3" element={<AlertsSubpart3 />} />
+            <Route path="/alerts/dashboard" element={<AlertsDashboard />} />
+            <Route path="/alerts/data" element={<AlertData />} />
+            <Route path="/alerts/intelligence" element={<AlertIntelligence />} />
+            <Route path="/alerts/prioritization" element={<AlertPrioritization />} />
+            <Route path="/alerts/health-trends" element={<ServiceHealthTrends />} />
+            <Route path="/alerts/threshold-config" element={<ThresholdConfig />} />
+            <Route path="/alerts/correlations" element={<Correlations />} />
+            <Route path="/alerts/settings" element={<Settings />} />
             
             {/* Anomalies routes */}
             <Route path="/anomalies/subpart1" element={<AnomaliesSubpart1 />} />
