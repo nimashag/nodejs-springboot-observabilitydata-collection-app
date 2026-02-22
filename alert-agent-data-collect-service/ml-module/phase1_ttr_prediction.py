@@ -1,14 +1,3 @@
-"""
-Phase 1: Time-to-Resolve (TTR) Prediction Engine
-Research Paper Reference: "Predictive thresholds" & "Forecasting techniques"
-
-Features:
-- Predict resolution time for each alert
-- Random Forest regression with confidence intervals
-- SLA breach prediction
-- Capacity planning insights
-"""
-
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
@@ -126,24 +115,62 @@ class TTRPredictionEngine:
             'error_rate_ma'
         ]
         
-        # Encode categorical variables
+        # Encode categorical variables with handling for unseen labels
         if 'service_name' not in self.encoders:
             self.encoders['service_name'] = LabelEncoder()
             df['service_name_encoded'] = self.encoders['service_name'].fit_transform(df['service_name'])
         else:
-            df['service_name_encoded'] = self.encoders['service_name'].transform(df['service_name'])
+            # Handle unseen service names
+            known_services = set(self.encoders['service_name'].classes_)
+            df['service_name_encoded'] = df['service_name'].apply(
+                lambda x: self.encoders['service_name'].transform([x])[0] 
+                if x in known_services 
+                else self.encoders['service_name'].transform(['users-service'])[0]  # Default fallback
+            )
         
         if 'alert_type' not in self.encoders:
             self.encoders['alert_type'] = LabelEncoder()
             df['alert_type_encoded'] = self.encoders['alert_type'].fit_transform(df['alert_type'])
         else:
-            df['alert_type_encoded'] = self.encoders['alert_type'].transform(df['alert_type'])
+            # Handle unseen alert types
+            known_types = set(self.encoders['alert_type'].classes_)
+            df['alert_type_encoded'] = df['alert_type'].apply(
+                lambda x: self.encoders['alert_type'].transform([x])[0] 
+                if x in known_types 
+                else self.encoders['alert_type'].transform(['error'])[0]  # Default fallback
+            )
         
         if 'severity' not in self.encoders:
             self.encoders['severity'] = LabelEncoder()
             df['severity_encoded'] = self.encoders['severity'].fit_transform(df['severity'])
         else:
-            df['severity_encoded'] = self.encoders['severity'].transform(df['severity'])
+            # Handle unseen severity labels - map to closest known severity
+            known_severities = set(self.encoders['severity'].classes_)
+            
+            def map_severity(severity):
+                if severity in known_severities:
+                    return self.encoders['severity'].transform([severity])[0]
+                # Map unseen severities to closest known ones
+                severity_lower = severity.lower()
+                if severity_lower in ['critical', 'high']:
+                    # Try 'high' first, then 'critical', then 'medium'
+                    for fallback in ['high', 'critical', 'medium']:
+                        if fallback in known_severities:
+                            return self.encoders['severity'].transform([fallback])[0]
+                elif severity_lower == 'medium':
+                    # Try 'medium' first, then 'low'
+                    for fallback in ['medium', 'low']:
+                        if fallback in known_severities:
+                            return self.encoders['severity'].transform([fallback])[0]
+                else:  # low or unknown
+                    # Try 'low' first, then 'medium'
+                    for fallback in ['low', 'medium']:
+                        if fallback in known_severities:
+                            return self.encoders['severity'].transform([fallback])[0]
+                # Ultimate fallback: use first known severity
+                return self.encoders['severity'].transform([self.encoders['severity'].classes_[0]])[0]
+            
+            df['severity_encoded'] = df['severity'].apply(map_severity)
         
         feature_columns.extend(['service_name_encoded', 'alert_type_encoded', 'severity_encoded'])
         
