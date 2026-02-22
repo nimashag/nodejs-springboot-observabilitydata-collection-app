@@ -1,0 +1,31 @@
+{
+  "training_date": "2026-02-12T12:02:22.807417",
+  "pipeline_version": "final_v4",
+  "data_stats": {
+    "total_samples": 961,
+    "training_samples": 768,
+    "test_samples": 193,
+    "features_count": 28
+  },
+  "alert_predictor": {
+    "model_type": "LightGBM",
+    "cv_accuracy": 0.8294941900205057,
+    "test_accuracy": 0.7979274611398963,
+    "precision": 0.7606837606837606,
+    "recall": 0.89,
+    "f1_score": 0.8202764976958525,
+    "mean_confidence": 0.9152748172538272,
+    "low_confidence_rate": 0.12435233160621761,
+    "cv_test_gap": 0.03156672888060941,
+    "status": "FAIL"
+  },
+  "all_models_tested": {
+    "ExtraTrees": 0.7969070403280929,
+    "RandomForest": 0.8190362269309638,
+    "GradientBoosting": 0.8098769651401231,
+    "XGBoost": 0.8086295283663706,
+    "LightGBM": 0.8294941900205057,
+    "VotingEnsemble": 0.8216336295283664
+  },
+  "note": "False Positive Detector skipped - insufficient reliable labeling data"
+}

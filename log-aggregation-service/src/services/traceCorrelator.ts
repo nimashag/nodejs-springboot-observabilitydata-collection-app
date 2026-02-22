@@ -149,6 +149,7 @@ export class TraceCorrelator {
 
   /**
    * Load logs from aggregated log files
+   * Loads only the latest file (most recent run) since each run processes all logs from service files
    */
   private async loadLogsFromFiles(): Promise<StructuredLog[]> {
     const logs: StructuredLog[] = [];
@@ -162,11 +163,12 @@ export class TraceCorrelator {
       .sort()
       .reverse(); // Most recent first
 
-    // Load from recent files (last 7 days)
-    const recentFiles = files.slice(0, 7);
+    // Load only the latest file (most recent run)
+    // Since each run processes all logs from service files, the latest file contains all previous logs
+    const latestFile = files[0];
 
-    for (const file of recentFiles) {
-      const filePath = path.join(this.aggregatedLogPath, file);
+    if (latestFile) {
+      const filePath = path.join(this.aggregatedLogPath, latestFile);
       try {
         const content = fs.readFileSync(filePath, 'utf-8');
         const lines = content.split('\n').filter(line => line.trim());
@@ -180,7 +182,7 @@ export class TraceCorrelator {
           }
         }
       } catch (error) {
-        console.error(`Error reading log file ${file}:`, error);
+        console.error(`Error reading log file ${latestFile}:`, error);
       }
     }
 
@@ -189,6 +191,7 @@ export class TraceCorrelator {
 
   /**
    * Query logs with filters
+   * Returns both the paginated logs and the total count
    */
   async queryLogs(query: {
     traceId?: string;
@@ -197,9 +200,12 @@ export class TraceCorrelator {
     startTime?: string;
     endTime?: string;
     event?: string;
+    templateId?: string;
+    sessionId?: string;
+    piiRedacted?: boolean;
     limit?: number;
     offset?: number;
-  }): Promise<StructuredLog[]> {
+  }): Promise<{ logs: StructuredLog[]; totalCount: number }> {
     let logs = await this.loadLogsFromFiles();
 
     // Apply filters
@@ -216,7 +222,7 @@ export class TraceCorrelator {
     }
 
     if (query.level) {
-      logs = logs.filter(log => log.level === query.level);
+      logs = logs.filter(log => log.level.toLowerCase() === query.level?.toLowerCase());
     }
 
     if (query.startTime) {
@@ -233,16 +239,36 @@ export class TraceCorrelator {
       logs = logs.filter(log => log.event.includes(query.event!));
     }
 
+    if (query.templateId) {
+      logs = logs.filter(log => 
+        log.metadata?.matchedTemplateId === query.templateId
+      );
+    }
+
+    if (query.sessionId) {
+      logs = logs.filter(log => log.sessionId === query.sessionId);
+    }
+
+    if (query.piiRedacted !== undefined) {
+      logs = logs.filter(log => 
+        query.piiRedacted ? log.piiRedacted === true : log.piiRedacted !== true
+      );
+    }
+
     // Sort by timestamp (newest first)
     logs.sort((a, b) => 
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
+    // Get total count before pagination
+    const totalCount = logs.length;
+
     // Apply pagination
     const offset = query.offset || 0;
     const limit = query.limit || 100;
+    const paginatedLogs = logs.slice(offset, offset + limit);
 
-    return logs.slice(offset, offset + limit);
+    return { logs: paginatedLogs, totalCount };
   }
 
   /**

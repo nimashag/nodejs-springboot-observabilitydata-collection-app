@@ -1,0 +1,25 @@
+{
+  "baseline_thresholds": {
+    "error_count": 10,
+    "average_response_time": 1000,
+    "process_cpu_usage": 80,
+    "process_memory_usage": 3221225472
+  },
+  "time_multipliers": {
+    "peak_hours": [
+      9,
+      18
+    ],
+    "peak_multiplier": 1.5,
+    "off_hours_multiplier": 0.7
+  },
+  "dow_multipliers": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 0.9,
+    "5": 0.6,
+    "6": 0.6
+  }
+}

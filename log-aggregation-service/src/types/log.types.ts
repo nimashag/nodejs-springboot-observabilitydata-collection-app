@@ -39,6 +39,9 @@ export interface LogQuery {
   startTime?: string;
   endTime?: string;
   event?: string;
+  templateId?: string;
+  sessionId?: string;
+  piiRedacted?: boolean;
   limit?: number;
   offset?: number;
 }

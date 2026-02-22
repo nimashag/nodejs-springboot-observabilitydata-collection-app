@@ -10,7 +10,8 @@
     "train": "ts-node src/scripts/trainModel.ts",
     "test:templates": "ts-node src/scripts/testTemplateMining.ts",
     "test:matching": "ts-node src/scripts/testTemplateMatching.ts",
-    "test:pii": "ts-node src/scripts/testPIIDetection.ts"
+    "test:pii": "ts-node src/scripts/testPIIDetection.ts",
+    "evaluate:event-types": "ts-node tests/evaluation/evaluateEventTypeClassifiers.ts"
   },
   "dependencies": {
     "chokidar": "^3.5.3",

@@ -1,0 +1,155 @@
+{
+  "training_date": "2026-02-12T12:59:38.453388",
+  "pipeline_version": "enhanced_v2",
+  "data_stats": {
+    "total_samples": 961,
+    "training_samples": 768,
+    "test_samples": 193,
+    "features_count": 21,
+    "alert_types": 5,
+    "severity_levels": 4
+  },
+  "hyperparameter_tuning": {
+    "method": "GridSearchCV",
+    "cv_folds": 5,
+    "classifier_best_params": {
+      "max_depth": 15,
+      "max_features": "sqrt",
+      "min_samples_leaf": 1,
+      "min_samples_split": 2,
+      "n_estimators": 200
+    },
+    "predictor_best_params": {
+      "max_depth": 15,
+      "max_features": "sqrt",
+      "min_samples_leaf": 2,
+      "min_samples_split": 5,
+      "n_estimators": 100
+    },
+    "predictor_model_type": "RandomForest",
+    "fp_detector_best_params": {
+      "learning_rate": 0.2,
+      "max_depth": 3,
+      "max_features": "sqrt",
+      "min_samples_split": 5,
+      "n_estimators": 200,
+      "subsample": 1.0
+    },
+    "fp_detector_model_type": "GradientBoosting"
+  },
+  "cross_validation": {
+    "alert_classifier": {
+      "mean_accuracy": 0.9521373056994819,
+      "std_accuracy": 0.00830700468230101,
+      "confidence_interval_95": [
+        0.9358555765221719,
+        0.9684190348767918
+      ]
+    },
+    "alert_predictor": {
+      "mean_accuracy": 0.7981325561312608,
+      "std_accuracy": 0.0058634610809124845,
+      "confidence_interval_95": [
+        0.7866401724126723,
+        0.8096249398498493
+      ]
+    },
+    "false_positive_detector": {
+      "mean_f1": 0.9820825183716956,
+      "std_f1": 0.009611510936219713,
+      "confidence_interval_95": [
+        0.963243956936705,
+        1.0009210798066863
+      ]
+    }
+  },
+  "test_performance": {
+    "alert_classifier": {
+      "accuracy": 0.9533678756476683,
+      "percentage": "95.34%"
+    },
+    "alert_predictor": {
+      "accuracy": 0.5647668393782384,
+      "precision": 0.5754716981132075,
+      "recall": 0.61,
+      "f1_score": 0.5922330097087378,
+      "percentage": "56.48%"
+    },
+    "false_positive_detector": {
+      "accuracy": 0.48704663212435234,
+      "precision": 0.4457831325301205,
+      "recall": 0.4111111111111111,
+      "f1_score": 0.4277456647398844,
+      "percentage": "48.70%"
+    }
+  },
+  "confidence_tracking": {
+    "alert_classifier": {
+      "mean_confidence": 0.9209222797927461,
+      "low_confidence_rate": 0.10362694300518134,
+      "low_confidence_threshold": 0.7
+    },
+    "alert_predictor": {
+      "mean_confidence": 0.5951077413304839,
+      "low_confidence_rate": 0.9067357512953368,
+      "low_confidence_threshold": 0.7
+    },
+    "false_positive_detector": {
+      "mean_confidence": 0.7448757778408887,
+      "low_confidence_rate": 0.37823834196891193,
+      "low_confidence_threshold": 0.7
+    }
+  },
+  "feature_importance": [
+    {
+      "feature": "error_rate_change",
+      "importance": 0.08146570295541838
+    },
+    {
+      "feature": "time_since_last_alert",
+      "importance": 0.07347110688544062
+    },
+    {
+      "feature": "error_count_rolling_std",
+      "importance": 0.07283950780241732
+    },
+    {
+      "feature": "error_rate",
+      "importance": 0.07085304367336666
+    },
+    {
+      "feature": "process_memory_usage",
+      "importance": 0.07039234279847711
+    },
+    {
+      "feature": "error_burst_5min",
+      "importance": 0.0696982082352295
+    },
+    {
+      "feature": "response_time_rolling_std",
+      "importance": 0.06776249387138436
+    },
+    {
+      "feature": "response_time_rolling_mean",
+      "importance": 0.06660789415688645
+    },
+    {
+      "feature": "error_burst_1min",
+      "importance": 0.06630583116050137
+    },
+    {
+      "feature": "error_count_rolling_mean",
+      "importance": 0.06601945961079056
+    }
+  ],
+  "model_files": {
+    "classifier": "alert_classifier_enhanced.joblib",
+    "predictor": "alert_predictor_enhanced.joblib",
+    "fp_detector": "false_positive_detector_enhanced.joblib",
+    "scaler": "scaler.joblib",
+    "encoders": [
+      "alert_type_encoder.joblib",
+      "severity_encoder.joblib"
+    ]
+  }
+}

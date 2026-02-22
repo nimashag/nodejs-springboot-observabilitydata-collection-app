@@ -3,31 +3,11 @@
 set -e  # Exit script on errors
 #set -x # Enable debugging
 
-CONFIG_FILE="services.config.json"
-DOCKER_DEV_REGISTRY="docker.io"
+# Source common Docker utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/runner_utils.sh"
+
 UPLOADS_PV_PATH_ON_HOST="/tmp/k8-uploads"
-
-function rebuild_images() {
-  echo "🔄 Rebuilding Docker images..."
-
-  jq -c '.services[]' $CONFIG_FILE | while read -r svc; do
-    NAME=$(echo $svc | jq -r '.name')
-    FOLDER=$(echo $svc | jq -r '.folder')
-    IMAGE=$(echo $svc | jq -r '.dockerImage')
-    REGISTRY_IMAGE="$DOCKER_DEV_REGISTRY/$IMAGE"
-
-    echo "→ Building image for $NAME..."
-    docker build -t "$IMAGE" "$FOLDER"
-
-    echo "→ Tagging image as $REGISTRY_IMAGE"
-    docker tag "$IMAGE" "$REGISTRY_IMAGE"
-
-    echo "→ Pushing image to $DOCKER_DEV_REGISTRY registry"
-    docker push "$REGISTRY_IMAGE" || echo "⚠️ Warning: Failed to push image $REGISTRY_IMAGE, continuing..."
-  done
-
-  echo "✅ Docker images built and pushed to $DOCKER_DEV_REGISTRY registry"
-}
 
 function start_cluster() {
   echo "🚀 Applying Kubernetes configurations..."
@@ -92,7 +72,7 @@ function stop_cluster() {
 
 function print_logs() {
   if [ -z "$2" ]; then
-    echo "❗ Please provide a pod name or part of it. Example: ./runner.sh logs order"
+    echo "❗ Please provide a pod name or part of it. Example: ./runner_k8s.sh logs order"
     return
   fi
 
@@ -108,7 +88,7 @@ function print_logs() {
 
 function exec_into_pod() {
   if [ -z "$2" ]; then
-    echo "❗ Please provide a pod name or part of it. Example: ./runner.sh exec order"
+    echo "❗ Please provide a pod name or part of it. Example: ./runner_k8s.sh exec order"
     return
   fi
 
@@ -129,7 +109,7 @@ function list_resources() {
 }
 
 function help_menu() {
-  echo "Usage: ./runner.sh [command] [command] ..."
+  echo "Usage: ./runner_k8s.sh [command] [command] ..."
   echo
   echo "Commands:"
   echo "  rebuild      Rebuild all docker images"
