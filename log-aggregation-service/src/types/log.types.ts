@@ -10,6 +10,8 @@ export interface StructuredLog {
   metadata: Record<string, any>;
   raw: string;
   sourceFile?: string;
+  piiRedacted?: boolean; // Flag indicating if PII was redacted
+  piiDetected?: string[]; // Types of PII detected (for audit)
 }
 
 export interface TraceSpan {
@@ -37,6 +39,9 @@ export interface LogQuery {
   startTime?: string;
   endTime?: string;
   event?: string;
+  templateId?: string;
+  sessionId?: string;
+  piiRedacted?: boolean;
   limit?: number;
   offset?: number;
 }

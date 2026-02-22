@@ -11,5 +11,5 @@ y = df["anomaly_label"]
 model = joblib.load("rf_model.pkl")
 y_pred = model.predict(X)
 
-print("🎯 Accuracy:", accuracy_score(y, y_pred))
+print(" Accuracy:", accuracy_score(y, y_pred))
 print(classification_report(y, y_pred))

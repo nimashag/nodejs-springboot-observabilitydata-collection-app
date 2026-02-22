@@ -10,6 +10,7 @@ export class LogCollector {
   private serviceLogPaths: Map<string, string>;
   private watchers: Map<string, chokidar.FSWatcher> = new Map();
   private processedFiles: Set<string> = new Set();
+  private currentAggregatedFile: string | null = null; // Track current run's unique file
 
   constructor(parser: MLBasedLogParser) {
     this.parser = parser;
@@ -26,6 +27,19 @@ export class LogCollector {
    * Initialize log collection from environment variables or defaults
    */
   async initialize(): Promise<void> {
+    // Create a unique filename for this run (timestamp-based)
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const date = new Date().toISOString().split('T')[0];
+    this.currentAggregatedFile = path.join(
+      this.aggregatedLogPath, 
+      `aggregated-${date}-${timestamp}.jsonl`
+    );
+    
+    console.log(`Creating new aggregated file: ${path.basename(this.currentAggregatedFile)}`);
+    
+    // Clear processed files tracking for fresh start
+    this.processedFiles.clear();
+
     // Load service log paths from environment or use defaults
     const services = [
       { name: 'delivery-service', path: process.env.DELIVERY_SERVICE_LOG_PATH || '../delivery-service/logs' },
@@ -177,13 +191,22 @@ export class LogCollector {
    * Write structured log to aggregated log file (JSONL format)
    */
   private async writeAggregatedLog(log: StructuredLog): Promise<void> {
-    const date = new Date().toISOString().split('T')[0];
-    const filePath = path.join(this.aggregatedLogPath, `aggregated-${date}.jsonl`);
+    // Use the unique file created at initialization
+    if (!this.currentAggregatedFile) {
+      // Fallback: create a unique file if somehow not initialized
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const date = new Date().toISOString().split('T')[0];
+      this.currentAggregatedFile = path.join(
+        this.aggregatedLogPath, 
+        `aggregated-${date}-${timestamp}.jsonl`
+      );
+      console.log(`Fallback: Created aggregated file: ${path.basename(this.currentAggregatedFile)}`);
+    }
 
     const logLine = JSON.stringify(log) + '\n';
     
     try {
-      fs.appendFileSync(filePath, logLine, 'utf-8');
+      fs.appendFileSync(this.currentAggregatedFile, logLine, 'utf-8');
     } catch (error) {
       console.error(`Error writing aggregated log:`, error);
     }
@@ -198,6 +221,8 @@ export class LogCollector {
       console.log(`Stopped watching logs for ${serviceName}`);
     }
     this.watchers.clear();
+    this.processedFiles.clear();
+    this.currentAggregatedFile = null; // Reset for next run
   }
 
   /**

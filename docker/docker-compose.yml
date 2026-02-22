@@ -1,0 +1,164 @@
+version: '3.8'
+
+services:
+  frontend-service:
+    image: my-app/frontend-service:latest
+    container_name: frontend-service
+    ports:
+      - "30000:80"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  restaurants-service:
+    image: my-app/restaurants-service:latest
+    container_name: restaurants-service
+    ports:
+      - "31001:3001"
+    environment:
+      - RESTAURANTS_SERVICE_URL=http://restaurants-service:3001/api/restaurants
+      - ORDERS_SERVICE_URL=http://orders-service:3002/api/orders
+      - USERS_SERVICE_URL=http://users-service:3003/api/restaurants
+      - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
+    volumes:
+      - uploads-data:/app/uploads
+      - ~/temp/docker-files/restaurants-service/logs:/app/logs
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  orders-service:
+    image: my-app/orders-service:latest
+    container_name: orders-service
+    ports:
+      - "31002:3002"
+    environment:
+      - RESTAURANTS_SERVICE_URL=http://restaurants-service:3001/api/restaurants
+      - ORDERS_SERVICE_URL=http://orders-service:3002/api/orders
+      - USERS_SERVICE_URL=http://users-service:3003/api/restaurants
+      - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
+    volumes:
+      - ~/temp/docker-files/orders-service/logs:/app/logs
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  users-service:
+    image: my-app/users-service:latest
+    container_name: users-service
+    ports:
+      - "31003:3003"
+    environment:
+      - RESTAURANTS_SERVICE_URL=http://restaurants-service:3001/api/restaurants
+      - ORDERS_SERVICE_URL=http://orders-service:3002/api/orders
+      - USERS_SERVICE_URL=http://users-service:3003/api/restaurants
+      - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
+    volumes:
+      - ~/temp/docker-files/users-service/logs:/app/logs
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  delivery-service:
+    image: my-app/delivery-service:latest
+    container_name: delivery-service
+    ports:
+      - "31004:3004"
+    environment:
+      - RESTAURANTS_SERVICE_URL=http://restaurants-service:3001/api/restaurants
+      - ORDERS_SERVICE_URL=http://orders-service:3002/api/orders
+      - USERS_SERVICE_URL=http://users-service:3003/api/restaurants
+      - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
+    volumes:
+      - ~/temp/docker-files/delivery-service/logs:/app/logs
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  alert-agent-data-collect-service:
+    image: my-app/alert-agent-data-collect-service:latest
+    container_name: alert-agent-data-collect-service
+    ports:
+      - "31008:3008"
+    volumes:
+      - ..:/project:ro
+    working_dir: /project/alert-agent-data-collect-service
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  alert-dashboard-frontend:
+    image: my-app/alert-dashboard-frontend:latest
+    container_name: alert-dashboard-frontend
+    ports:
+      - "30009:80"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  log-aggregation-service:
+    image: my-app/log-aggregation-service:latest
+    container_name: log-aggregation-service
+    ports:
+      - "31005:3005"
+    environment:
+      - DELIVERY_SERVICE_LOG_PATH=/app/service-logs/delivery-service
+      - ORDERS_SERVICE_LOG_PATH=/app/service-logs/orders-service
+      - RESTAURANTS_SERVICE_LOG_PATH=/app/service-logs/restaurants-service
+      - USERS_SERVICE_LOG_PATH=/app/service-logs/users-service
+    volumes:
+      - ~/temp/docker-files/log-aggregation-service/aggregated-logs:/app/aggregated-logs
+      - ~/temp/docker-files/delivery-service/logs:/app/service-logs/delivery-service:ro
+      - ~/temp/docker-files/orders-service/logs:/app/service-logs/orders-service:ro
+      - ~/temp/docker-files/restaurants-service/logs:/app/service-logs/restaurants-service:ro
+      - ~/temp/docker-files/users-service/logs:/app/service-logs/users-service:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    mem_limit: 900m
+    memswap_limit: 900m
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3005/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  logs-dashboard-frontend:
+    image: my-app/logs-dashboard-frontend:latest
+    container_name: logs-dashboard-frontend
+    ports:
+      - "30010:80"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  nginx-gateway:
+    image: nginx:alpine
+    container_name: nginx-gateway
+    ports:
+      - "31000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend-service
+      - restaurants-service
+      - orders-service
+      - users-service
+      - delivery-service
+      - alert-agent-data-collect-service
+      - alert-dashboard-frontend
+      - log-aggregation-service
+      - logs-dashboard-frontend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  uploads-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+

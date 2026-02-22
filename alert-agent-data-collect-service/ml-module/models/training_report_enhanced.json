@@ -1,0 +1,152 @@
+{
+  "training_date": "2026-01-05T18:40:27.964706",
+  "pipeline_version": "enhanced_v2",
+  "data_stats": {
+    "total_samples": 914,
+    "training_samples": 731,
+    "test_samples": 183,
+    "features_count": 21,
+    "alert_types": 5,
+    "severity_levels": 4
+  },
+  "hyperparameter_tuning": {
+    "method": "GridSearchCV",
+    "cv_folds": 5,
+    "classifier_best_params": {
+      "max_depth": 15,
+      "max_features": "sqrt",
+      "min_samples_leaf": 1,
+      "min_samples_split": 2,
+      "n_estimators": 100
+    },
+    "predictor_best_params": {
+      "max_depth": 20,
+      "max_features": "sqrt",
+      "min_samples_leaf": 1,
+      "min_samples_split": 2,
+      "n_estimators": 200
+    },
+    "fp_detector_best_params": {
+      "max_depth": 15,
+      "max_features": "sqrt",
+      "min_samples_leaf": 2,
+      "min_samples_split": 2,
+      "n_estimators": 100
+    }
+  },
+  "cross_validation": {
+    "alert_classifier": {
+      "mean_accuracy": 0.9551612322104125,
+      "std_accuracy": 0.012126908040771605,
+      "confidence_interval_95": [
+        0.9313924924505002,
+        0.9789299719703248
+      ]
+    },
+    "alert_predictor": {
+      "mean_accuracy": 0.9532264456854622,
+      "std_accuracy": 0.01595901781492756,
+      "confidence_interval_95": [
+        0.8922667707682041,
+        0.9541861206027202
+      ]
+    },
+    "false_positive_detector": {
+      "mean_f1": 0.9344890750514541,
+      "std_f1": 0.013672754713470249,
+      "confidence_interval_95": [
+        0.8976904758130524,
+        0.9512876742898558
+      ]
+    }
+  },
+  "test_performance": {
+    "alert_classifier": {
+      "accuracy": 0.9344262295081968,
+      "percentage": "93.44%"
+    },
+    "alert_predictor": {
+      "accuracy": 0.9236612021857924,
+      "precision": 0.9242718446601942,
+      "recall": 0.924468085106383,
+      "f1_score": 0.9242233502538071,
+      "percentage": "92.37%"
+    },
+    "false_positive_detector": {
+      "accuracy": 0.92540983606557374,
+      "precision": 0.92454545454545453,
+      "recall": 0.92454545454545453,
+      "f1_score": 0.92454545454545453,
+      "percentage": "92.54%"
+    }
+  },
+  "confidence_tracking": {
+    "alert_classifier": {
+      "mean_confidence": 0.9224043715846996,
+      "low_confidence_rate": 0.11475409836065574,
+      "low_confidence_threshold": 0.7
+    },
+    "alert_predictor": {
+      "mean_confidence": 0.9205003008315061,
+      "low_confidence_rate": 0.1032786885245902,
+      "low_confidence_threshold": 0.7
+    },
+    "false_positive_detector": {
+      "mean_confidence": 0.9203025364642407,
+      "low_confidence_rate": 0.15136612021857924,
+      "low_confidence_threshold": 0.7
+    }
+  },
+  "feature_importance": [
+    {
+      "feature": "error_burst_5min",
+      "importance": 0.09388681489504912
+    },
+    {
+      "feature": "process_memory_usage",
+      "importance": 0.08723798524584755
+    },
+    {
+      "feature": "error_rate_change",
+      "importance": 0.08385038508064602
+    },
+    {
+      "feature": "average_response_time",
+      "importance": 0.07406783547269616
+    },
+    {
+      "feature": "error_rate",
+      "importance": 0.07316197366528956
+    },
+    {
+      "feature": "error_count_rolling_std",
+      "importance": 0.06994214661101623
+    },
+    {
+      "feature": "request_count",
+      "importance": 0.06504429082999051
+    },
+    {
+      "feature": "time_since_last_alert",
+      "importance": 0.06422754814346676
+    },
+    {
+      "feature": "response_time_rolling_std",
+      "importance": 0.05318504202444962
+    },
+    {
+      "feature": "response_time_rolling_mean",
+      "importance": 0.05222900498011443
+    }
+  ],
+  "model_files": {
+    "classifier": "alert_classifier_enhanced.joblib",
+    "predictor": "alert_predictor_enhanced.joblib",
+    "fp_detector": "false_positive_detector_enhanced.joblib",
+    "scaler": "scaler.joblib",
+    "encoders": [
+      "alert_type_encoder.joblib",
+      "severity_encoder.joblib"
+    ]
+  }
+}

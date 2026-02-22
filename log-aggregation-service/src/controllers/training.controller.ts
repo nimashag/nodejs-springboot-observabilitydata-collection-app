@@ -20,20 +20,20 @@ export class TrainingController {
       const { sampleLogs } = req.body;
 
       if (!sampleLogs || !Array.isArray(sampleLogs) || sampleLogs.length === 0) {
-        res.status(400).json({ 
-          error: 'sampleLogs array is required with format: [{raw: string, structured: StructuredLog}]' 
+        res.status(400).json({
+          error: 'sampleLogs array is required with format: [{raw: string, structured: StructuredLog}]'
         });
         return;
       }
 
       // Validate sample logs format
-      const validSamples = sampleLogs.filter((sample: any) => 
+      const validSamples = sampleLogs.filter((sample: any) =>
         sample.raw && sample.structured
       );
 
       if (validSamples.length === 0) {
-        res.status(400).json({ 
-          error: 'Invalid sample logs format. Expected: [{raw: string, structured: StructuredLog}]' 
+        res.status(400).json({
+          error: 'Invalid sample logs format. Expected: [{raw: string, structured: StructuredLog}]'
         });
         return;
       }
@@ -41,9 +41,10 @@ export class TrainingController {
       await this.parser.trainModel(validSamples);
 
       res.json({
-        message: 'Model trained successfully',
-        samplesUsed: validSamples.length,
-        isTrained: this.parser.isModelTrained(),
+        message: 'NLP training is disabled. Pattern-based extraction is used instead (90.98% accuracy).',
+        note: 'NLP training was removed as it reduces accuracy from 90.98% to 76.84%.',
+        samplesReceived: validSamples.length,
+        isTrained: this.parser.isModelTrained(), // Always false
       });
     } catch (error) {
       console.error('Error training model:', error);
@@ -58,7 +59,7 @@ export class TrainingController {
   autoTrain = async (req: Request, res: Response): Promise<void> => {
     try {
       const aggregatedLogPath = path.join(__dirname, '..', '..', 'aggregated-logs');
-      
+
       if (!fs.existsSync(aggregatedLogPath)) {
         res.status(404).json({ error: 'No aggregated logs found. Collect some logs first.' });
         return;
@@ -100,10 +101,11 @@ export class TrainingController {
       await this.parser.trainModel(sampleLogs);
 
       res.json({
-        message: 'Model auto-trained successfully',
-        samplesUsed: sampleLogs.length,
-        filesUsed: files.length,
-        isTrained: this.parser.isModelTrained(),
+        message: 'NLP training is disabled. Pattern-based extraction is used instead (90.98% accuracy).',
+        note: 'NLP training was removed as it reduces accuracy from 90.98% to 76.84%.',
+        samplesReceived: sampleLogs.length,
+        filesProcessed: files.length,
+        isTrained: this.parser.isModelTrained(), // Always false
       });
     } catch (error) {
       console.error('Error auto-training model:', error);
@@ -118,7 +120,8 @@ export class TrainingController {
   getTrainingStatus = async (req: Request, res: Response): Promise<void> => {
     try {
       res.json({
-        isTrained: this.parser.isModelTrained(),
+        isTrained: this.parser.isModelTrained(), // Always false
+        note: 'NLP training is disabled. Pattern-based extraction is used instead (90.98% accuracy).',
       });
     } catch (error) {
       console.error('Error getting training status:', error);

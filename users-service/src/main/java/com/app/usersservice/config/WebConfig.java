@@ -14,8 +14,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
+    private final AlertCollectorInterceptor alertCollectorInterceptor;
+    
     @Autowired
-    private AlertCollectorInterceptor alertCollectorInterceptor;
+    public WebConfig(AlertCollectorInterceptor alertCollectorInterceptor) {
+        this.alertCollectorInterceptor = alertCollectorInterceptor;
+    }
     
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
