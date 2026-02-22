@@ -16,7 +16,10 @@
     "axios": "^1.6.2",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.294.0",
-    "recharts": "^2.10.3"
+    "recharts": "^2.10.3",
+    "chart.js": "^4.4.9",
+    "react-chartjs-2": "^5.3.0",
+    "@headlessui/react": "^2.2.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
