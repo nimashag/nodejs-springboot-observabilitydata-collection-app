@@ -33,7 +33,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   const navItems: NavItem[] = [
     {
-      path: '/',
+      path: '/dashboard',
       label: 'Dashboard',
       icon: Activity
     },
@@ -63,9 +63,14 @@ const Layout = ({ children }: LayoutProps) => {
       label: 'Alerts',
       icon: AlertTriangle,
       subItems: [
-        { path: '/alerts/subpart1', label: 'Subpart 1' },
-        { path: '/alerts/subpart2', label: 'Subpart 2' },
-        { path: '/alerts/subpart3', label: 'Subpart 3' }
+        { path: '/alerts/dashboard', label: 'Dashboard' },
+        { path: '/alerts/data', label: 'Alert Data' },
+        { path: '/alerts/intelligence', label: 'Alert Intelligence' },
+        { path: '/alerts/prioritization', label: 'Alert Prioritization' },
+        { path: '/alerts/health-trends', label: 'Service Health Trends' },
+        { path: '/alerts/threshold-config', label: 'Threshold Config' },
+        { path: '/alerts/correlations', label: 'Correlations' },
+        { path: '/alerts/settings', label: 'Settings' }
       ]
     },
     {
