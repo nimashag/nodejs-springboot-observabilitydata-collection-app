@@ -75,6 +75,7 @@ export default function LogsViewer() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const refreshTimerRef = useRef<number | null>(null);
 
   // Load services and templates only once on mount
@@ -239,51 +240,100 @@ export default function LogsViewer() {
     setPage(1);
   };
 
-  const handleExport = (format: "json" | "csv") => {
-    const dataToExport = filteredLogs.length > 0 ? filteredLogs : logs;
+  const handleExport = async (format: "json" | "csv") => {
+    try {
+      setIsExporting(true);
 
-    if (format === "json") {
-      const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
-        type: "application/json",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `logs-${new Date().toISOString()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } else {
-      // CSV export
-      const headers = [
-        "Timestamp",
-        "Service",
-        "Level",
-        "Event",
-        "Trace ID",
-        "Session ID",
-        "Message",
-      ];
-      const rows = dataToExport.map((log) => [
-        log.timestamp,
-        log.service,
-        log.level,
-        log.event,
-        log.traceId || "",
-        log.sessionId || "",
-        log.raw.replace(/"/g, '""'), // Escape quotes
-      ]);
-      const csv = [
-        headers.join(","),
-        ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-      ].join("\n");
+      // Check if any filters are active (excluding limit, offset, and search query)
+      const hasActiveFilters = !!(
+        filters.service ||
+        filters.level ||
+        filters.event ||
+        filters.traceId ||
+        filters.sessionId ||
+        filters.templateId ||
+        filters.startTime ||
+        filters.endTime ||
+        filters.piiRedacted !== undefined
+      );
 
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `logs-${new Date().toISOString()}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+      let dataToExport: StructuredLog[];
+
+      if (!hasActiveFilters && !searchQuery.trim()) {
+        // No filters active - fetch ALL logs from the system
+        console.log("Exporting all logs from the system...");
+        const response = await queryLogs({
+          limit: 1000000, // Large limit to get all logs
+        });
+        dataToExport = response.logs;
+        console.log(`Fetched ${dataToExport.length} logs for export`);
+      } else {
+        // Filters are active - use current filtered/displayed results
+        dataToExport = searchQuery.trim() ? filteredLogs : logs;
+        console.log(`Exporting ${dataToExport.length} filtered logs`);
+      }
+
+      if (dataToExport.length === 0) {
+        alert("No logs to export");
+        return;
+      }
+
+      if (format === "json") {
+        const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const fileName =
+          hasActiveFilters || searchQuery.trim()
+            ? `logs-filtered-${new Date().toISOString()}.json`
+            : `logs-complete-${new Date().toISOString()}.json`;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        // CSV export
+        const headers = [
+          "Timestamp",
+          "Service",
+          "Level",
+          "Event",
+          "Trace ID",
+          "Session ID",
+          "Message",
+        ];
+        const rows = dataToExport.map((log) => [
+          log.timestamp,
+          log.service,
+          log.level,
+          log.event,
+          log.traceId || "",
+          log.sessionId || "",
+          log.raw.replace(/"/g, '""'), // Escape quotes
+        ]);
+        const csv = [
+          headers.join(","),
+          ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+        ].join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const fileName =
+          hasActiveFilters || searchQuery.trim()
+            ? `logs-filtered-${new Date().toISOString()}.csv`
+            : `logs-complete-${new Date().toISOString()}.csv`;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error("Error exporting logs:", error);
+      alert("Failed to export logs. Please try again.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -304,6 +354,16 @@ export default function LogsViewer() {
   // Use filtered logs for display
   const displayLogs = searchQuery.trim() ? filteredLogs : logs;
   const displayCount = searchQuery.trim() ? filteredLogs.length : totalCount;
+
+  // Count active filters
+  const activeFilterCount = Object.entries(filters).filter(
+    ([key, value]) =>
+      key !== "limit" &&
+      key !== "offset" &&
+      value !== undefined &&
+      value !== null &&
+      value !== "",
+  ).length;
 
   // Calculate page numbers to show
   const getPageNumbers = () => {
@@ -373,24 +433,45 @@ export default function LogsViewer() {
 
           {/* Export button */}
           <div className="relative group">
-            <button className="flex items-center space-x-2.5 px-4 py-2.5 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-600 text-gray-700 dark:text-gray-300 transition-all duration-300 shadow-sm hover:shadow-md font-semibold">
-              <Download className="w-4 h-4" />
-              <span className="text-sm">Export</span>
+            <button
+              className={`flex items-center space-x-2.5 px-4 py-2.5 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-600 text-gray-700 dark:text-gray-300 transition-all duration-300 shadow-sm hover:shadow-md font-semibold ${isExporting ? "opacity-50 cursor-not-allowed" : ""}`}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Exporting...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  <span className="text-sm">Export</span>
+                </>
+              )}
             </button>
-            <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 overflow-hidden">
-              <button
-                onClick={() => handleExport("json")}
-                className="w-full px-4 py-2.5 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-950/50 dark:hover:to-purple-950/50 font-medium transition-all"
-              >
-                JSON
-              </button>
-              <button
-                onClick={() => handleExport("csv")}
-                className="w-full px-4 py-2.5 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-950/50 dark:hover:to-purple-950/50 font-medium transition-all"
-              >
-                CSV
-              </button>
-            </div>
+            {!isExporting && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 overflow-hidden">
+                <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                    {activeFilterCount > 0 || searchQuery.trim()
+                      ? `Export ${displayCount} filtered logs`
+                      : `Export all logs (${totalCount} total)`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleExport("json")}
+                  className="w-full px-4 py-2.5 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-950/50 dark:hover:to-purple-950/50 font-medium transition-all"
+                >
+                  JSON Format
+                </button>
+                <button
+                  onClick={() => handleExport("csv")}
+                  className="w-full px-4 py-2.5 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-950/50 dark:hover:to-purple-950/50 font-medium transition-all"
+                >
+                  CSV Format
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
