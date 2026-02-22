@@ -1,11 +1,3 @@
-"""
-Phase 1 Orchestrator: Integrated ML-Enhanced Alert System
-Coordinates all Phase 1 components:
-- Priority Scoring Engine
-- TTR Prediction
-- Smart Email Service
-"""
-
 import sys
 from pathlib import Path
 from datetime import datetime

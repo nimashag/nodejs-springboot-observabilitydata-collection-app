@@ -71,7 +71,7 @@ const MLAnalytics = () => {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading ML Analytics...</p>
+          <p className="text-gray-600">Loading performance data...</p>
         </div>
       </div>
     )
@@ -81,14 +81,14 @@ const MLAnalytics = () => {
     return (
       <div className="space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">ML Model Analytics</h1>
-          <p className="text-gray-600 mt-1">Machine learning model performance and insights</p>
+          <h1 className="text-3xl font-bold text-gray-900">Model Performance</h1>
+          <p className="text-gray-600 mt-1">System accuracy and performance metrics</p>
         </div>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <div className="flex items-center gap-3">
             <AlertCircle className="w-6 h-6 text-red-600" />
             <div>
-              <h3 className="text-red-800 font-semibold">Error Loading ML Analytics</h3>
+              <h3 className="text-red-800 font-semibold">Error Loading Performance Data</h3>
               <p className="text-red-600 text-sm">{error || 'Unknown error occurred'}</p>
               <button 
                 onClick={loadData}
@@ -176,9 +176,9 @@ const MLAnalytics = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Brain className="w-8 h-8 text-primary-600" />
-            ML Model Analytics
+            Model Performance
           </h1>
-          <p className="text-gray-600 mt-1">Machine learning model performance and insights</p>
+          <p className="text-gray-600 mt-1">System accuracy, reliability metrics, and performance insights</p>
         </div>
         <button
           onClick={loadData}
@@ -197,12 +197,12 @@ const MLAnalytics = () => {
               <Brain className="w-8 h-8 text-primary-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Model Training Information</h2>
-              <p className="text-gray-600">Pipeline Version: {report.pipeline_version}</p>
+              <h2 className="text-2xl font-bold text-gray-900">System Training Status</h2>
+              <p className="text-gray-600">Version: {report.pipeline_version}</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500">Last Trained</p>
+            <p className="text-sm text-gray-500">Last Updated</p>
             <p className="text-lg font-semibold text-gray-900">
               {new Date(report.training_date).toLocaleDateString('en-US', { 
                 year: 'numeric', 
@@ -248,12 +248,12 @@ const MLAnalytics = () => {
 
       {/* Model Performance Cards with Progress Bars */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Alert Classifier */}
+        {/* Priority Classification */}
         <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-green-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Target className="w-6 h-6 text-green-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Alert Classifier</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Priority Classification</h3>
             </div>
           </div>
           <div className="space-y-4">
@@ -292,12 +292,12 @@ const MLAnalytics = () => {
           </div>
         </div>
 
-        {/* Alert Predictor */}
+        {/* Resolution Prediction */}
         <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-6 h-6 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Alert Predictor</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Resolution Prediction</h3>
             </div>
           </div>
           <div className="space-y-4">
@@ -336,12 +336,12 @@ const MLAnalytics = () => {
           </div>
         </div>
 
-        {/* False Positive Detector */}
+        {/* Noise Detection */}
         <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-purple-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Award className="w-6 h-6 text-purple-600" />
-              <h3 className="text-lg font-semibold text-gray-900">FP Detector</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Noise Detection</h3>
             </div>
           </div>
           <div className="space-y-4">
@@ -685,18 +685,18 @@ const MLAnalytics = () => {
           </div>
         </div>
 
-        {/* Hyperparameters */}
+        {/* System Configuration */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Zap className="w-5 h-5 text-primary-600" />
-            Hyperparameter Tuning
-            <span className="text-xs font-normal text-gray-500 ml-2">({report.hyperparameter_tuning.method})</span>
+            System Configuration
+            <span className="text-xs font-normal text-gray-500 ml-2">(Auto-optimized)</span>
           </h3>
           <div className="space-y-4">
             <div className="border-2 border-green-200 bg-green-50/50 rounded-xl p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-3">
                 <Target className="w-4 h-4 text-green-600" />
-                <h4 className="font-semibold text-gray-900">Alert Classifier</h4>
+                <h4 className="font-semibold text-gray-900">Priority Classification</h4>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="text-gray-600">Estimators:</div>
@@ -710,7 +710,7 @@ const MLAnalytics = () => {
             <div className="border-2 border-blue-200 bg-blue-50/50 rounded-xl p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="w-4 h-4 text-blue-600" />
-                <h4 className="font-semibold text-gray-900">Alert Predictor</h4>
+                <h4 className="font-semibold text-gray-900">Resolution Prediction</h4>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="text-gray-600">Estimators:</div>
@@ -724,7 +724,7 @@ const MLAnalytics = () => {
             <div className="border-2 border-purple-200 bg-purple-50/50 rounded-xl p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-3">
                 <Award className="w-4 h-4 text-purple-600" />
-                <h4 className="font-semibold text-gray-900">FP Detector</h4>
+                <h4 className="font-semibold text-gray-900">Noise Detection</h4>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="text-gray-600">Estimators:</div>

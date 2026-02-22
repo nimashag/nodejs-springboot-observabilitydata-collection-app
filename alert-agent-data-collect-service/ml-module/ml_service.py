@@ -89,8 +89,8 @@ def predict():
                 'error': 'No alert data provided'
             }), 400
         
-        # Process alert through ML pipeline (without sending email)
-        result = orchestrator.process_alert(alert_data, send_email=False)
+        # Process alert through ML pipeline (with email notification)
+        result = orchestrator.process_alert(alert_data, send_email=True)
         
         return jsonify({
             'success': True,
@@ -198,6 +198,78 @@ def models_info():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/email/send', methods=['POST'])
+def send_email():
+    """
+    Manually send email notification
+    
+    Request Body:
+    {
+        "alert_data": {
+            "service_name": "orders-service",
+            "alert_name": "High Error Rate",
+            "alert_type": "error",
+            "severity": "high",
+            ...
+        },
+        "test_mode": false  # Optional: if true, sends test email
+    }
+    """
+    try:
+        if not orchestrator:
+            return jsonify({
+                'success': False,
+                'error': 'ML orchestrator not loaded'
+            }), 503
+        
+        data = request.json
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No data provided'
+            }), 400
+        
+        test_mode = data.get('test_mode', False)
+        
+        if test_mode:
+            # Send test emails for all priority levels
+            orchestrator.send_test_emails()
+            return jsonify({
+                'success': True,
+                'message': 'Test emails sent successfully',
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            # Send email for specific alert
+            alert_data = data.get('alert_data')
+            if not alert_data:
+                return jsonify({
+                    'success': False,
+                    'error': 'alert_data is required when test_mode is false'
+                }), 400
+            
+            # Process alert with email enabled
+            result = orchestrator.process_alert(alert_data, send_email=True)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Email sent successfully',
+                'predictions': result,
+                'timestamp': datetime.now().isoformat()
+            })
+        
+    except Exception as e:
+        stats['errors'] += 1
+        print(f"[X] Email send error: {e}")
+        traceback.print_exc()
+        
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
+
 if __name__ == '__main__':
     print("\n" + "=" * 80)
     print("ML PREDICTION MICROSERVICE")
@@ -207,6 +279,7 @@ if __name__ == '__main__':
     print("  POST /predict             - Full ML prediction")
     print("  POST /predict/priority    - Priority prediction only")
     print("  POST /predict/ttr         - TTR prediction only")
+    print("  POST /email/send          - Manually send email notification")
     print("  GET  /stats               - Service statistics")
     print("  GET  /models/info         - Model information")
     print("\nStarting server on http://localhost:5001")

@@ -8,9 +8,13 @@ import {
   Download,
   Save,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Mail,
+  Send,
+  Loader
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { apiService } from '../services/api'
 
 const Settings = () => {
   const { 
@@ -25,6 +29,8 @@ const Settings = () => {
   
   const [localRefreshInterval, setLocalRefreshInterval] = useState(refreshInterval)
   const [saved, setSaved] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
+  const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' })
   
   const handleSaveSettings = () => {
     setRefreshInterval(localRefreshInterval)
@@ -36,6 +42,106 @@ const Settings = () => {
       autoClose: true
     })
     setTimeout(() => setSaved(false), 3000)
+  }
+
+  const handleSendTestEmail = async () => {
+    setSendingEmail(true)
+    setEmailStatus({ type: null, message: '' })
+    
+    try {
+      const result = await apiService.sendEmail({ test_mode: true })
+      
+      if (result.success) {
+        setEmailStatus({ 
+          type: 'success', 
+          message: 'Test emails sent successfully! Check your inbox.' 
+        })
+        addNotification({
+          type: 'success',
+          title: 'Email Sent',
+          message: 'Test emails have been sent to nayanaharikusalanajani@gmail.com',
+          autoClose: true
+        })
+      } else {
+        throw new Error(result.error || 'Failed to send email')
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to send email'
+      setEmailStatus({ 
+        type: 'error', 
+        message: errorMessage 
+      })
+      addNotification({
+        type: 'error',
+        title: 'Email Send Failed',
+        message: errorMessage,
+        autoClose: true
+      })
+    } finally {
+      setSendingEmail(false)
+      setTimeout(() => {
+        setEmailStatus({ type: null, message: '' })
+      }, 5000)
+    }
+  }
+
+  const handleSendCustomEmail = async () => {
+    setSendingEmail(true)
+    setEmailStatus({ type: null, message: '' })
+    
+    // Create a sample alert for testing
+    const sampleAlert = {
+      service_name: 'users-service',
+      alert_name: 'Manual Test Alert',
+      alert_type: 'error',
+      severity: 'high',
+      alert_state: 'fired',
+      error_count: 25,
+      request_count: 100,
+      average_response_time: 1500,
+      process_cpu_usage: 75.5,
+      process_memory_usage: 2000000000,
+      timestamp: new Date().toISOString()
+    }
+    
+    try {
+      const result = await apiService.sendEmail({ 
+        alert_data: sampleAlert,
+        test_mode: false 
+      })
+      
+      if (result.success) {
+        setEmailStatus({ 
+          type: 'success', 
+          message: 'Email sent successfully! Check your inbox.' 
+        })
+        addNotification({
+          type: 'success',
+          title: 'Email Sent',
+          message: 'Alert email has been sent to nayanaharikusalanajani@gmail.com',
+          autoClose: true
+        })
+      } else {
+        throw new Error(result.error || 'Failed to send email')
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to send email'
+      setEmailStatus({ 
+        type: 'error', 
+        message: errorMessage 
+      })
+      addNotification({
+        type: 'error',
+        title: 'Email Send Failed',
+        message: errorMessage,
+        autoClose: true
+      })
+    } finally {
+      setSendingEmail(false)
+      setTimeout(() => {
+        setEmailStatus({ type: null, message: '' })
+      }, 5000)
+    }
   }
   
   return (
@@ -82,7 +188,7 @@ const Settings = () => {
         </div>
       </div>
       
-      {/* Data Refresh Settings */}
+      {/* Data Refresh Settings
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
           <RefreshCw className="w-5 h-5" />
@@ -141,44 +247,111 @@ const Settings = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       
-      {/* Notification Settings */}
+      {/* Email Notification Settings */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-          <Bell className="w-5 h-5" />
-          Notifications
+          <Mail className="w-5 h-5" />
+          Email Notifications
         </h2>
         
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-            <div>
-              <h3 className="font-medium text-gray-900 dark:text-gray-100">Browser Notifications</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Receive notifications for critical alerts
-              </p>
+          <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Email Configuration</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {/* Recipient: <strong className="text-gray-900 dark:text-gray-100">nayanaharikusalanajani@gmail.com</strong> */}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Emails are automatically sent when alerts are detected. You can also manually send test emails to verify the system is working.
+            </p>
+          </div>
+
+          <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="flex items-start gap-2 mb-4">
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+              <div className="text-sm text-green-800 dark:text-green-200">
+                <p className="font-medium">Email System Active</p>
+                <p>Automatic email notifications are enabled and working</p>
+              </div>
             </div>
+          </div>
+
+          {emailStatus.type && (
+            <div className={`p-4 rounded-lg border ${
+              emailStatus.type === 'success' 
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+            }`}>
+              <div className="flex items-start gap-2">
+                {emailStatus.type === 'success' ? (
+                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                )}
+                <div className={`text-sm ${
+                  emailStatus.type === 'success'
+                    ? 'text-green-800 dark:text-green-200'
+                    : 'text-red-800 dark:text-red-200'
+                }`}>
+                  <p className="font-medium">{emailStatus.type === 'success' ? 'Success' : 'Error'}</p>
+                  <p>{emailStatus.message}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
-              className="relative inline-flex h-8 w-14 items-center rounded-full bg-gray-300 cursor-not-allowed"
-              disabled
+              onClick={handleSendTestEmail}
+              disabled={sendingEmail}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed"
             >
-              <span className="inline-block h-6 w-6 transform rounded-full bg-white translate-x-1" />
+              {sendingEmail ? (
+                <>
+                  <Loader className="w-5 h-5 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  Send Test Emails
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={handleSendCustomEmail}
+              disabled={sendingEmail}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed"
+            >
+              {sendingEmail ? (
+                <>
+                  <Loader className="w-5 h-5 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="w-5 h-5" />
+                  Send Sample Alert Email
+                </>
+              )}
             </button>
           </div>
-          
+
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
               <div className="text-sm text-blue-800 dark:text-blue-200">
-                <p className="font-medium">Coming Soon</p>
-                <p>Browser notifications will be available in a future update</p>
+                <p className="font-medium">Manual Email Sending</p>
+                <p>Use these buttons to manually test the email system. Test emails will send sample alerts for all priority levels (P0-P3).</p>
               </div>
             </div>
           </div>
         </div>
       </div>
       
-      {/* Data Export Settings */}
+      {/* Data Export Settings
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
           <Download className="w-5 h-5" />
@@ -207,9 +380,9 @@ const Settings = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       
-      {/* API Configuration */}
+      {/* API Configuration
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
           API Configuration
@@ -246,9 +419,9 @@ const Settings = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       
-      {/* Save Button */}
+      {/* Save Button
       <div className="flex justify-end gap-3">
         <button
           onClick={handleSaveSettings}
@@ -266,7 +439,7 @@ const Settings = () => {
             </>
           )}
         </button>
-      </div>
+      </div> */}
       
       {/* System Information */}
       <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
@@ -281,7 +454,7 @@ const Settings = () => {
           </div>
           <div className="p-3 bg-white dark:bg-gray-700/50 rounded-lg">
             <p className="text-sm text-gray-600 dark:text-gray-400">AATA System</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">v1.0.0</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">v1.1.1</p>
           </div>
           <div className="p-3 bg-white dark:bg-gray-700/50 rounded-lg">
             <p className="text-sm text-gray-600 dark:text-gray-400">Last Build</p>

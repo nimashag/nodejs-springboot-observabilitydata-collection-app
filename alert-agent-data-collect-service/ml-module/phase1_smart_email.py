@@ -1,15 +1,3 @@
-"""
-Phase 1: Smart Email Service with ML-Enhanced Intelligence
-Research Paper Reference: "Reduce alert fatigue" through intelligent email routing
-
-Features:
-- Priority-based email routing (Immediate, Digest, Daily, Weekly)
-- Rich HTML emails with predictions, confidence, remediation suggestions
-- Batch processing for medium/low priority alerts
-- Email templates for different alert types
-- SMTP integration with Gmail
-"""
-
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -348,72 +336,301 @@ class SmartEmailService:
         )
     
     def _build_email_content(self, alert_data: Dict, ml_predictions: Dict = None) -> str:
-        """Build rich HTML email content with ML insights"""
+        """Build clean and realistic HTML email content"""
         priority = ml_predictions.get('priority_level', 'P2') if ml_predictions else 'P2'
-        priority_score = ml_predictions.get('priority_score', 50) if ml_predictions else 50
-        ttr_data = ml_predictions.get('ttr_prediction', {}) if ml_predictions else {}
         
-        # Color scheme by priority
-        priority_colors = {
-            'P0': '#dc3545',
-            'P1': '#ffc107',
-            'P2': '#17a2b8',
-            'P3': '#6c757d'
+        # Priority colors and labels
+        priority_info = {
+            'P0': {'color': '#dc3545', 'label': 'CRITICAL', 'urgency': 'Immediate Action Required'},
+            'P1': {'color': '#ff9800', 'label': 'HIGH', 'urgency': 'Action Required Soon'},
+            'P2': {'color': '#2196F3', 'label': 'MEDIUM', 'urgency': 'Monitor Closely'},
+            'P3': {'color': '#6c757d', 'label': 'LOW', 'urgency': 'Review When Convenient'}
         }
+        p_info = priority_info.get(priority, priority_info['P2'])
+        
+        # Format timestamp
+        timestamp = alert_data.get('timestamp', datetime.now().isoformat())
+        try:
+            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            formatted_time = dt.strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            formatted_time = timestamp
+        
+        # Get key metrics - these need instant attention
+        error_count = alert_data.get('error_count', 0)
+        request_count = alert_data.get('request_count', 0)
+        error_rate = (error_count / request_count * 100) if request_count > 0 else 0
+        response_time = alert_data.get('average_response_time', 0)
+        cpu_usage = alert_data.get('process_cpu_usage', 0)
+        memory_usage_gb = alert_data.get('process_memory_usage', 0) / (1024**3)
+        
+        # Determine critical metrics that need instant attention
+        critical_metrics = []
+        if error_rate > 10:
+            critical_metrics.append(('Error Rate', f'{error_rate:.1f}%', '#dc3545'))
+        if response_time > 2000:
+            critical_metrics.append(('Response Time', f'{response_time:.0f} ms', '#ff9800'))
+        if cpu_usage > 80:
+            critical_metrics.append(('CPU Usage', f'{cpu_usage:.1f}%', '#ff5722'))
+        if memory_usage_gb > 2:
+            critical_metrics.append(('Memory Usage', f'{memory_usage_gb:.2f} GB', '#f44336'))
         
         html = f"""
+        <!DOCTYPE html>
         <html>
         <head>
+            <meta charset="UTF-8">
             <style>
-                body {{ font-family: Arial, sans-serif; }}
-                .header {{ background-color: {priority_colors[priority]}; color: white; padding: 15px; }}
-                .content {{ padding: 20px; }}
-                .alert-info {{ background-color: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; }}
-                .metrics {{ background-color: #e7f3ff; padding: 15px; margin: 10px 0; }}
-                .predictions {{ background-color: #fff3cd; padding: 15px; margin: 10px 0; }}
-                .explanation {{ background-color: #d1ecf1; padding: 15px; margin: 10px 0; }}
-                .actions {{ background-color: #d4edda; padding: 15px; margin: 10px 0; }}
-                .priority-badge {{ display: inline-block; padding: 5px 10px; background: {priority_colors[priority]}; color: white; border-radius: 3px; }}
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                    line-height: 1.5;
+                    color: #212529;
+                    max-width: 650px;
+                    margin: 0 auto;
+                    padding: 15px;
+                    background-color: #f8f9fa;
+                }}
+                .container {{
+                    background: white;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    overflow: hidden;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, {p_info['color']} 0%, {p_info['color']}dd 100%);
+                    color: white;
+                    padding: 28px 24px;
+                }}
+                .header .brand {{
+                    font-size: 14px;
+                    font-weight: 600;
+                    opacity: 0.95;
+                    margin-bottom: 8px;
+                    letter-spacing: 0.5px;
+                }}
+                .header h1 {{
+                    margin: 0 0 10px 0;
+                    font-size: 26px;
+                    font-weight: 700;
+                    line-height: 1.2;
+                }}
+                .header .service-name {{
+                    font-size: 16px;
+                    opacity: 0.95;
+                    margin-bottom: 12px;
+                    font-weight: 500;
+                }}
+                .header .priority {{
+                    display: inline-block;
+                    background: rgba(255,255,255,0.25);
+                    padding: 6px 14px;
+                    border-radius: 20px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    letter-spacing: 0.3px;
+                }}
+                .content {{
+                    padding: 28px 24px;
+                }}
+                .section {{
+                    margin-bottom: 28px;
+                }}
+                .section-title {{
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #212529;
+                    margin-bottom: 16px;
+                    padding-bottom: 10px;
+                    border-bottom: 3px solid {p_info['color']};
+                }}
+                .info-row {{
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 10px 0;
+                    border-bottom: 1px solid #e9ecef;
+                }}
+                .info-label {{
+                    color: #6c757d;
+                    font-weight: 600;
+                    font-size: 14px;
+                }}
+                .info-value {{
+                    color: #212529;
+                    font-weight: 700;
+                    font-size: 14px;
+                }}
+                .critical-metrics {{
+                    background: #fff3cd;
+                    border: 2px solid #ffc107;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin: 20px 0;
+                }}
+                .critical-metrics-title {{
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #856404;
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }}
+                .critical-metric-item {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 12px;
+                    margin-bottom: 10px;
+                    background: white;
+                    border-radius: 6px;
+                    border-left: 4px solid;
+                }}
+                .critical-metric-label {{
+                    font-size: 15px;
+                    font-weight: 600;
+                    color: #212529;
+                }}
+                .critical-metric-value {{
+                    font-size: 20px;
+                    font-weight: 700;
+                }}
+                .metrics-grid {{
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 14px;
+                    margin-top: 16px;
+                }}
+                .metric-card {{
+                    background: #f8f9fa;
+                    padding: 16px;
+                    border-radius: 8px;
+                    border-left: 4px solid {p_info['color']};
+                    transition: transform 0.2s;
+                }}
+                .metric-label {{
+                    font-size: 13px;
+                    color: #6c757d;
+                    margin-bottom: 8px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }}
+                .metric-value {{
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #212529;
+                    line-height: 1.2;
+                }}
+                .actions-box {{
+                    background: #e7f3ff;
+                    border: 2px solid #2196F3;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-top: 20px;
+                }}
+                .actions-box-title {{
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #0d47a1;
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }}
+                .actions-box ul {{
+                    margin: 0;
+                    padding-left: 24px;
+                }}
+                .actions-box li {{
+                    margin: 10px 0;
+                    color: #1565c0;
+                    font-size: 14px;
+                    font-weight: 500;
+                    line-height: 1.6;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 20px;
+                    background: #f8f9fa;
+                    color: #6c757d;
+                    font-size: 13px;
+                    border-top: 2px solid #e9ecef;
+                    font-weight: 500;
+                }}
             </style>
         </head>
         <body>
-            <div class="header">
-                <h2>Alert: {alert_data.get('alert_name', 'Unknown Alert')}</h2>
-                <p>Service: {alert_data.get('service_name', 'Unknown')} | Priority: <span class="priority-badge">{priority}</span></p>
-            </div>
-            
-            <div class="content">
-                <div class="alert-info">
-                    <h3>[i] Alert Details</h3>
-                    <ul>
-                        <li><strong>Service:</strong> {alert_data.get('service_name', 'N/A')}</li>
-                        <li><strong>Alert Type:</strong> {alert_data.get('alert_type', 'N/A')}</li>
-                        <li><strong>Severity:</strong> {alert_data.get('severity', 'N/A')}</li>
-                        <li><strong>State:</strong> {alert_data.get('alert_state', 'fired')}</li>
-                        <li><strong>Timestamp:</strong> {alert_data.get('timestamp', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}</li>
-                    </ul>
+            <div class="container">
+                <div class="header">
+                    <div class="brand">HUNGERJET ALERT SYSTEM</div>
+                    <h1>{alert_data.get('alert_name', 'System Alert')}</h1>
+                    <div class="service-name">{alert_data.get('service_name', 'Unknown Service')}</div>
+                    <div class="priority">{p_info['label']} - {p_info['urgency']}</div>
                 </div>
                 
-                <div class="metrics">
-                    <h3>[#] Current Metrics</h3>
-                    <ul>
-                        <li><strong>Error Count:</strong> {alert_data.get('error_count', 0)}</li>
-                        <li><strong>Request Count:</strong> {alert_data.get('request_count', 0)}</li>
-                        <li><strong>Avg Response Time:</strong> {alert_data.get('average_response_time', 0)} ms</li>
-                        <li><strong>CPU Usage:</strong> {alert_data.get('process_cpu_usage', 0):.1f}%</li>
-                        <li><strong>Memory Usage:</strong> {alert_data.get('process_memory_usage', 0) / (1024**3):.2f} GB</li>
-                    </ul>
+                <div class="content">
+                    {f'''
+                    <div class="critical-metrics">
+                        <div class="critical-metrics-title">
+                            ⚠️ CRITICAL METRICS - IMMEDIATE ATTENTION REQUIRED
+                        </div>
+                        {''.join([f'''
+                        <div class="critical-metric-item" style="border-left-color: {color};">
+                            <span class="critical-metric-label">{label}</span>
+                            <span class="critical-metric-value" style="color: {color};">{value}</span>
+                        </div>
+                        ''' for label, value, color in critical_metrics])}
+                    </div>
+                    ''' if critical_metrics else ''}
+                    
+                    <div class="section">
+                        <div class="section-title">Alert Information</div>
+                        <div class="info-row">
+                            <span class="info-label">Service:</span>
+                            <span class="info-value">{alert_data.get('service_name', 'N/A')}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Alert Type:</span>
+                            <span class="info-value">{alert_data.get('alert_type', 'N/A').upper()}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Severity:</span>
+                            <span class="info-value">{alert_data.get('severity', 'N/A').upper()}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Time:</span>
+                            <span class="info-value">{formatted_time}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">Current Metrics</div>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">Error Rate</div>
+                                <div class="metric-value">{error_rate:.1f}%</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Response Time</div>
+                                <div class="metric-value">{response_time:.0f} ms</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">CPU Usage</div>
+                                <div class="metric-value">{cpu_usage:.1f}%</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Memory Usage</div>
+                                <div class="metric-value">{memory_usage_gb:.2f} GB</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {self._build_remediation_section(alert_data, ml_predictions)}
                 </div>
                 
-                {self._build_ml_predictions_section(ml_predictions) if ml_predictions else ''}
-                
-                {self._build_explanation_section(ml_predictions) if ml_predictions else ''}
-                
-                {self._build_remediation_section(alert_data, ml_predictions) if ml_predictions else ''}
-                
-                <p style="margin-top: 20px; font-size: 12px; color: #6c757d;">
-                    <em>Generated by ML-Enhanced Alert System at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</em>
-                </p>
+                <div class="footer">
+                    HungerJet Alert System • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                </div>
             </div>
         </body>
         </html>
@@ -421,94 +638,86 @@ class SmartEmailService:
         
         return html
     
-    def _build_ml_predictions_section(self, ml_predictions: Dict) -> str:
+    def _build_ml_predictions_section(self, ml_predictions: Dict, ttr_data: Dict) -> str:
         """Build ML predictions section"""
-        ttr_data = ml_predictions.get('ttr_prediction', {})
+        if not ml_predictions:
+            return ""
+        
+        ttr_minutes = ttr_data.get('ttr_minutes', 0)
+        ttr_category = ttr_data.get('ttr_category', 'Standard')
+        sla_breach_risk = ttr_data.get('sla_breach_risk', False)
+        confidence = ml_predictions.get('confidence', 0)
         
         return f"""
-        <div class="predictions">
-            <h3>[ML] ML Predictions</h3>
-            <ul>
-                <li><strong>Priority Score:</strong> {ml_predictions.get('priority_score', 50):.1f}/100</li>
-                <li><strong>Confidence:</strong> {ml_predictions.get('confidence', 0):.1%}</li>
-                <li><strong>[t] Estimated Resolution Time:</strong> {ttr_data.get('ttr_minutes', 0):.1f} minutes ({ttr_data.get('ttr_category', 'Standard')})</li>
-                <li><strong>Confidence Range:</strong> {ttr_data.get('confidence_lower_minutes', 0):.1f} - {ttr_data.get('confidence_upper_minutes', 0):.1f} minutes</li>
-                <li><strong>SLA Threshold:</strong> {ttr_data.get('sla_threshold_minutes', 0):.1f} minutes</li>
-                <li><strong>SLA Breach Risk:</strong> {'[!] YES (' + str(ttr_data.get('sla_breach_probability', 0)) + '%)' if ttr_data.get('sla_breach_risk') else '[OK] NO'}</li>
-            </ul>
+        <div class="section">
+            <div class="prediction-box">
+                <h4>📊 ML Analysis</h4>
+                <div style="margin-top: 8px;">
+                    <div class="info-row">
+                        <span class="info-label">Estimated Resolution Time:</span>
+                        <span class="info-value"><strong>{ttr_minutes:.0f} minutes</strong> ({ttr_category})</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Confidence:</span>
+                        <span class="info-value">{confidence:.0%}</span>
+                    </div>
+                    {f'<div style="margin-top: 8px; padding: 8px; background: #f8d7da; border-radius: 4px; color: #721c24;"><strong>⚠️ SLA Breach Risk:</strong> High probability of exceeding SLA threshold</div>' if sla_breach_risk else ''}
+                </div>
+            </div>
         </div>
         """
     
-    def _build_explanation_section(self, ml_predictions: Dict) -> str:
-        """Build explainable AI section"""
-        explanation = ml_predictions.get('explanation', {})
-        
-        if not explanation:
-            return ""
-        
-        return f"""
-        <div class="explanation">
-            <h3>[#] Why This Priority?</h3>
-            <p>This alert was classified based on the following factors:</p>
-            <ul>
-                <li>Error rate spike: <strong>+{explanation.get('error_impact', 0):.0f}%</strong> (weight: 0.35)</li>
-                <li>Service criticality: <strong>{explanation.get('service_criticality', 'Medium')}</strong> (weight: 0.30)</li>
-                <li>Time context: <strong>{explanation.get('time_context', 'Business hours')}</strong> (weight: 0.20)</li>
-                <li>Historical pattern: <strong>{explanation.get('historical_pattern', '50%')} led to outages</strong> (weight: 0.15)</li>
-            </ul>
-        </div>
-        """
     
     def _build_remediation_section(self, alert_data: Dict, ml_predictions: Dict) -> str:
         """Build automated remediation suggestions"""
         service = alert_data.get('service_name', '')
-        alert_type = alert_data.get('alert_type', '')
+        alert_type = alert_data.get('alert_type', '').lower()
+        error_count = alert_data.get('error_count', 0)
+        cpu_usage = alert_data.get('process_cpu_usage', 0)
+        memory_usage_gb = alert_data.get('process_memory_usage', 0) / (1024**3)
+        response_time = alert_data.get('average_response_time', 0)
         
-        # Simple rule-based remediation suggestions
+        # Generate realistic remediation suggestions based on alert type and metrics
         suggestions = []
         
-        if 'error' in alert_type.lower():
-            suggestions.append({
-                'action': f'Review recent logs for {service}',
-                'confidence': 95,
-                'auto_execute': False
-            })
-            suggestions.append({
-                'action': f'Check {service} error rate dashboard',
-                'confidence': 90,
-                'auto_execute': False
-            })
+        if 'error' in alert_type or error_count > 10:
+            suggestions.append(f'Review error logs for {service} to identify root cause')
+            suggestions.append(f'Check service health endpoint: GET /health')
+            suggestions.append(f'Verify recent deployments or configuration changes')
+            if error_count > 20:
+                suggestions.append(f'Consider rolling back recent changes if applicable')
         
-        if 'availability' in alert_type.lower():
-            suggestions.append({
-                'action': f'Restart {service} if health check fails',
-                'confidence': 85,
-                'auto_execute': False
-            })
-            suggestions.append({
-                'action': f'Scale up {service} instances by 1',
-                'confidence': 75,
-                'auto_execute': False
-            })
+        if 'availability' in alert_type or 'latency' in alert_type or response_time > 2000:
+            suggestions.append(f'Check service health and restart if health checks are failing')
+            suggestions.append(f'Review resource utilization (CPU/Memory) metrics')
+            suggestions.append(f'Consider scaling service instances horizontally')
+            if response_time > 3000:
+                suggestions.append(f'Investigate database query performance and connection pool')
+        
+        if 'memory' in alert_type or 'cpu' in alert_type or cpu_usage > 80 or memory_usage_gb > 2:
+            suggestions.append(f'Check for memory leaks or resource-intensive operations')
+            suggestions.append(f'Review recent code changes that might affect performance')
+            suggestions.append(f'Consider restarting the service to clear memory issues')
+            if cpu_usage > 90:
+                suggestions.append(f'Investigate CPU-intensive processes or infinite loops')
+            if memory_usage_gb > 3:
+                suggestions.append(f'Check for memory leaks using profiling tools')
         
         if not suggestions:
-            suggestions.append({
-                'action': 'Manual investigation recommended',
-                'confidence': 60,
-                'auto_execute': False
-            })
+            suggestions.append('Review service logs and metrics dashboard')
+            suggestions.append('Check service health dashboard for trends')
+            suggestions.append('Verify system resources and dependencies')
         
-        suggestions_html = ""
-        for i, suggestion in enumerate(suggestions, 1):
-            suggestions_html += f"<li>{suggestion['action']} <em>(Confidence: {suggestion['confidence']}%)</em></li>"
+        suggestions_html = "".join([f"<li>{s}</li>" for s in suggestions])
         
         return f"""
-        <div class="actions">
-            <h3>[W] Recommended Actions</h3>
-            <ol>
+        <div class="actions-box">
+            <div class="actions-box-title">
+                🔧 Recommended Actions
+            </div>
+            <ul>
                 {suggestions_html}
-            </ol>
-            <p><em>Historical success rate: Based on similar past incidents</em></p>
+            </ul>
         </div>
         """
     

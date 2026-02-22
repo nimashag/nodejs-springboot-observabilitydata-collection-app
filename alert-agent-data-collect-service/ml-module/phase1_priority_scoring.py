@@ -1,14 +1,3 @@
-"""
-Phase 1: ML-Driven Priority Scoring Engine
-Research Paper Reference: "Machine intelligence to dynamically adjust thresholds based on environmental context"
-
-Features:
-- Gradient Boosting for alert priority classification (P0-P3)
-- Business-impact-aware scoring (0-100)
-- Historical pattern learning
-- Auto-triage capabilities
-"""
-
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestRegressor
@@ -175,24 +164,62 @@ class PriorityScoringEngine:
             'alert_frequency', 'resolution_time'
         ]
         
-        # Encode categorical variables
+        # Encode categorical variables with handling for unseen labels
         if 'service_name' not in self.encoders:
             self.encoders['service_name'] = LabelEncoder()
             df['service_name_encoded'] = self.encoders['service_name'].fit_transform(df['service_name'])
         else:
-            df['service_name_encoded'] = self.encoders['service_name'].transform(df['service_name'])
+            # Handle unseen service names
+            known_services = set(self.encoders['service_name'].classes_)
+            df['service_name_encoded'] = df['service_name'].apply(
+                lambda x: self.encoders['service_name'].transform([x])[0] 
+                if x in known_services 
+                else self.encoders['service_name'].transform(['users-service'])[0]  # Default fallback
+            )
         
         if 'alert_type' not in self.encoders:
             self.encoders['alert_type'] = LabelEncoder()
             df['alert_type_encoded'] = self.encoders['alert_type'].fit_transform(df['alert_type'])
         else:
-            df['alert_type_encoded'] = self.encoders['alert_type'].transform(df['alert_type'])
+            # Handle unseen alert types
+            known_types = set(self.encoders['alert_type'].classes_)
+            df['alert_type_encoded'] = df['alert_type'].apply(
+                lambda x: self.encoders['alert_type'].transform([x])[0] 
+                if x in known_types 
+                else self.encoders['alert_type'].transform(['error'])[0]  # Default fallback
+            )
         
         if 'severity' not in self.encoders:
             self.encoders['severity'] = LabelEncoder()
             df['severity_encoded'] = self.encoders['severity'].fit_transform(df['severity'])
         else:
-            df['severity_encoded'] = self.encoders['severity'].transform(df['severity'])
+            # Handle unseen severity labels - map to closest known severity
+            known_severities = set(self.encoders['severity'].classes_)
+            
+            def map_severity(severity):
+                if severity in known_severities:
+                    return self.encoders['severity'].transform([severity])[0]
+                # Map unseen severities to closest known ones
+                severity_lower = severity.lower()
+                if severity_lower in ['critical', 'high']:
+                    # Try 'high' first, then 'critical', then 'medium'
+                    for fallback in ['high', 'critical', 'medium']:
+                        if fallback in known_severities:
+                            return self.encoders['severity'].transform([fallback])[0]
+                elif severity_lower == 'medium':
+                    # Try 'medium' first, then 'low'
+                    for fallback in ['medium', 'low']:
+                        if fallback in known_severities:
+                            return self.encoders['severity'].transform([fallback])[0]
+                else:  # low or unknown
+                    # Try 'low' first, then 'medium'
+                    for fallback in ['low', 'medium']:
+                        if fallback in known_severities:
+                            return self.encoders['severity'].transform([fallback])[0]
+                # Ultimate fallback: use first known severity
+                return self.encoders['severity'].transform([self.encoders['severity'].classes_[0]])[0]
+            
+            df['severity_encoded'] = df['severity'].apply(map_severity)
         
         feature_columns.extend(['service_name_encoded', 'alert_type_encoded', 'severity_encoded'])
         
@@ -277,32 +304,72 @@ class PriorityScoringEngine:
         Returns:
             dict with priority_level, priority_score, confidence
         """
-        if self.priority_classifier is None:
-            self._load_models()
+        try:
+            if self.priority_classifier is None:
+                self._load_models()
+            
+            # Convert to DataFrame
+            df = pd.DataFrame([alert_data])
+            
+            # Add derived features
+            df['hour_of_day'] = pd.to_datetime(df.get('timestamp', datetime.now())).dt.hour.iloc[0] if 'timestamp' in df else datetime.now().hour
+            df['day_of_week'] = pd.to_datetime(df.get('timestamp', datetime.now())).dt.dayofweek.iloc[0] if 'timestamp' in df else datetime.now().weekday()
+            df['is_weekend'] = 1 if df['day_of_week'].iloc[0] in [5, 6] else 0
+            df['is_peak_hours'] = 1 if 9 <= df['hour_of_day'].iloc[0] <= 18 else 0
+            df['alert_frequency'] = df.get('alert_frequency', 1)
+            df['resolution_time'] = df.get('resolution_time', 0)
+            
+            X = self.prepare_features(df)
+            
+            # Predict
+            priority_level = self.priority_classifier.predict(X)[0]
+            priority_score = self.priority_scorer.predict(X)[0]
+            confidence = self.priority_classifier.predict_proba(X).max()
+            
+            return {
+                'priority_level': priority_level,
+                'priority_score': float(priority_score),
+                'confidence': float(confidence),
+                'timestamp': datetime.now().isoformat()
+            }
+        except ValueError as e:
+            if 'previously unseen labels' in str(e) or 'unseen' in str(e).lower():
+                # Fallback to rule-based prediction if model fails
+                print(f"[W] Model prediction failed due to unseen labels, using fallback prediction")
+                return self._fallback_prediction(alert_data)
+            else:
+                raise
+        except Exception as e:
+            print(f"[X] Prediction error: {e}")
+            # Fallback to rule-based prediction
+            return self._fallback_prediction(alert_data)
+    
+    def _fallback_prediction(self, alert_data):
+        """Fallback rule-based prediction when ML model fails"""
+        severity = alert_data.get('severity', 'low').lower()
+        service = alert_data.get('service_name', '')
+        error_count = alert_data.get('error_count', 0)
         
-        # Convert to DataFrame
-        df = pd.DataFrame([alert_data])
-        
-        # Add derived features
-        df['hour_of_day'] = pd.to_datetime(df.get('timestamp', datetime.now())).dt.hour.iloc[0] if 'timestamp' in df else datetime.now().hour
-        df['day_of_week'] = pd.to_datetime(df.get('timestamp', datetime.now())).dt.dayofweek.iloc[0] if 'timestamp' in df else datetime.now().weekday()
-        df['is_weekend'] = 1 if df['day_of_week'].iloc[0] in [5, 6] else 0
-        df['is_peak_hours'] = 1 if 9 <= df['hour_of_day'].iloc[0] <= 18 else 0
-        df['alert_frequency'] = df.get('alert_frequency', 1)
-        df['resolution_time'] = df.get('resolution_time', 0)
-        
-        X = self.prepare_features(df)
-        
-        # Predict
-        priority_level = self.priority_classifier.predict(X)[0]
-        priority_score = self.priority_scorer.predict(X)[0]
-        confidence = self.priority_classifier.predict_proba(X).max()
+        # Rule-based priority assignment
+        if severity in ['critical'] or (severity in ['high'] and error_count > 20):
+            priority_level = 'P0'
+            priority_score = 90.0
+        elif severity in ['high'] or error_count > 10:
+            priority_level = 'P1'
+            priority_score = 70.0
+        elif severity in ['medium']:
+            priority_level = 'P2'
+            priority_score = 50.0
+        else:
+            priority_level = 'P3'
+            priority_score = 30.0
         
         return {
             'priority_level': priority_level,
             'priority_score': float(priority_score),
-            'confidence': float(confidence),
-            'timestamp': datetime.now().isoformat()
+            'confidence': 0.5,  # Lower confidence for fallback
+            'timestamp': datetime.now().isoformat(),
+            'fallback': True
         }
     
     def _save_models(self):

@@ -4,7 +4,10 @@
   "description": "Central Alert Data Collection Service - Aggregates alert data from all services for AATA",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "npm run build && concurrently --kill-others --names \"ML,AATA\" --prefix-colors \"cyan,green\" \"npm run start:ml\" \"npm run start:node\"",
+    "start:ml": "cd ml-module && python ml_service.py",
+    "start:node": "node wait-for-ml.js",
+    "start:aata-only": "npm run build && node dist/index.js",
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "collect": "node dist/index.js"
@@ -15,6 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
+    "concurrently": "^9.2.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.0"
   }
