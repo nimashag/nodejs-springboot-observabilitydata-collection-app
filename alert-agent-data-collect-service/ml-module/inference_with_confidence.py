@@ -1,7 +1,3 @@
-"""
-ML Model Inference with Confidence Tracking
-"""
-
 import sys
 import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
