@@ -1,15 +1,3 @@
-"""
-Phase 2: LSTM-Based Predictive Alert Forecasting
-Research Paper Reference: "LSTM networks capable of capturing long-term dependencies and complex temporal dynamics"
-
-Features:
-- Predict alerts 15-30 minutes before they fire
-- Train separate models per service
-- Input: Last 10 time points of error_count, response_time, cpu_usage, memory_usage
-- Output: Probability of alert firing in next 15/30/60 minutes
-- Proactive incident prevention
-"""
-
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
