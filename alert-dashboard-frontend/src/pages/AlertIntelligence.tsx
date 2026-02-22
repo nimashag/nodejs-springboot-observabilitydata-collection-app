@@ -161,28 +161,46 @@ const AlertIntelligence = () => {
         {/* Priority Distribution */}
         <div className="mb-6">
           <h4 className="text-sm font-medium text-gray-700 mb-3">Priority Level Distribution</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {data.predictions.priority_distribution.map((item) => {
-              const priorityColors: Record<string, { bg: string; text: string; border: string }> = {
-                'P0': { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-500' },
-                'P1': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-500' },
-                'P2': { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-500' },
-                'P3': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-500' }
-              };
-              const colors = priorityColors[item.level] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-500' };
-              
-              return (
-                <div key={item.level} className={`${colors.bg} border-l-4 ${colors.border} rounded-lg p-4`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`text-sm font-semibold ${colors.text}`}>{item.level}</span>
-                    <span className={`text-xs font-bold ${colors.text}`}>{item.percentage}%</span>
+          {(!data.predictions?.priority_distribution || data.predictions.priority_distribution.length === 0) &&
+           (!data.classified_alerts?.by_priority || Object.keys(data.classified_alerts.by_priority).length === 0) ? (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                No priority data available. Priority data will appear here once alerts are processed.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {(data.predictions?.priority_distribution && data.predictions.priority_distribution.length > 0
+                ? data.predictions.priority_distribution
+                : Object.entries(data.classified_alerts?.by_priority || {}).map(([level, count]) => ({
+                    level,
+                    count: count as number,
+                    percentage: data.summary?.total_classified 
+                      ? ((count as number) / data.summary.total_classified * 100).toFixed(1)
+                      : '0'
+                  }))
+              ).map((item: any) => {
+                const priorityColors: Record<string, { bg: string; text: string; border: string }> = {
+                  'P0': { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-500' },
+                  'P1': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-500' },
+                  'P2': { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-500' },
+                  'P3': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-500' }
+                };
+                const colors = priorityColors[item.level] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-500' };
+                
+                return (
+                  <div key={item.level} className={`${colors.bg} border-l-4 ${colors.border} rounded-lg p-4`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-sm font-semibold ${colors.text}`}>{item.level}</span>
+                      <span className={`text-xs font-bold ${colors.text}`}>{item.percentage}%</span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">{item.count}</p>
+                    <p className="text-xs text-gray-600 mt-1">alerts</p>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{item.count}</p>
-                  <p className="text-xs text-gray-600 mt-1">alerts</p>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
       </div>
