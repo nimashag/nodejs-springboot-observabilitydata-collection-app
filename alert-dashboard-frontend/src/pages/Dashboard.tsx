@@ -262,12 +262,12 @@ const Dashboard = () => {
                 Running
               </span>
             </div>
-            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+            {/* <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
               <span className="font-medium text-gray-700">ML Models</span>
               <span className="px-3 py-1 bg-purple-500 text-white rounded-full text-sm font-semibold">
                 Trained
               </span>
-            </div>
+            </div> */}
             <div className="p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">Last Updated</p>
               <p className="text-lg font-semibold text-gray-900 mt-1">
@@ -289,9 +289,9 @@ const Dashboard = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Service Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Alert Count
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Percentage
                 </th>
@@ -311,9 +311,9 @@ const Dashboard = () => {
                         <span className="text-sm font-medium text-gray-900">{service}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-900">{count}</span>
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-full bg-gray-200 rounded-full h-2 mr-2" style={{ width: '100px' }}>
