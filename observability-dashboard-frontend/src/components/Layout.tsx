@@ -55,7 +55,8 @@ const Layout = ({ children }: LayoutProps) => {
         { path: '/logs/dashboard', label: 'Dashboard' },
         { path: '/logs/subpart1', label: 'Logs Viewer' },
         { path: '/logs/subpart2', label: 'Templates' },
-        { path: '/logs/subpart3', label: 'Analytics' }
+        { path: '/logs/subpart3', label: 'Analytics' },
+        { path: '/logs/metadata-analyzer', label: 'Metadata Analyzer' }
       ]
     },
     {

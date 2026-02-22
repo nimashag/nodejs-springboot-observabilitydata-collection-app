@@ -403,7 +403,7 @@ export default function LogsViewer() {
       {/* Header Section */}
       <div className="flex items-center justify-between px-1">
         <div>
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Logs Viewer
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5 font-medium">

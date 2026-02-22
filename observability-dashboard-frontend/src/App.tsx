@@ -11,6 +11,7 @@ import MetricsSubpart3 from './pages/metrics/Subpart3'
 // Logs pages
 import LogsDashboard from './pages/logs/LogsDashboard'
 import LogsViewer from './pages/logs/LogsViewer'
+import LogMetadataAnalyzer from './pages/logs/LogMetadataAnalyzer'
 import TraceView from './pages/logs/TraceView'
 import TemplatesPage from './pages/logs/TemplatesPage'
 import Analytics from './pages/logs/Analytics'
@@ -51,6 +52,7 @@ function App() {
             {/* Logs routes */}
             <Route path="/logs/dashboard" element={<LogsDashboard />} />
             <Route path="/logs/subpart1" element={<LogsViewer />} />
+            <Route path="/logs/metadata-analyzer" element={<LogMetadataAnalyzer />} />
             <Route path="/logs/subpart2" element={<TemplatesPage />} />
             <Route path="/logs/subpart3" element={<Analytics />} />
             <Route path="/logs/traces/:traceId" element={<TraceView />} />
