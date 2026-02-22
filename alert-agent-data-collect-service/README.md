@@ -116,13 +116,31 @@ npm run build
 
 ### Run AATA as HTTP API Service
 
+**Option 1: Start AATA with ML Service (Recommended)**
+
 ```bash
-# Development mode (uses .env file)
+# Starts both ML service and AATA together
 npm start
 
-# Or override environment variables
-PORT=8080 API_KEY=your-secret-key npm start
+# This will:
+# 1. Build the TypeScript code
+# 2. Start ML prediction service (Python Flask on port 5001)
+# 3. Wait for ML service to be ready (automatic retry with health checks)
+# 4. Start AATA service (Node.js on port 3008)
+# 5. Both services run in parallel with color-coded logs
 ```
+
+**Option 2: Start AATA Only (Without ML)**
+
+```bash
+# Start AATA without ML predictions
+npm run start:aata-only
+
+# Or override environment variables
+PORT=8080 API_KEY=your-secret-key npm run start:aata-only
+```
+
+**Note:** When running without ML service, AATA will continue to work using statistical methods only. ML predictions (priority scoring, TTR prediction) will be disabled gracefully.
 
 
 ### View File-Based Results
