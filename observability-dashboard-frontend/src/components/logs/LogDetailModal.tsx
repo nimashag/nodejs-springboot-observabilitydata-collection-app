@@ -1,9 +1,9 @@
-import { Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { X } from 'lucide-react';
-import { format } from 'date-fns';
-import LogLevelBadge from './LogLevelBadge';
-import type { StructuredLog } from '../../types/logs/logAggregation.types';
+import { Fragment, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { X, Copy, CheckCircle2, ExternalLink } from "lucide-react";
+import { format } from "date-fns";
+import LogLevelBadge from "./LogLevelBadge";
+import type { StructuredLog } from "../../types/logs/logAggregation.types";
 
 interface LogDetailModalProps {
   log: StructuredLog | null;
@@ -11,10 +11,54 @@ interface LogDetailModalProps {
   onClose: () => void;
 }
 
-export default function LogDetailModal({ log, isOpen, onClose }: LogDetailModalProps) {
+export default function LogDetailModal({
+  log,
+  isOpen,
+  onClose,
+}: LogDetailModalProps) {
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
   if (!log) return null;
 
-  const formattedTime = format(new Date(log.timestamp), 'PPpp');
+  const formattedTime = format(new Date(log.timestamp), "PPpp");
+
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const CopyButton = ({
+    text,
+    field,
+    label,
+  }: {
+    text: string;
+    field: string;
+    label?: string;
+  }) => (
+    <button
+      onClick={() => copyToClipboard(text, field)}
+      className="inline-flex items-center space-x-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+      title={`Copy ${label || field}`}
+    >
+      {copiedField === field ? (
+        <>
+          <CheckCircle2 className="w-3 h-3 text-green-500" />
+          <span className="text-green-500">Copied!</span>
+        </>
+      ) : (
+        <>
+          <Copy className="w-3 h-3" />
+          <span>Copy</span>
+        </>
+      )}
+    </button>
+  );
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -28,7 +72,7 @@ export default function LogDetailModal({ log, isOpen, onClose }: LogDetailModalP
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -42,104 +86,284 @@ export default function LogDetailModal({ log, isOpen, onClose }: LogDetailModalP
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Log Details
-                  </Dialog.Title>
+              <Dialog.Panel className="w-full max-w-5xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <ExternalLink className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Log Details
+                      </Dialog.Title>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-0.5">
+                        {log.service} · {log.event}
+                      </p>
+                    </div>
+                  </div>
                   <button
                     onClick={onClose}
-                    className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Timestamp</label>
-                      <p className="text-sm text-gray-900 dark:text-gray-100">{formattedTime}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Level</label>
-                      <div className="mt-1">
-                        <LogLevelBadge level={log.level} />
+                {/* Content */}
+                <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">
+                  <div className="space-y-6">
+                    {/* Primary Information */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Timestamp
+                        </label>
+                        <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
+                          <p className="text-sm text-gray-900 dark:text-gray-100 font-mono">
+                            {formattedTime}
+                          </p>
+                          <CopyButton
+                            text={log.timestamp}
+                            field="timestamp"
+                            label="timestamp"
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Service</label>
-                      <p className="text-sm text-gray-900 dark:text-gray-100">{log.service}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Event</label>
-                      <p className="text-sm text-gray-900 dark:text-gray-100">{log.event}</p>
-                    </div>
-                    {log.traceId && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Trace ID</label>
-                        <p className="text-sm text-gray-900 dark:text-gray-100 font-mono break-all">{log.traceId}</p>
-                      </div>
-                    )}
-                    {log.spanId && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Span ID</label>
-                        <p className="text-sm text-gray-900 dark:text-gray-100 font-mono break-all">{log.spanId}</p>
-                      </div>
-                    )}
-                    {log.requestId && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Request ID</label>
-                        <p className="text-sm text-gray-900 dark:text-gray-100 font-mono break-all">{log.requestId}</p>
-                      </div>
-                    )}
-                    {log.sessionId && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Session ID</label>
-                        <p className="text-sm text-gray-900 dark:text-gray-100 font-mono break-all">{log.sessionId}</p>
-                      </div>
-                    )}
-                    {log.sourceFile && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Source File</label>
-                        <p className="text-sm text-gray-900 dark:text-gray-100 break-all">{log.sourceFile}</p>
-                      </div>
-                    )}
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">PII Redacted</label>
-                      <p className="text-sm text-gray-900 dark:text-gray-100">
-                        {log.piiRedacted ? 'Yes' : 'No'}
-                      </p>
-                    </div>
-                    {log.piiDetected && log.piiDetected.length > 0 && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">PII Detected Types</label>
-                        <p className="text-sm text-gray-900 dark:text-gray-100">
-                          {log.piiDetected.join(', ')}
-                        </p>
-                      </div>
-                    )}
-                  </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 block">Metadata</label>
-                    <pre className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg text-xs overflow-x-auto">
-                      {JSON.stringify(log.metadata, null, 2)}
-                    </pre>
-                  </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Log Level
+                        </label>
+                        <div className="flex items-start pt-2">
+                          <LogLevelBadge level={log.level} />
+                        </div>
+                      </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 block">Raw Log</label>
-                    <pre className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg text-xs overflow-x-auto whitespace-pre-wrap">
-                      {log.raw}
-                    </pre>
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Service
+                        </label>
+                        <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
+                          <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">
+                            {log.service}
+                          </p>
+                          <CopyButton text={log.service} field="service" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Event Type
+                        </label>
+                        <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
+                          <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">
+                            {log.event}
+                          </p>
+                          <CopyButton text={log.event} field="event" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Correlation IDs */}
+                    {(log.traceId ||
+                      log.spanId ||
+                      log.requestId ||
+                      log.sessionId) && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3">
+                          Correlation IDs
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {log.traceId && (
+                            <div className="bg-blue-50 dark:bg-blue-900/20 px-3 py-2.5 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                                  Trace ID
+                                </label>
+                                <CopyButton
+                                  text={log.traceId}
+                                  field="traceId"
+                                  label="trace ID"
+                                />
+                              </div>
+                              <p className="text-sm text-blue-900 dark:text-blue-100 font-mono break-all">
+                                {log.traceId}
+                              </p>
+                            </div>
+                          )}
+                          {log.spanId && (
+                            <div className="bg-purple-50 dark:bg-purple-900/20 px-3 py-2.5 rounded-lg border border-purple-200 dark:border-purple-800">
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                                  Span ID
+                                </label>
+                                <CopyButton
+                                  text={log.spanId}
+                                  field="spanId"
+                                  label="span ID"
+                                />
+                              </div>
+                              <p className="text-sm text-purple-900 dark:text-purple-100 font-mono break-all">
+                                {log.spanId}
+                              </p>
+                            </div>
+                          )}
+                          {log.requestId && (
+                            <div className="bg-green-50 dark:bg-green-900/20 px-3 py-2.5 rounded-lg border border-green-200 dark:border-green-800">
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-medium text-green-700 dark:text-green-300">
+                                  Request ID
+                                </label>
+                                <CopyButton
+                                  text={log.requestId}
+                                  field="requestId"
+                                  label="request ID"
+                                />
+                              </div>
+                              <p className="text-sm text-green-900 dark:text-green-100 font-mono break-all">
+                                {log.requestId}
+                              </p>
+                            </div>
+                          )}
+                          {log.sessionId && (
+                            <div className="bg-orange-50 dark:bg-orange-900/20 px-3 py-2.5 rounded-lg border border-orange-200 dark:border-orange-800">
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-medium text-orange-700 dark:text-orange-300">
+                                  Session ID
+                                </label>
+                                <CopyButton
+                                  text={log.sessionId}
+                                  field="sessionId"
+                                  label="session ID"
+                                />
+                              </div>
+                              <p className="text-sm text-orange-900 dark:text-orange-100 font-mono break-all">
+                                {log.sessionId}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Additional Information */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {log.sourceFile && (
+                        <div className="space-y-1 col-span-2">
+                          <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Source File
+                          </label>
+                          <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <p className="text-sm text-gray-900 dark:text-gray-100 font-mono break-all">
+                              {log.sourceFile}
+                            </p>
+                            <CopyButton
+                              text={log.sourceFile}
+                              field="sourceFile"
+                              label="source file"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          PII Status
+                        </label>
+                        <div
+                          className={`px-3 py-2 rounded-lg border ${
+                            log.piiRedacted
+                              ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800"
+                              : "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                          }`}
+                        >
+                          <p
+                            className={`text-sm font-medium ${
+                              log.piiRedacted
+                                ? "text-purple-900 dark:text-purple-100"
+                                : "text-gray-900 dark:text-gray-100"
+                            }`}
+                          >
+                            {log.piiRedacted
+                              ? "🔒 PII Redacted"
+                              : "No PII Redaction"}
+                          </p>
+                        </div>
+                      </div>
+                      {log.piiDetected && log.piiDetected.length > 0 && (
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            PII Detection
+                          </label>
+                          <div className="bg-purple-50 dark:bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-800">
+                            <p className="text-sm text-purple-900 dark:text-purple-100">
+                              {log.piiDetected.join(", ")}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Metadata */}
+                    {log.metadata && Object.keys(log.metadata).length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                            Metadata
+                          </label>
+                          <CopyButton
+                            text={JSON.stringify(log.metadata, null, 2)}
+                            field="metadata"
+                          />
+                        </div>
+                        <pre className="bg-gray-900 dark:bg-black text-gray-100 dark:text-gray-200 p-4 rounded-lg text-xs overflow-x-auto border border-gray-700 font-mono leading-relaxed">
+                          {JSON.stringify(log.metadata, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+
+                    {/* Raw Log Message */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                          Raw Log Message
+                        </label>
+                        <CopyButton
+                          text={log.raw}
+                          field="raw"
+                          label="raw message"
+                        />
+                      </div>
+                      <pre className="bg-gray-900 dark:bg-black text-gray-100 dark:text-gray-200 p-4 rounded-lg text-xs overflow-x-auto border border-gray-700 whitespace-pre-wrap break-words font-mono leading-relaxed">
+                        {log.raw}
+                      </pre>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-6 flex justify-end">
+                {/* Footer */}
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                  <button
+                    onClick={() =>
+                      copyToClipboard(JSON.stringify(log, null, 2), "full")
+                    }
+                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    {copiedField === "full" ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <span className="text-green-500">Full log copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        <span>Copy Full Log (JSON)</span>
+                      </>
+                    )}
+                  </button>
                   <button
                     onClick={onClose}
-                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    className="px-6 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors font-medium"
                   >
                     Close
                   </button>
@@ -152,4 +376,3 @@ export default function LogDetailModal({ log, isOpen, onClose }: LogDetailModalP
     </Transition>
   );
 }
-
