@@ -4,9 +4,12 @@ import { NotificationToast } from './components/alerts/NotificationToast'
 import Layout from './components/Layout'
 
 // Metrics pages
-import MetricsSubpart1 from './pages/metrics/Subpart1'
-import MetricsSubpart2 from './pages/metrics/Subpart2'
-import MetricsSubpart3 from './pages/metrics/Subpart3'
+import MetricOverview from "./pages/metrics/metric-agent/Overview";
+import MetricSignals from "./pages/metrics/metric-agent/Signals";
+import MetricKpiCoverage from "./pages/metrics/metric-agent/KpiCoverage";
+import MetricUpdatePlan from "./pages/metrics/metric-agent/UpdatePlan";
+import MetricPromSuggestions from "./pages/metrics/metric-agent/PromSuggestions";
+import MetricSettings from "./pages/metrics/metric-agent/Settings";
 
 // Logs pages
 import LogsDashboard from './pages/logs/LogsDashboard'
@@ -34,7 +37,21 @@ import AnomaliesSubpart1 from './pages/anomalies/Subpart1'
 import AnomaliesSubpart2 from './pages/anomalies/Subpart2'
 import AnomaliesSubpart3 from './pages/anomalies/Subpart3'
 
-function App() {
+import MetricSettingsWrapper from "./pages/metrics/metric-agent/MetricSettingsWrapper";
+
+function App() { 
+  
+  const metricAgentSettings = {
+  pollingEnabled: true,
+  intervals: {
+    healthMs: 3000,
+    signalsMs: 2500,
+    kpiMs: 5000,
+    planMs: 9000,
+    promMs: 12000,
+  },
+  ui: { defaultPromView: "raw" as const },
+};
   return (
     <AppProvider>
       <Router>
@@ -45,9 +62,13 @@ function App() {
             <Route path="/dashboard" element={<MainDashboard />} />
             
             {/* Metrics routes */}
-            <Route path="/metrics/subpart1" element={<MetricsSubpart1 />} />
-            <Route path="/metrics/subpart2" element={<MetricsSubpart2 />} />
-            <Route path="/metrics/subpart3" element={<MetricsSubpart3 />} />
+            <Route path="/metrics" element={<Navigate to="/metrics/overview" replace />} />
+            <Route path="/metrics/overview" element={<MetricOverview settings={metricAgentSettings} />} />
+            <Route path="/metrics/signals" element={<MetricSignals settings={metricAgentSettings} />} />
+            <Route path="/metrics/kpi-coverage" element={<MetricKpiCoverage settings={metricAgentSettings} />} />
+            <Route path="/metrics/update-plan" element={<MetricUpdatePlan settings={metricAgentSettings} />} />
+            <Route path="/metrics/prom-suggestions" element={<MetricPromSuggestions settings={metricAgentSettings} />} />
+            <Route path="/metrics/settings" element={<MetricSettingsWrapper />} />
             
             {/* Logs routes */}
             <Route path="/logs/dashboard" element={<LogsDashboard />} />

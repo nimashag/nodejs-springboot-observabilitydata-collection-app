@@ -38,14 +38,17 @@ const Layout = ({ children }: LayoutProps) => {
       icon: Activity
     },
     {
-      path: '/metrics',
-      label: 'Metrics',
+      path: "/metrics",
+      label: "Metrics",
       icon: BarChart3,
       subItems: [
-        { path: '/metrics/subpart1', label: 'Subpart 1' },
-        { path: '/metrics/subpart2', label: 'Subpart 2' },
-        { path: '/metrics/subpart3', label: 'Subpart 3' }
-      ]
+        { path: "/metrics/overview", label: "Overview" },
+        { path: "/metrics/signals", label: "Signals" },
+        { path: "/metrics/kpi-coverage", label: "KPI Coverage" },
+        { path: "/metrics/update-plan", label: "Update Plan" },
+        { path: "/metrics/prom-suggestions", label: "Prom Suggestions" },
+        { path: "/metrics/settings", label: "Settings" },
+      ],
     },
     {
       path: '/logs',
