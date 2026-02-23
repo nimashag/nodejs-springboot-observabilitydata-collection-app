@@ -87,15 +87,6 @@ services:
       - app-network
     restart: unless-stopped
 
-  alert-dashboard-frontend:
-    image: my-app/alert-dashboard-frontend:latest
-    container_name: alert-dashboard-frontend
-    ports:
-      - "30009:80"
-    networks:
-      - app-network
-    restart: unless-stopped
-
   log-aggregation-service:
     image: my-app/log-aggregation-service:latest
     container_name: log-aggregation-service
