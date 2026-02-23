@@ -29,6 +29,7 @@ services:
     volumes:
       - uploads-data:/app/uploads
       - ~/temp/docker-files/restaurants-service/logs:/app/logs
+      - ~/temp/docker-files/restaurants-service/alerts:/app/alerts
     networks:
       - app-network
     restart: unless-stopped
@@ -48,6 +49,7 @@ services:
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
     volumes:
       - ~/temp/docker-files/orders-service/logs:/app/logs
+      - ~/temp/docker-files/orders-service/alerts:/app/alerts
     networks:
       - app-network
     restart: unless-stopped
@@ -67,6 +69,7 @@ services:
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
     volumes:
       - ~/temp/docker-files/users-service/logs:/app/logs
+      - ~/temp/docker-files/users-service/alerts:/app/alerts
     networks:
       - app-network
     restart: unless-stopped
@@ -86,6 +89,7 @@ services:
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
     volumes:
       - ~/temp/docker-files/delivery-service/logs:/app/logs
+      - ~/temp/docker-files/delivery-service/alerts:/app/alerts
     networks:
       - app-network
     restart: unless-stopped
@@ -98,12 +102,36 @@ services:
     container_name: alert-agent-data-collect-service
     ports:
       - "31008:3008"
+    environment:
+      - DELIVERY_SERVICE_ALERT_PATH=/project/delivery-service/alerts/delivery-service-alert-data.ndjson
+      - ORDERS_SERVICE_ALERT_PATH=/project/orders-service/alerts/orders-service-alert-data.ndjson
+      - RESTAURANTS_SERVICE_ALERT_PATH=/project/restaurants-service/alerts/restaurants-service-alert-data.ndjson
+      - USERS_SERVICE_ALERT_PATH=/project/users-service/alerts/users-service-alert-data.ndjson
     volumes:
       - ..:/project:ro
+      - ~/temp/docker-files/alert-agent-data-collect-service/output:/project/alert-agent-data-collect-service/output
+      - ~/temp/docker-files/delivery-service/alerts:/project/delivery-service/alerts:ro
+      - ~/temp/docker-files/orders-service/alerts:/project/orders-service/alerts:ro
+      - ~/temp/docker-files/restaurants-service/alerts:/project/restaurants-service/alerts:ro
+      - ~/temp/docker-files/users-service/alerts:/project/users-service/alerts:ro
     working_dir: /project/alert-agent-data-collect-service
     networks:
       - app-network
     restart: unless-stopped
+    mem_limit: 2g
+    memswap_limit: 2g
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3008/api/analysis', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   log-aggregation-service:
     build:
@@ -154,6 +182,18 @@ services:
       - app-network
     restart: unless-stopped
 
+  observability-dashboard-frontend:
+    build:
+      context: ../observability-dashboard-frontend
+      dockerfile: Dockerfile
+    image: my-app/observability-dashboard-frontend:latest
+    container_name: observability-dashboard-frontend
+    ports:
+      - "30011:80"
+    networks:
+      - app-network
+    restart: unless-stopped
+
   nginx-gateway:
     image: nginx:alpine
     container_name: nginx-gateway
@@ -170,6 +210,7 @@ services:
       - alert-agent-data-collect-service
       - log-aggregation-service
       - logs-dashboard-frontend
+      - observability-dashboard-frontend
     networks:
       - app-network
     restart: unless-stopped
