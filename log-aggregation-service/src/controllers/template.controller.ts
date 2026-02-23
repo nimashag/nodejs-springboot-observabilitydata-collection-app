@@ -169,6 +169,11 @@ export class TemplateController {
 
   /**
    * Read aggregated logs
+   * Only reads the most recent aggregated log file to avoid memory issues.
+   * When the service starts, it processes all existing logs from all services
+   * and writes them to a new aggregated file. Therefore, the latest file contains
+   * all logs that existed when the service started, plus any new logs collected
+   * during the current run.
    */
   private async readAggregatedLogs(): Promise<string[]> {
     const aggregatedLogsPath = path.join(__dirname, '..', '..', 'aggregated-logs');
@@ -178,22 +183,34 @@ export class TemplateController {
       return logs;
     }
 
-    const files = fs.readdirSync(aggregatedLogsPath);
+    // Get all .jsonl files and sort by modification time (newest first)
+    const files = fs.readdirSync(aggregatedLogsPath)
+      .filter(file => file.endsWith('.jsonl'))
+      .map(file => ({
+        name: file,
+        path: path.join(aggregatedLogsPath, file),
+        mtime: fs.statSync(path.join(aggregatedLogsPath, file)).mtime.getTime()
+      }))
+      .sort((a, b) => b.mtime - a.mtime); // Sort descending (newest first)
     
-    for (const file of files) {
-      if (file.endsWith('.jsonl')) {
-        const filePath = path.join(aggregatedLogsPath, file);
-        const content = fs.readFileSync(filePath, 'utf-8');
-        const lines = content.split('\n').filter(line => line.trim());
-        
-        for (const line of lines) {
-          try {
-            const log: StructuredLog = JSON.parse(line);
-            logs.push(log.raw);
-          } catch (e) {
-            // Skip invalid JSON lines
-          }
-        }
+    // Only read the most recent file
+    // Since each service run processes all existing logs from service files,
+    // the latest aggregated file contains all logs that were available when
+    // the service started, plus any new logs collected during the current run.
+    if (files.length === 0) {
+      return logs;
+    }
+
+    const latestFile = files[0];
+    const content = fs.readFileSync(latestFile.path, 'utf-8');
+    const lines = content.split('\n').filter(line => line.trim());
+    
+    for (const line of lines) {
+      try {
+        const log: StructuredLog = JSON.parse(line);
+        logs.push(log.raw);
+      } catch (e) {
+        // Skip invalid JSON lines
       }
     }
 

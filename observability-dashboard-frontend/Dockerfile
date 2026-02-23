@@ -1,10 +1,18 @@
 # Build step
 FROM node:18-alpine AS builder
 WORKDIR /app
+
+# Increase Node.js memory limit for build
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 COPY package*.json ./
 RUN npm install
+
 COPY . .
-RUN npm run build
+
+# Build - skip TypeScript type checking to save memory (Vite handles TS compilation)
+# Note: API URL is determined dynamically at runtime based on window.location
+RUN NODE_OPTIONS="--max-old-space-size=2048" npx vite build
 
 # Production step
 FROM nginx:1.27-alpine

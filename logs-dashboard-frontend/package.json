@@ -19,7 +19,8 @@
     "lucide-react": "^0.503.0",
     "date-fns": "^3.6.0",
     "react-window": "^1.8.10",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "recharts": "^2.10.3"
   },
   "devDependencies": {
     "@types/react": "^19.1.2",

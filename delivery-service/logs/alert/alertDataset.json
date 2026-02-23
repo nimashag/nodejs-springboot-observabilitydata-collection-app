@@ -1,0 +1,796 @@
+[
+  {
+    "alertId": "1766302824967",
+    "service": "delivery-service",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid",
+      "customerId": "123",
+      "restaurantId": "456"
+    },
+    "resolutionTime": "2025-12-21T10:27:21.018Z",
+    "feedback": "none",
+    "incidentOutcome": "resolved",
+    "duration": null,
+    "predictedNoise": null,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766307055560",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T08:50:55.560Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "test-invalid",
+      "customerId": "456",
+      "restaurantId": "789"
+    },
+    "metrics": {
+      "cpu": 42.902690882657524,
+      "memory": 26.99110721763227
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 348.83826296063927
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": "2025-12-21T10:05:59.613Z",
+    "feedback": "false positive",
+    "incidentOutcome": "ignored",
+    "duration": 4504053,
+    "predictedNoise": null,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766312906949",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T10:28:26.949Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid"
+    },
+    "metrics": {
+      "cpu": 55.97944841463924,
+      "memory": 89.13594906230651
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 290.81334222446407
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": "2025-12-21T10:40:26.251Z",
+    "feedback": "false positive",
+    "incidentOutcome": "ignored",
+    "duration": 719302,
+    "predictedNoise": null,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766312914399",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T10:28:34.399Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid"
+    },
+    "metrics": {
+      "cpu": 66.2787560342123,
+      "memory": 22.07671233237265
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 534.6288801910863
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766312919574",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T10:28:39.574Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid"
+    },
+    "metrics": {
+      "cpu": 61.49083586419395,
+      "memory": 74.00346588205036
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 219.978701455809
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": "2025-12-21T10:41:39.466Z",
+    "feedback": "false positive",
+    "incidentOutcome": "ignored",
+    "duration": 779892,
+    "predictedNoise": null,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766314043422",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T10:47:23.422Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "new-invalid",
+      "customerId": "999",
+      "restaurantId": "888"
+    },
+    "metrics": {
+      "cpu": 29.0590245579474,
+      "memory": 98.9966135011568
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 302.1823141352704
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334354286",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:25:54.286Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-1",
+      "customerId": "123",
+      "restaurantId": "456"
+    },
+    "metrics": {
+      "cpu": 16.257023146084304,
+      "memory": 77.1259377046875
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 579.4458951451451
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334358886",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:25:58.886Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-2",
+      "customerId": "456",
+      "restaurantId": "789"
+    },
+    "metrics": {
+      "cpu": 5.501632355018993,
+      "memory": 58.94409477019411
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 256.85749631011333
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334364949",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:26:04.949Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-3",
+      "customerId": "999",
+      "restaurantId": "888"
+    },
+    "metrics": {
+      "cpu": 39.32003618908715,
+      "memory": 49.1940897202616
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 346.7793769697629
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334370239",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:26:10.239Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-4",
+      "customerId": "111",
+      "restaurantId": "222"
+    },
+    "metrics": {
+      "cpu": 46.24909550411904,
+      "memory": 72.88153861608481
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 200.7747886599711
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334374407",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:26:14.407Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-5",
+      "customerId": "333",
+      "restaurantId": "444"
+    },
+    "metrics": {
+      "cpu": 15.22779087785542,
+      "memory": 54.43222070006139
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 847.2767422288887
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334380070",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:26:20.070Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-6",
+      "customerId": "555",
+      "restaurantId": "666"
+    },
+    "metrics": {
+      "cpu": 5.655030802460104,
+      "memory": 91.77111668727873
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 779.1953254129634
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334383755",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:26:23.755Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-7",
+      "customerId": "777",
+      "restaurantId": "888"
+    },
+    "metrics": {
+      "cpu": 72.80795089704661,
+      "memory": 81.63419579537145
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 311.463492523254
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334389015",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:26:29.015Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-8",
+      "customerId": "999",
+      "restaurantId": "000"
+    },
+    "metrics": {
+      "cpu": 21.07429107212222,
+      "memory": 46.11103591819597
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 188.7991967040412
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334393953",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:26:33.953Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-9",
+      "customerId": "111",
+      "restaurantId": "333"
+    },
+    "metrics": {
+      "cpu": 28.373206359715475,
+      "memory": 24.946716761523714
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 200.98021815094324
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334398756",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:26:38.756Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "invalid-10",
+      "customerId": "222",
+      "restaurantId": "555"
+    },
+    "metrics": {
+      "cpu": 27.182439398924018,
+      "memory": 75.241156969247
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 687.2396668894758
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334642419",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:30:42.419Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "6941059443c8641abfd62b25",
+      "customerId": "invalid-customer",
+      "restaurantId": "invalid-restaurant"
+    },
+    "metrics": {
+      "cpu": 61.454977788983655,
+      "memory": 15.678026868423366
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 644.6085052824104
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766334649028",
+    "service": "delivery-service",
+    "timestamp": "2025-12-21T16:30:49.028Z",
+    "severity": "error",
+    "event": "delivery.assign.failed",
+    "details": {
+      "orderId": "6942564513904c96693a0953",
+      "customerId": "invalid-customer",
+      "restaurantId": "invalid-restaurant"
+    },
+    "metrics": {
+      "cpu": 47.3349923287764,
+      "memory": 91.9771101031228
+    },
+    "traces": [
+      {
+        "spanId": "assign-span",
+        "duration": 345.9236374279797
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "Driver assignment failed"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": false,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766392526044",
+    "service": "delivery-service",
+    "timestamp": "2025-12-22T08:35:26.044Z",
+    "severity": "warning",
+    "event": "system.performance.slow_query",
+    "details": {
+      "detectionTime": "2025-12-22T08:35:26.044Z",
+      "threshold": 5000,
+      "affectedEndpoints": [
+        "/api/delivery/assign",
+        "/api/delivery/status"
+      ],
+      "impactedOrders": 16,
+      "queryTime": 4223,
+      "queryType": "JOIN"
+    },
+    "metrics": {
+      "cpu": 39.031459038249444,
+      "memory": 48.43492669174625,
+      "latency": 608.7413039244439,
+      "errorRate": 0.22400471410266576,
+      "requestCount": 1097
+    },
+    "traces": [
+      {
+        "spanId": "perf-check-0",
+        "duration": 608.7413039244439
+      },
+      {
+        "spanId": "metric-collection-0",
+        "duration": 24.10004753708244
+      }
+    ],
+    "logs": [
+      {
+        "level": "warning",
+        "message": "slow_query: Threshold 5000 exceeded"
+      },
+      {
+        "level": "info",
+        "message": "Current metrics: CPU 39.031459038249444%, Memory 48.43492669174625%"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": null,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766392526157",
+    "service": "delivery-service",
+    "timestamp": "2025-12-22T08:35:26.157Z",
+    "severity": "error",
+    "event": "system.performance.memory_leak",
+    "details": {
+      "detectionTime": "2025-12-22T08:35:26.157Z",
+      "threshold": 90,
+      "affectedEndpoints": [
+        "/api/delivery/assign",
+        "/api/delivery/status"
+      ],
+      "impactedOrders": 6,
+      "actualMemory": 64.48228657248119,
+      "memoryGrowthRate": "4.70 MB/min"
+    },
+    "metrics": {
+      "cpu": 32.261043612886475,
+      "memory": 54.482286572481186,
+      "latency": 163.71160149787298,
+      "errorRate": 5.128480317556416,
+      "requestCount": 242
+    },
+    "traces": [
+      {
+        "spanId": "perf-check-1",
+        "duration": 163.71160149787298
+      },
+      {
+        "spanId": "metric-collection-1",
+        "duration": 75.47784602446976
+      }
+    ],
+    "logs": [
+      {
+        "level": "error",
+        "message": "memory_leak: Threshold 90 exceeded"
+      },
+      {
+        "level": "info",
+        "message": "Current metrics: CPU 32.261043612886475%, Memory 54.482286572481186%"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": null,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766392526264",
+    "service": "delivery-service",
+    "timestamp": "2025-12-22T08:35:26.264Z",
+    "severity": "warning",
+    "event": "system.performance.slow_query",
+    "details": {
+      "detectionTime": "2025-12-22T08:35:26.264Z",
+      "threshold": 5000,
+      "affectedEndpoints": [
+        "/api/delivery/assign",
+        "/api/delivery/status"
+      ],
+      "impactedOrders": 13,
+      "queryTime": 3464,
+      "queryType": "SELECT"
+    },
+    "metrics": {
+      "cpu": 59.24845547360177,
+      "memory": 61.5864053958967,
+      "latency": 442.7856262491691,
+      "errorRate": 2.618451237696664,
+      "requestCount": 569
+    },
+    "traces": [
+      {
+        "spanId": "perf-check-2",
+        "duration": 442.7856262491691
+      },
+      {
+        "spanId": "metric-collection-2",
+        "duration": 82.49300848674812
+      }
+    ],
+    "logs": [
+      {
+        "level": "warning",
+        "message": "slow_query: Threshold 5000 exceeded"
+      },
+      {
+        "level": "info",
+        "message": "Current metrics: CPU 59.24845547360177%, Memory 61.5864053958967%"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": null,
+    "tunedThreshold": null
+  },
+  {
+    "alertId": "1766392526371",
+    "service": "delivery-service",
+    "timestamp": "2025-12-22T08:35:26.371Z",
+    "severity": "warning",
+    "event": "system.performance.high_latency",
+    "details": {
+      "detectionTime": "2025-12-22T08:35:26.371Z",
+      "threshold": 3000,
+      "affectedEndpoints": [
+        "/api/delivery/assign",
+        "/api/delivery/status"
+      ],
+      "impactedOrders": 15,
+      "actualLatency": 1074.9152710410297,
+      "p95Latency": 1374.9152710410297,
+      "p99Latency": 1774.9152710410297
+    },
+    "metrics": {
+      "cpu": 58.471617404148695,
+      "memory": 49.74510829479516,
+      "latency": 574.9152710410297,
+      "errorRate": 4.984507715152788,
+      "requestCount": 637
+    },
+    "traces": [
+      {
+        "spanId": "perf-check-3",
+        "duration": 574.9152710410297
+      },
+      {
+        "spanId": "metric-collection-3",
+        "duration": 75.58002599690006
+      }
+    ],
+    "logs": [
+      {
+        "level": "warning",
+        "message": "high_latency: Threshold 3000 exceeded"
+      },
+      {
+        "level": "info",
+        "message": "Current metrics: CPU 58.471617404148695%, Memory 49.74510829479516%"
+      }
+    ],
+    "resolutionTime": null,
+    "feedback": null,
+    "incidentOutcome": "pending",
+    "duration": 0,
+    "predictedNoise": null,
+    "tunedThreshold": null
+  }
+]
