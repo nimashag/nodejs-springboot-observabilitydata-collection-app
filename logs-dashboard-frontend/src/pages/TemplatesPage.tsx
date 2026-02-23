@@ -186,15 +186,15 @@ export default function TemplatesPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Log Templates</h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-cyan-100 mb-2">Log Templates</h1>
+            <p className="text-sm text-gray-600 dark:text-cyan-400/70 mt-1">
               Discovered log patterns and templates
             </p>
           </div>
           <button
             onClick={handleMineTemplates}
             disabled={mining}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg hover:from-cyan-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-cyan-500/20 dark:shadow-cyan-500/30 font-semibold"
           >
             {mining ? 'Mining...' : 'Mine Templates'}
           </button>
@@ -203,13 +203,13 @@ export default function TemplatesPage() {
 
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-cyan-300 mb-2">
             Filter by Frequency
           </label>
           <select
             value={selectedFrequencyRange}
             onChange={(e) => setSelectedFrequencyRange(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-gray-300 dark:border-cyan-800/30 rounded-lg px-3 py-2 bg-white dark:bg-slate-900 text-gray-900 dark:text-cyan-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:ring-cyan-400 dark:focus:border-cyan-400 transition-all"
           >
             <option value="">All Frequencies</option>
             <option value="very-high">Very High (≥1000)</option>
@@ -221,13 +221,13 @@ export default function TemplatesPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-cyan-300 mb-2">
             Filter by Event Type
           </label>
           <select
             value={selectedEventType}
             onChange={(e) => setSelectedEventType(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-gray-300 dark:border-cyan-800/30 rounded-lg px-3 py-2 bg-white dark:bg-slate-900 text-gray-900 dark:text-cyan-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:ring-cyan-400 dark:focus:border-cyan-400 transition-all"
           >
             <option value="">All Event Types</option>
             {eventTypes.map((eventType) => (
@@ -240,7 +240,7 @@ export default function TemplatesPage() {
 
         <div className="flex items-end">
           <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-cyan-300 mb-2">
               Per Page
             </label>
             <select
@@ -249,7 +249,7 @@ export default function TemplatesPage() {
                 setPageSize(parseInt(e.target.value, 10));
                 setPage(1);
               }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 dark:border-cyan-800/30 rounded-lg px-3 py-2 bg-white dark:bg-slate-900 text-gray-900 dark:text-cyan-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 dark:focus:ring-cyan-400 dark:focus:border-cyan-400 transition-all"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <option key={size} value={size}>
@@ -262,7 +262,7 @@ export default function TemplatesPage() {
       </div>
 
       <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 dark:text-cyan-400/70">
           {loading ? (
             'Loading...'
           ) : filteredTemplates.length > 0 ? (
@@ -281,7 +281,7 @@ export default function TemplatesPage() {
               setSelectedFrequencyRange('');
               setSelectedEventType('');
             }}
-            className="text-sm text-blue-600 hover:text-blue-700"
+            className="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 font-semibold transition-colors"
           >
             Clear Filters
           </button>
@@ -289,22 +289,22 @@ export default function TemplatesPage() {
       </div>
 
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-sm text-red-800">
+        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <p className="text-sm text-red-800 dark:text-red-300">
             <strong>Error:</strong> {error}
           </p>
         </div>
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading templates...</div>
+        <div className="text-center py-12 text-gray-500 dark:text-cyan-400/70">Loading templates...</div>
       ) : filteredTemplates.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">
+          <p className="text-gray-500 dark:text-cyan-400/70 mb-4">
             {error ? 'Failed to load templates' : allTemplates.length === 0 ? 'No templates found' : 'No templates match your filters'}
           </p>
           {allTemplates.length === 0 && (
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-400 dark:text-cyan-500/60 mb-4">
               Click the button below to mine templates from your aggregated logs.
             </p>
           )}
@@ -312,7 +312,7 @@ export default function TemplatesPage() {
             <button
               onClick={handleMineTemplates}
               disabled={mining}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg hover:from-cyan-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-cyan-500/20 dark:shadow-cyan-500/30 font-semibold"
             >
               {mining ? 'Mining...' : 'Mine Templates from Aggregated Logs'}
             </button>
@@ -346,28 +346,28 @@ export default function TemplatesPage() {
               return (
                 <div
                   key={template.id}
-                  className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                  className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-cyan-800/30 p-6 hover:shadow-lg hover:shadow-cyan-500/10 dark:hover:shadow-cyan-500/20 transition-all duration-300 hover:border-cyan-300 dark:hover:border-cyan-700"
                 >
                   {/* Header Section */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-cyan-100">
                           Template {template.id.split('-')[1]}
                         </h3>
                         {template.service && (
-                          <span className="text-sm bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                          <span className="text-sm bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-cyan-300 px-2 py-1 rounded border border-gray-200 dark:border-cyan-800/30">
                             {template.service}
                           </span>
                         )}
                         {template.eventType && (
-                          <span className="text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                          <span className="text-sm bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 px-2 py-1 rounded border border-cyan-200 dark:border-cyan-800">
                             {template.eventType}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center space-x-2 mb-2">
-                        <p className="text-xs text-gray-500 font-mono">ID: {template.id}</p>
+                        <p className="text-xs text-gray-500 dark:text-cyan-400/70 font-mono">ID: {template.id}</p>
                         <button
                           onClick={() => copyToClipboard(template.id)}
                           className="text-gray-400 hover:text-gray-600"
@@ -376,10 +376,10 @@ export default function TemplatesPage() {
                           <ClipboardDocumentIcon className="w-4 h-4" />
                         </button>
                       </div>
-                      <p className="text-sm font-mono text-gray-700 bg-gray-50 p-3 rounded mb-2 break-all">
+                      <p className="text-sm font-mono text-gray-700 dark:text-cyan-200 bg-gray-50 dark:bg-slate-900 p-3 rounded mb-2 break-all border border-gray-200 dark:border-cyan-800/30">
                         {template.template}
                       </p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500 flex-wrap gap-2">
+                      <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-cyan-400/70 flex-wrap gap-2">
                         <span className="font-medium">Frequency: <span className="font-normal">{template.frequency.toLocaleString()}</span></span>
                         {template.metadata?.parameterCount !== undefined && (
                           <span className="font-medium">Parameters: <span className="font-normal">{template.metadata.parameterCount}</span></span>
@@ -418,11 +418,11 @@ export default function TemplatesPage() {
 
                   {/* Expanded Details Section */}
                   {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-cyan-800/30 space-y-4">
                       {/* Pattern Section */}
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm font-semibold text-gray-700">Regex Pattern</p>
+                          <p className="text-sm font-semibold text-gray-700 dark:text-cyan-300">Regex Pattern</p>
                           <button
                             onClick={() => copyToClipboard(template.pattern)}
                             className="text-gray-400 hover:text-gray-600 flex items-center space-x-1 text-xs"
@@ -432,7 +432,7 @@ export default function TemplatesPage() {
                             <span>Copy</span>
                           </button>
                         </div>
-                        <p className="text-xs font-mono text-gray-600 bg-gray-50 p-3 rounded break-all">
+                        <p className="text-xs font-mono text-gray-600 dark:text-cyan-200 bg-gray-50 dark:bg-slate-900 p-3 rounded break-all border border-gray-200 dark:border-cyan-800/30">
                           {template.pattern}
                         </p>
                       </div>
@@ -441,7 +441,7 @@ export default function TemplatesPage() {
                       {template.parameterizedLog && (
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm font-semibold text-gray-700">Parameterized Log</p>
+                            <p className="text-sm font-semibold text-gray-700 dark:text-cyan-300">Parameterized Log</p>
                             <button
                               onClick={() => copyToClipboard(template.parameterizedLog)}
                               className="text-gray-400 hover:text-gray-600 flex items-center space-x-1 text-xs"
@@ -451,7 +451,7 @@ export default function TemplatesPage() {
                               <span>Copy</span>
                             </button>
                           </div>
-                          <p className="text-xs font-mono text-gray-600 bg-gray-50 p-3 rounded break-all">
+                          <p className="text-xs font-mono text-gray-600 dark:text-cyan-200 bg-gray-50 dark:bg-slate-900 p-3 rounded break-all border border-gray-200 dark:border-cyan-800/30">
                             {template.parameterizedLog}
                           </p>
                         </div>
@@ -460,29 +460,29 @@ export default function TemplatesPage() {
                       {/* Metadata Section */}
                       {template.metadata && (
                         <div>
-                          <p className="text-sm font-semibold text-gray-700 mb-2">Metadata</p>
-                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <p className="text-sm font-semibold text-gray-700 dark:text-cyan-300 mb-2">Metadata</p>
+                          <div className="bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-cyan-800/30">
                             <div className="space-y-3">
                               {template.metadata.avgLength !== undefined && (
                                 <div className="flex items-center">
-                                  <span className="text-xs text-gray-600 font-medium w-32 flex-shrink-0">Average Length:</span>
-                                  <span className="text-xs text-gray-900 font-semibold">{template.metadata.avgLength}</span>
+                                  <span className="text-xs text-gray-600 dark:text-cyan-400/70 font-medium w-32 flex-shrink-0">Average Length:</span>
+                                  <span className="text-xs text-gray-900 dark:text-cyan-100 font-semibold">{template.metadata.avgLength}</span>
                                 </div>
                               )}
                               {template.metadata.parameterCount !== undefined && (
                                 <div className="flex items-center">
-                                  <span className="text-xs text-gray-600 font-medium w-32 flex-shrink-0">Parameter Count:</span>
-                                  <span className="text-xs text-gray-900 font-semibold">{template.metadata.parameterCount}</span>
+                                  <span className="text-xs text-gray-600 dark:text-cyan-400/70 font-medium w-32 flex-shrink-0">Parameter Count:</span>
+                                  <span className="text-xs text-gray-900 dark:text-cyan-100 font-semibold">{template.metadata.parameterCount}</span>
                                 </div>
                               )}
                               {template.metadata.parameterTypes && Object.keys(template.metadata.parameterTypes).length > 0 && (
                                 <div>
-                                  <div className="text-xs text-gray-600 font-medium mb-2">Parameter Types:</div>
-                                  <div className="space-y-2 pl-4 border-l-2 border-gray-300">
+                                  <div className="text-xs text-gray-600 dark:text-cyan-400/70 font-medium mb-2">Parameter Types:</div>
+                                  <div className="space-y-2 pl-4 border-l-2 border-gray-300 dark:border-cyan-800/30">
                                     {Object.entries(template.metadata.parameterTypes).map(([param, type]) => (
                                       <div key={param} className="flex items-center">
-                                        <span className="text-xs text-gray-600 font-mono font-medium w-24 flex-shrink-0">{param}:</span>
-                                        <span className="text-xs text-gray-900 bg-white px-2 py-1 rounded border border-gray-200">{type}</span>
+                                        <span className="text-xs text-gray-600 dark:text-cyan-400/70 font-mono font-medium w-24 flex-shrink-0">{param}:</span>
+                                        <span className="text-xs text-gray-900 dark:text-cyan-100 bg-white dark:bg-slate-800 px-2 py-1 rounded border border-gray-200 dark:border-cyan-800/30">{type}</span>
                                       </div>
                                     ))}
                                   </div>
@@ -496,13 +496,13 @@ export default function TemplatesPage() {
                       {/* Example Logs Section */}
                       {template.exampleLogs.length > 0 && (
                         <div>
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                          <p className="text-sm font-semibold text-gray-700 dark:text-cyan-300 mb-2">
                             Example Logs ({template.exampleLogs.length} total)
                           </p>
                           <div className="space-y-2 max-h-96 overflow-y-auto">
                             {template.exampleLogs.map((example, index) => (
                               <div key={index} className="relative group">
-                                <p className="text-xs font-mono text-gray-600 bg-gray-50 p-2 rounded break-all">
+                                <p className="text-xs font-mono text-gray-600 dark:text-cyan-200 bg-gray-50 dark:bg-slate-900 p-2 rounded break-all border border-gray-200 dark:border-cyan-800/30">
                                   {example}
                                 </p>
                                 <button
@@ -522,11 +522,11 @@ export default function TemplatesPage() {
 
                   {/* Collapsed Preview - Show first example log if not expanded */}
                   {!isExpanded && template.exampleLogs.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-xs font-medium text-gray-700 mb-2">
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-cyan-800/30">
+                      <p className="text-xs font-medium text-gray-700 dark:text-cyan-300 mb-2">
                         Preview (Click to expand for all {template.exampleLogs.length} examples):
                       </p>
-                      <p className="text-xs font-mono text-gray-600 bg-gray-50 p-2 rounded break-all">
+                      <p className="text-xs font-mono text-gray-600 dark:text-cyan-200 bg-gray-50 dark:bg-slate-900 p-2 rounded break-all border border-gray-200 dark:border-cyan-800/30">
                         {template.exampleLogs[0]}
                       </p>
                     </div>
@@ -537,13 +537,13 @@ export default function TemplatesPage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="bg-white rounded-lg border border-gray-200 px-4 py-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-cyan-800/30 px-4 py-4 shadow-sm">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setPage(1)}
                     disabled={page === 1 || totalPages === 0}
-                    className="p-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 text-gray-600 dark:text-cyan-300 border border-gray-300 dark:border-cyan-800/30 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="First page"
                   >
                     <ChevronDoubleLeftIcon className="w-5 h-5" />
@@ -551,7 +551,7 @@ export default function TemplatesPage() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1 || totalPages === 0}
-                    className="p-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 text-gray-600 dark:text-cyan-300 border border-gray-300 dark:border-cyan-800/30 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="Previous page"
                   >
                     <ChevronLeftIcon className="w-5 h-5" />
@@ -574,8 +574,8 @@ export default function TemplatesPage() {
                         onClick={() => setPage(pageNumber)}
                         className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                           page === pageNumber
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-700 border border-gray-300 hover:bg-gray-50'
+                            ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/30'
+                            : 'text-gray-700 dark:text-cyan-300 border border-gray-300 dark:border-cyan-800/30 hover:bg-cyan-50 dark:hover:bg-cyan-900/20'
                         }`}
                       >
                         {pageNumber}
@@ -588,7 +588,7 @@ export default function TemplatesPage() {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages || totalPages === 0}
-                    className="p-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 text-gray-600 dark:text-cyan-300 border border-gray-300 dark:border-cyan-800/30 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="Next page"
                   >
                     <ChevronRightIcon className="w-5 h-5" />
@@ -596,14 +596,14 @@ export default function TemplatesPage() {
                   <button
                     onClick={() => setPage(totalPages)}
                     disabled={page === totalPages || totalPages === 0}
-                    className="p-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 text-gray-600 dark:text-cyan-300 border border-gray-300 dark:border-cyan-800/30 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="Last page"
                   >
                     <ChevronDoubleRightIcon className="w-5 h-5" />
                   </button>
                 </div>
               </div>
-              <div className="mt-3 text-center text-sm text-gray-500">
+              <div className="mt-3 text-center text-sm text-gray-500 dark:text-cyan-400/70">
                 Page {page} of {totalPages || 1} {filteredTemplates.length > 0 && `(${filteredTemplates.length.toLocaleString()} total templates)`}
               </div>
             </div>
