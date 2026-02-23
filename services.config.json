@@ -49,14 +49,6 @@
       "k8sPath": ""
     },
     {
-      "name": "alert-dashboard-frontend",
-      "prefix": "alert-dashboard",
-      "folder": "alert-dashboard-frontend",
-      "port": 80,
-      "dockerImage": "my-app/alert-dashboard-frontend:latest",
-      "k8sPath": ""
-    },
-    {
       "name": "log-aggregation-service",
       "prefix": "log-aggregation",
       "folder": "log-aggregation-service",

@@ -108,4 +108,3 @@ export const redactPII = async (text: string) => {
   const response = await api.post('/api/pii/redact', { text });
   return response.data;
 };
-
