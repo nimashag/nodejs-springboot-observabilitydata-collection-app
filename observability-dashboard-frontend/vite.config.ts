@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/observability/',
+  base: '/',
   server: {
     port: 3009
   }
