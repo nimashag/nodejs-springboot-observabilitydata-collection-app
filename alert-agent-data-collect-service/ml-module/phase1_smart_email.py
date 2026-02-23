@@ -375,6 +375,26 @@ class SmartEmailService:
         if memory_usage_gb > 2:
             critical_metrics.append(('Memory Usage', f'{memory_usage_gb:.2f} GB', '#f44336'))
         
+        # Build critical metrics HTML first (avoid nested f-strings)
+        critical_metrics_html = ''
+        if critical_metrics:
+            critical_items = ''.join([
+                f'''
+                        <div class="critical-metric-item" style="border-left-color: {color};">
+                            <span class="critical-metric-label">{label}</span>
+                            <span class="critical-metric-value" style="color: {color};">{value}</span>
+                        </div>
+                        ''' for label, value, color in critical_metrics
+            ])
+            critical_metrics_html = f'''
+                    <div class="critical-metrics">
+                        <div class="critical-metrics-title">
+                            ⚠️ CRITICAL METRICS - IMMEDIATE ATTENTION REQUIRED
+                        </div>
+                        {critical_items}
+                    </div>
+                    '''
+        
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -569,19 +589,7 @@ class SmartEmailService:
                 </div>
                 
                 <div class="content">
-                    {f'''
-                    <div class="critical-metrics">
-                        <div class="critical-metrics-title">
-                            ⚠️ CRITICAL METRICS - IMMEDIATE ATTENTION REQUIRED
-                        </div>
-                        {''.join([f'''
-                        <div class="critical-metric-item" style="border-left-color: {color};">
-                            <span class="critical-metric-label">{label}</span>
-                            <span class="critical-metric-value" style="color: {color};">{value}</span>
-                        </div>
-                        ''' for label, value, color in critical_metrics])}
-                    </div>
-                    ''' if critical_metrics else ''}
+                    {critical_metrics_html}
                     
                     <div class="section">
                         <div class="section-title">Alert Information</div>
