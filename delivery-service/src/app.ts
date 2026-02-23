@@ -1,17 +1,14 @@
 import express from "express";
-import mongoose from "mongoose";
 import path from "path";
 import cors from "cors";
 import dotenv from "dotenv";
+import "./middleware/registerMongooseMetricsPlugin";
 import deliveryRoutes from "./routes/delivery.routes";
 import driverRoutes from "./routes/driver.routes";
 import { requestLogger } from "./middleware/requestLogger";
 import { initializeAlertCollector, alertCollectorMiddleware } from "./collectors/alert-collector";
 import { createMetricsMiddleware } from "./middleware/metricsMiddleware";
-import { enhanceMongooseWithRequestId, mongooseQueryTracker } from "./middleware/mongoosePlugin";
-
-// Apply mongoose plugin BEFORE connecting to database
-mongoose.plugin(mongooseQueryTracker);
+import { enhanceMongooseWithRequestId } from "./middleware/mongoosePlugin";
 import { telemetryMiddleware } from "./middleware/telemetry.middleware";
 
 dotenv.config();
@@ -31,7 +28,7 @@ app.use(
 
 app.use(express.json());
 
-// createMetricsMiddleware FIRST so requestId exists; enhanceMongooseWithRequestId sets global for DB tracking
+// createMetricsMiddleware FIRST so requestId exists; enhanceMongooseWithRequestId keeps requestId on req for compatibility
 app.use(createMetricsMiddleware('delivery-service', './metrics'));
 app.use(enhanceMongooseWithRequestId);
 

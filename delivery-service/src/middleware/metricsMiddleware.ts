@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { randomUUID } from 'crypto';
+import { AsyncLocalStorage } from 'async_hooks';
 
 interface RequestMetrics {
   request_id: string;
@@ -33,26 +34,39 @@ const requestMetricsMap = new Map<string, {
   cpuUsageStart: NodeJS.CpuUsage;
 }>();
 
+const requestContext = new AsyncLocalStorage<{ requestId: string }>();
+
+export function getCurrentRequestId(): string | undefined {
+  return requestContext.getStore()?.requestId;
+}
+
 // Track DB query times per request
-export function trackDbQuery(requestId: string, queryTimeMs: number): void {
-  const metrics = requestMetricsMap.get(requestId);
+export function trackDbQuery(requestId: string | undefined, queryTimeMs: number): void {
+  const resolvedRequestId = requestId || getCurrentRequestId();
+  if (!resolvedRequestId) {
+    return;
+  }
+
+  const metrics = requestMetricsMap.get(resolvedRequestId);
   if (metrics) {
     metrics.dbQueryTime += queryTimeMs;
   }
 }
 
 // Get CPU usage percentage
-function getCpuPercent(): number {
+function getCpuPercent(
+  cpuUsageStart: NodeJS.CpuUsage,
+  durationMs: number,
+): number {
   const cpus = os.cpus();
-  if (cpus.length === 0) return 0;
-  
-  // Simple approximation: use process.cpuUsage() if available
-  // Otherwise return 0 (approximation)
+  if (cpus.length === 0 || durationMs <= 0) return 0;
+
   try {
-    const usage = process.cpuUsage();
-    // This is a simplified approximation
-    // In production, you'd want to track over time
-    return Math.min(100, (usage.user + usage.system) / 10000);
+    const usageDelta = process.cpuUsage(cpuUsageStart);
+    const totalCpuMicros = usageDelta.user + usageDelta.system;
+    const wallClockMicros = durationMs * 1000;
+    const normalizedPercent = (totalCpuMicros / (wallClockMicros * cpus.length)) * 100;
+    return Math.max(0, Math.min(100, normalizedPercent));
   } catch {
     return 0;
   }
@@ -124,7 +138,7 @@ export function createMetricsMiddleware(serviceName: string, outputDir: string =
       }
 
       const memory = getMemoryMetrics();
-      const cpuPercent = getCpuPercent();
+      const cpuPercent = getCpuPercent(metricsData.cpuUsageStart, durationMs);
       
       const metrics: RequestMetrics = {
         request_id: requestId,
@@ -154,7 +168,6 @@ export function createMetricsMiddleware(serviceName: string, outputDir: string =
       requestMetricsMap.delete(requestId);
     });
 
-    next();
+    requestContext.run({ requestId }, () => next());
   };
 }
-
