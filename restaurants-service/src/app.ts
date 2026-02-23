@@ -5,15 +5,12 @@ import restaurantsRoutes from './routes/restaurants.routes';
 import path from 'path';
 import { requestLogger } from './middlewares/requestLogger';
 import { initializeAlertCollector, alertCollectorMiddleware } from './collectors/alert-collector';
-<<<<<<< HEAD
 import { createMetricsMiddleware } from './middlewares/metricsMiddleware';
 import { enhanceMongooseWithRequestId, mongooseQueryTracker } from './middlewares/mongoosePlugin';
+import { telemetryMiddleware } from "./middlewares/telemetry.middleware";
 
 // Apply mongoose plugin BEFORE connecting to database
 mongoose.plugin(mongooseQueryTracker);
-=======
-import { telemetryMiddleware } from "./middlewares/telemetry.middleware";
->>>>>>> 3e720325430ab55ed4ba153a67ddc75974c4a3ad
 
 const app = express();
 
