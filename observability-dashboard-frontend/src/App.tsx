@@ -30,9 +30,7 @@ import ThresholdConfig from './pages/alerts/ThresholdConfig'
 import Correlations from './pages/alerts/Correlations'
 
 // Anomalies pages
-import AnomaliesSubpart1 from './pages/anomalies/Subpart1'
-import AnomaliesSubpart2 from './pages/anomalies/Subpart2'
-import AnomaliesSubpart3 from './pages/anomalies/Subpart3'
+import AnomalyDashboard from './pages/anomalies/AnomalyDashboard'
 
 function App() {
   return (
@@ -68,9 +66,8 @@ function App() {
             <Route path="/alerts/settings" element={<Settings />} />
             
             {/* Anomalies routes */}
-            <Route path="/anomalies/subpart1" element={<AnomaliesSubpart1 />} />
-            <Route path="/anomalies/subpart2" element={<AnomaliesSubpart2 />} />
-            <Route path="/anomalies/subpart3" element={<AnomaliesSubpart3 />} />
+            <Route path="/anomalies" element={<Navigate to="/anomalies/dashboard" replace />} />
+            <Route path="/anomalies/dashboard" element={<AnomalyDashboard />} />
             
             {/* Redirect unknown routes to dashboard */}
             <Route path="*" element={<Navigate to="/" replace />} />
