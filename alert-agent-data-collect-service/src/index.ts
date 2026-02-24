@@ -741,7 +741,7 @@ const server = http.createServer(async (req, res) => {
           }
 
           // Forward request to ML service
-          const mlServiceUrl = process.env.ML_SERVICE_URL || "localhost";
+          const mlServiceUrl = process.env.ML_SERVICE_URL || "127.0.0.1"; // Use IPv4 to avoid IPv6 connection issues
           const mlServicePort = process.env.ML_SERVICE_PORT 
             ? parseInt(process.env.ML_SERVICE_PORT) 
             : 5001;
@@ -753,6 +753,7 @@ const server = http.createServer(async (req, res) => {
             port: mlServicePort,
             path: "/email/send",
             method: "POST",
+            family: 4, // Force IPv4 to avoid IPv6 connection issues
             headers: {
               "Content-Type": "application/json",
               "Content-Length": Buffer.byteLength(postData),

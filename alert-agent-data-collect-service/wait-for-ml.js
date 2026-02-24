@@ -3,7 +3,7 @@
  */
 const http = require('http');
 
-const ML_HOST = 'localhost';
+const ML_HOST = '127.0.0.1'; // Use IPv4 to avoid IPv6 connection issues
 const ML_PORT = 5001;
 const MAX_RETRIES = 10;
 const RETRY_DELAY = 1000; // 1 second
@@ -18,6 +18,7 @@ function checkMLService() {
         port: ML_PORT,
         path: '/health',
         method: 'GET',
+        family: 4, // Force IPv4 to avoid IPv6 connection issues
         timeout: 2000
       },
       (res) => {
