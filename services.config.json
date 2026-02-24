@@ -63,6 +63,14 @@
       "port": 80,
       "dockerImage": "my-app/logs-dashboard-frontend:latest",
       "k8sPath": ""
+    },
+    {
+      "name": "observability-dashboard-frontend",
+      "prefix": "observability-dashboard",
+      "folder": "observability-dashboard-frontend",
+      "port": 80,
+      "dockerImage": "my-app/observability-dashboard-frontend:latest",
+      "k8sPath": ""
     }
   ],
   "nginx": {
