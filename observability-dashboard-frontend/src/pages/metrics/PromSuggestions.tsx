@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../../../../../metric-agent-frontend/src/lib/api";
-import { usePoll } from "../../../../../metric-agent-frontend/src/hooks/usePoll";
-import { downloadText } from "../../../../../metric-agent-frontend/src/lib/download";
-import { parsePromSuggestions } from "../../../../../metric-agent-frontend/src/lib/parsePromSuggestions";
+import { api } from "../../../../metric-agent-frontend/src/lib/api";
+import { usePoll } from "../../../../metric-agent-frontend/src/hooks/usePoll";
+import { downloadText } from "../../../../metric-agent-frontend/src/lib/download";
+import { parsePromSuggestions } from "../../../../metric-agent-frontend/src/lib/parsePromSuggestions";
 
 type AppSettings = {
   pollingEnabled: boolean;

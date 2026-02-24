@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { api } from "../../../../../metric-agent-frontend/src/lib/api";
-import { downloadJson, downloadText } from "../../../../../metric-agent-frontend/src/lib/download";
+import { api } from "../../../../metric-agent-frontend/src/lib/api";
+import { downloadJson, downloadText } from "../../../../metric-agent-frontend/src/lib/download";
 
 type NavKey = "overview" | "signals" | "kpi" | "plan" | "prom" | "settings";
 

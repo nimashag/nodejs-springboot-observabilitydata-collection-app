@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { api } from "../../../../../metric-agent-frontend/src/lib/api";
-import { usePoll } from "../../../../../metric-agent-frontend/src/hooks/usePoll";
+import { api } from "../../../../metric-agent-frontend/src/lib/api";
+import { usePoll } from "../../../../metric-agent-frontend/src/hooks/usePoll";
 
 type AppSettings = {
   pollingEnabled: boolean;

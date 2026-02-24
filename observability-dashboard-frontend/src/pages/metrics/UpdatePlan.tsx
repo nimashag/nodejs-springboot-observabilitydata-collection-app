@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../../../../../metric-agent-frontend/src/lib/api";
-import { usePoll } from "../../../../../metric-agent-frontend/src/hooks/usePoll";
-import { Drawer } from "../../../../../metric-agent-frontend/src/components/Drawer";
-import { downloadCsv, downloadJson } from "../../../../../metric-agent-frontend/src/lib/download";
+import { api } from "../../../../metric-agent-frontend/src/lib/api";
+import { usePoll } from "../../../../metric-agent-frontend/src/hooks/usePoll";
+import { Drawer } from "../../../../metric-agent-frontend/src/components/Drawer";
+import { downloadCsv, downloadJson } from "../../../../metric-agent-frontend/src/lib/download";
 
 type AppSettings = {
   pollingEnabled: boolean;

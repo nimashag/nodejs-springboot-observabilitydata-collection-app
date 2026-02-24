@@ -4,12 +4,12 @@ import { NotificationToast } from './components/alerts/NotificationToast'
 import Layout from './components/Layout'
 
 // Metrics pages
-import MetricOverview from "./pages/metrics/metric-agent/Overview";
-import MetricSignals from "./pages/metrics/metric-agent/Signals";
-import MetricKpiCoverage from "./pages/metrics/metric-agent/KpiCoverage";
-import MetricUpdatePlan from "./pages/metrics/metric-agent/UpdatePlan";
-import MetricPromSuggestions from "./pages/metrics/metric-agent/PromSuggestions";
-import MetricSettings from "./pages/metrics/metric-agent/Settings";
+import MetricOverview from "./pages/metrics/Overview";
+import MetricSignals from "./pages/metrics/Signals";
+import MetricKpiCoverage from "./pages/metrics/KpiCoverage";
+import MetricUpdatePlan from "./pages/metrics/UpdatePlan";
+import MetricPromSuggestions from "./pages/metrics/PromSuggestions";
+import MetricSettings from "./pages/metrics/Settings";
 
 // Logs pages
 import LogsDashboard from './pages/logs/LogsDashboard'
@@ -37,7 +37,7 @@ import AnomaliesSubpart1 from './pages/anomalies/Subpart1'
 import AnomaliesSubpart2 from './pages/anomalies/Subpart2'
 import AnomaliesSubpart3 from './pages/anomalies/Subpart3'
 
-import MetricSettingsWrapper from "./pages/metrics/metric-agent/MetricSettingsWrapper";
+import MetricSettingsWrapper from "./pages/metrics/MetricSettingsWrapper";
 
 function App() { 
   
