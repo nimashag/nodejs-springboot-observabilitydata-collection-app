@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
-from __future__ import annotations
-
 import json
 import csv
 import os
-import sys
 import argparse
 from pathlib import Path
-
-# Fix Windows console encoding for Unicode characters
-if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+from typing import Optional
 
 RAW_LOGS_DIR = Path("data/raw/logs")
 INPUT_FILE = None
@@ -27,7 +19,7 @@ FIELDS = [
     "duration_ms"
 ]
 
-def resolve_input_file(input_file: str | None) -> Path:
+def resolve_input_file(input_file: Optional[str]) -> Path:
     if input_file:
         path = Path(input_file)
         if not path.exists():

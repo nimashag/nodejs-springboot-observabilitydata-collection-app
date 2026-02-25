@@ -71,6 +71,22 @@
       "port": 80,
       "dockerImage": "my-app/observability-dashboard-frontend:latest",
       "k8sPath": ""
+    },
+    {
+      "name": "email-service",
+      "prefix": "email",
+      "folder": "email-service",
+      "port": 4000,
+      "dockerImage": "my-app/email-service:latest",
+      "k8sPath": ""
+    },
+    {
+      "name": "anomaly-detection-agent",
+      "prefix": "anomaly-detection",
+      "folder": "anomaly-detection-agent",
+      "port": 3007,
+      "dockerImage": "my-app/anomaly-detection-agent:latest",
+      "k8sPath": ""
     }
   ],
   "nginx": {

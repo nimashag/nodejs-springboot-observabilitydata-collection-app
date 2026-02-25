@@ -19,14 +19,17 @@ import sys
 import time
 from pathlib import Path
 
-# Fix Windows console encoding for Unicode characters
-if sys.platform == 'win32':
+# Fix encoding for Windows console
+if sys.platform == "win32":
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# Use 'python' on Windows, 'python3' on Unix-like systems
+PYTHON_CMD = "python" if sys.platform == "win32" else "python3"
 
 
 def run_step(cmd: list[str]) -> None:
@@ -35,17 +38,17 @@ def run_step(cmd: list[str]) -> None:
 
 
 def run_once(model_path: str, with_threshold_label: bool) -> None:
-    run_step(["python", "scripts/collect_logs_from_aggregation.py"])
-    run_step(["python", "scripts/collect_metrics_from_services.py"])
-    run_step(["python", "scripts/jsonl_to_csv_filtered.py"])
-    run_step(["python", "scripts/merge_logs_and_metrics.py"])
-    run_step(["python", "scripts/drop_log_duration.py"])
+    run_step([PYTHON_CMD, "scripts/collect_logs_from_aggregation.py"])
+    run_step([PYTHON_CMD, "scripts/collect_metrics_from_services.py"])
+    run_step([PYTHON_CMD, "scripts/jsonl_to_csv_filtered.py"])
+    run_step([PYTHON_CMD, "scripts/merge_logs_and_metrics.py"])
+    run_step([PYTHON_CMD, "scripts/drop_log_duration.py"])
 
     if with_threshold_label:
-        run_step(["python", "scripts/threshold_label.py"])
+        run_step([PYTHON_CMD, "scripts/threshold_label.py"])
 
     run_step([
-        "python",
+        PYTHON_CMD,
         "scripts/rf_predict_incidents.py",
         "data/merged/logs_with_metrics_clean.csv",
         model_path,

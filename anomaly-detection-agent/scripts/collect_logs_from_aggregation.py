@@ -15,8 +15,8 @@ import sys
 import time
 from pathlib import Path
 
-# Fix Windows console encoding for Unicode characters
-if sys.platform == 'win32':
+# Fix encoding for Windows console
+if sys.platform == "win32":
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')

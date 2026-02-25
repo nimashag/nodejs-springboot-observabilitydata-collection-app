@@ -5,15 +5,8 @@ Collect metrics.jsonl from each service into anomaly-detection-agent/data/raw/me
 
 import json
 import csv
-import sys
 import time
 from pathlib import Path
-
-# Fix Windows console encoding for Unicode characters
-if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # Paths relative to project root
 PROJECT_ROOT = Path(__file__).parent.parent.parent

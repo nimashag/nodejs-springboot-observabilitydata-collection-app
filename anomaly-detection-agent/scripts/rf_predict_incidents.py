@@ -7,13 +7,6 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 import requests
 import os
-import sys
-
-# Fix Windows console encoding for Unicode characters
-if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # ---------------- CONFIG ----------------
 DEFAULT_INPUT_CSV = "data/merged/logs_with_metrics_clean.csv"
@@ -223,15 +216,11 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
         svc_counter = Counter()
         ev_counter = Counter()
         max_status = 0
-        max_anomaly_score = 0.0
 
         for r in rows:
             svc_counter[str(r.get("service", "unknown"))] += 1
             ev_counter[str(r.get("event", ""))] += 1
             max_status = max(max_status, safe_int(r.get("status_code", 0)))
-            # Get max anomaly score for this incident
-            score = safe_float(r.get("pred_anomaly_score", 0), 0.0)
-            max_anomaly_score = max(max_anomaly_score, score)
 
         service = svc_counter.most_common(1)[0][0]
         events = [e for e, _ in ev_counter.most_common(10) if e and e != "nan"]
@@ -257,11 +246,9 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
             "events": events,
             "reason": reason,
             "row_count": len(rows),
-            "max_anomaly_score": round(max_anomaly_score, 4),
         })
 
-    # Sort incidents by status code (highest first), then by anomaly score
-    incidents = sorted(incidents, key=lambda x: (x["status_code"], -(x.get("max_anomaly_score", 0))), reverse=True)
+    incidents = sorted(incidents, key=lambda x: x["status_code"], reverse=True)
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -272,7 +259,7 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
         "predicted_normal_count": total - anomaly_count,
         "predicted_anomaly_request_count": predicted_anomaly_requests,
         "incident_story": build_story(incidents),
-        "incidents": incidents,  # Include all incidents, no limit
+        "incidents": incidents[:200],
     }
 
     OUT_INCIDENTS_JSON.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -280,7 +267,11 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
 
     # ✅ EMAIL TRIGGER MUST BE HERE (payload exists here)
     if SEND_EMAIL and len(payload.get("incidents", [])) >= MIN_INCIDENTS_TO_EMAIL:
-        send_incident_email(payload)
+        try:
+            send_incident_email(payload)
+        except Exception as e:
+            # Do not fail anomaly pipeline if email service is unavailable.
+            print(f"⚠️ Email send skipped due to error: {e}")
     else:
         print("ℹ️ No email sent (no incidents)")
 

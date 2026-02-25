@@ -3,22 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "concurrently --kill-others --names \"Pipeline,API\" --prefix-colors \"cyan,green\" \"npm run start:pipeline\" \"npm run start:api\"",
-    "start:pipeline": "python scripts/run_realtime_pipeline.py --interval 2",
-    "start:api": "node api-server.js",
-    "start:once": "python scripts/run_realtime_pipeline.py --once",
-    "start:watch": "python scripts/run_realtime_pipeline.py --interval 2",
-    "start:no-email": "python scripts/run_realtime_pipeline.py --interval 2 --no-email",
-    "api": "node api-server.js",
-    "api:dev": "nodemon api-server.js",
-    "preflight": "python scripts/preflight_check.py"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "concurrently": "^9.2.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+    "start": "cross-env PYTHONIOENCODING=utf-8 python scripts/run_realtime_pipeline.py --once",
+    "start:once": "cross-env PYTHONIOENCODING=utf-8 python scripts/run_realtime_pipeline.py --once",
+    "start:watch": "cross-env PYTHONIOENCODING=utf-8 python scripts/run_realtime_pipeline.py --interval 2",
+    "start:no-email": "cross-env PYTHONIOENCODING=utf-8 ANOMALY_SEND_EMAIL=0 python scripts/run_realtime_pipeline.py --interval 2"
   }
 }
