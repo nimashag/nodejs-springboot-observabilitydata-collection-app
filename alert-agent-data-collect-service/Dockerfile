@@ -1,54 +1,42 @@
-FROM node:18-alpine
+# Use Python slim as base since we need Python for ML module
+FROM python:3.11-slim
 
-# Install Python and build dependencies for ML module
-RUN apk add --no-cache \
-    python3 \
-    py3-pip \
-    make \
-    g++ \
-    && ln -sf python3 /usr/bin/python
+# Install Node.js 18 and procps (provides ps command for concurrently)
+RUN apt-get update && apt-get install -y \
+    curl \
+    procps \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /project/alert-agent-data-collect-service
+WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY tsconfig.json ./
 
-# Install Node.js dependencies
-RUN npm ci
+# Install Node dependencies
+RUN npm install
+
+# Copy Python requirements
+COPY ml-module/requirements.txt ./ml-module/
+COPY ml-module/requirements_enhanced.txt ./ml-module/
+
+# Install Python dependencies (base + Flask for ML service)
+RUN pip install --no-cache-dir -r ml-module/requirements.txt && \
+    pip install --no-cache-dir flask>=3.0.0 flask-cors>=4.0.0
 
 # Copy source code
-COPY src ./src
-
-# Copy ML module
-COPY ml-module ./ml-module
-
-# Copy wait-for-ml script
-COPY wait-for-ml.js ./
-
-# Install Python dependencies for ML module
-# Use --break-system-packages flag for Alpine's externally-managed-environment
-RUN cd ml-module && \
-    pip3 install --break-system-packages --no-cache-dir -r requirements_enhanced.txt || \
-    (echo "Warning: Some ML dependencies may have failed to install" && true)
+COPY . .
 
 # Build TypeScript
 RUN npm run build
 
-# Backup dist files to /tmp since volume mount will override them
-RUN cp -r dist /tmp/dist-backup 2>/dev/null || true
-
-# Create output directory
-RUN mkdir -p output
+# Create necessary directories
+RUN mkdir -p output ml-module/models
 
 # Expose port
 EXPOSE 3008
 
-# Environment variable defaults
-ENV PORT=3008
-
-# Start service (runs both ML and Node.js services)
-# Copy dist files to writable location since volume mount overrides them
-# Then use pre-built files instead of rebuilding (volume mount is read-only)
-# ML service is optional - if it fails, AATA will continue without ML predictions
-CMD ["sh", "-c", "if [ ! -d dist ] || [ ! -f dist/index.js ]; then cp -r /tmp/dist-backup/* . 2>/dev/null || echo 'Using mounted dist'; fi && (npm run start:ml &) && node wait-for-ml.js"]
+# Start service (runs both ML service and Node service)
+CMD ["npm", "start"]

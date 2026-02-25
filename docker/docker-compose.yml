@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   frontend-service:
@@ -94,45 +94,6 @@ services:
       - app-network
     restart: unless-stopped
 
-  alert-agent-data-collect-service:
-    build:
-      context: ../alert-agent-data-collect-service
-      dockerfile: Dockerfile
-    image: my-app/alert-agent-data-collect-service:latest
-    container_name: alert-agent-data-collect-service
-    ports:
-      - "31008:3008"
-    environment:
-      - DELIVERY_SERVICE_ALERT_PATH=/project/delivery-service/alerts/delivery-service-alert-data.ndjson
-      - ORDERS_SERVICE_ALERT_PATH=/project/orders-service/alerts/orders-service-alert-data.ndjson
-      - RESTAURANTS_SERVICE_ALERT_PATH=/project/restaurants-service/alerts/restaurants-service-alert-data.ndjson
-      - USERS_SERVICE_ALERT_PATH=/project/users-service/alerts/users-service-alert-data.ndjson
-    volumes:
-      - ..:/project:ro
-      - ~/temp/docker-files/alert-agent-data-collect-service/output:/project/alert-agent-data-collect-service/output
-      - ~/temp/docker-files/delivery-service/alerts:/project/delivery-service/alerts:ro
-      - ~/temp/docker-files/orders-service/alerts:/project/orders-service/alerts:ro
-      - ~/temp/docker-files/restaurants-service/alerts:/project/restaurants-service/alerts:ro
-      - ~/temp/docker-files/users-service/alerts:/project/users-service/alerts:ro
-    working_dir: /project/alert-agent-data-collect-service
-    networks:
-      - app-network
-    restart: unless-stopped
-    mem_limit: 2g
-    memswap_limit: 2g
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://localhost:3008/api/analysis', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
   log-aggregation-service:
     build:
       context: ../log-aggregation-service
@@ -164,6 +125,43 @@ services:
           "node",
           "-e",
           "require('http').get('http://localhost:3005/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  alert-agent-data-collect-service:
+    build:
+      context: ../alert-agent-data-collect-service
+      dockerfile: Dockerfile
+    image: my-app/alert-agent-data-collect-service:latest
+    container_name: alert-agent-data-collect-service
+    ports:
+      - "31008:3008"
+    environment:
+      - PORT=3008
+      - API_KEY=${ALERT_AGENT_API_KEY:-your-secret-api-key-here}
+      - ALLOWED_ORIGINS=
+      - ALERT_COLLECTION_INTERVAL=60000
+      - DOCKER_ENV=true
+    volumes:
+      - ~/temp/docker-files/alert-agent-data-collect-service/output:/app/output
+      - ~/temp/docker-files/alert-agent-data-collect-service/ml-module/models:/app/ml-module/models
+      - ~/temp/docker-files/delivery-service/alerts:/app/alerts/delivery-service:ro
+      - ~/temp/docker-files/orders-service/alerts:/app/alerts/orders-service:ro
+      - ~/temp/docker-files/restaurants-service/alerts:/app/alerts/restaurants-service:ro
+      - ~/temp/docker-files/users-service/alerts:/app/alerts/users-service:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3008/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))",
         ]
       interval: 30s
       timeout: 10s
