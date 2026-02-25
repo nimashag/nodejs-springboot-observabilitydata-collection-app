@@ -48,8 +48,8 @@ function getFileStats(filePath) {
     }
 }
 
-// GET /api/incidents - Return latest incidents
-app.get('/api/incidents', (req, res) => {
+// GET /api/anomaly/incidents - Return latest incidents
+app.get('/api/anomaly/incidents', (req, res) => {
     const data = readJSONFile(INCIDENTS_FILE);
 
     if (!data) {
@@ -94,8 +94,8 @@ app.get('/api/incidents', (req, res) => {
     });
 });
 
-// GET /api/predictions - Return predictions summary
-app.get('/api/predictions', (req, res) => {
+// GET /api/anomaly/predictions - Return predictions summary
+app.get('/api/anomaly/predictions', (req, res) => {
     const fileStats = getFileStats(PREDICTIONS_FILE);
 
     if (!fileStats) {
@@ -149,8 +149,8 @@ app.get('/api/predictions', (req, res) => {
     }
 });
 
-// GET /api/predictions/download - Download CSV file
-app.get('/api/predictions/download', (req, res) => {
+// GET /api/anomaly/predictions/download - Download CSV file
+app.get('/api/anomaly/predictions/download', (req, res) => {
     if (!fs.existsSync(PREDICTIONS_FILE)) {
         return res.status(404).json({
             error: 'Predictions file not found'
@@ -168,8 +168,8 @@ app.get('/api/predictions/download', (req, res) => {
     });
 });
 
-// GET /api/status - Service status and file availability
-app.get('/api/status', (req, res) => {
+// GET /api/anomaly/status - Service status and file availability
+app.get('/api/anomaly/status', (req, res) => {
     const incidentsStats = getFileStats(INCIDENTS_FILE);
     const predictionsStats = getFileStats(PREDICTIONS_FILE);
 
@@ -209,10 +209,10 @@ app.get('/', (req, res) => {
         service: 'Anomaly Detection Agent API',
         version: '1.0.0',
         endpoints: {
-            incidents: '/api/incidents',
-            predictions: '/api/predictions',
-            predictionsDownload: '/api/predictions/download',
-            status: '/api/status',
+            incidents: '/api/anomaly/incidents',
+            predictions: '/api/anomaly/predictions',
+            predictionsDownload: '/api/anomaly/predictions/download',
+            status: '/api/anomaly/status',
             health: '/health'
         }
     });
@@ -230,9 +230,22 @@ app.use((err, req, res, next) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`🔍 Anomaly Detection API running on http://localhost:${PORT}`);
-    console.log(`   Incidents endpoint: http://localhost:${PORT}/api/incidents`);
-    console.log(`   Predictions endpoint: http://localhost:${PORT}/api/predictions`);
-    console.log(`   Status endpoint: http://localhost:${PORT}/api/status`);
+    console.log(`   Incidents endpoint: http://localhost:${PORT}/api/anomaly/incidents`);
+    console.log(`   Predictions endpoint: http://localhost:${PORT}/api/anomaly/predictions`);
+    console.log(`   Status endpoint: http://localhost:${PORT}/api/anomaly/status`);
+    
+    // Check if output files exist on startup
+    const incidentsExists = fs.existsSync(INCIDENTS_FILE);
+    const predictionsExists = fs.existsSync(PREDICTIONS_FILE);
+    
+    console.log(`\n📂 Output files status:`);
+    console.log(`   Incidents file: ${incidentsExists ? '✅ EXISTS' : '❌ NOT FOUND'} - ${INCIDENTS_FILE}`);
+    console.log(`   Predictions file: ${predictionsExists ? '✅ EXISTS' : '❌ NOT FOUND'} - ${PREDICTIONS_FILE}`);
+    
+    if (!incidentsExists || !predictionsExists) {
+        console.log(`\n⚠️  Warning: Output files not found. The pipeline may not have run yet.`);
+        console.log(`   Make sure the pipeline is running and has processed data.`);
+    }
 });
 
 // Handle graceful shutdown

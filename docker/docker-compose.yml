@@ -30,6 +30,7 @@ services:
       - uploads-data:/app/uploads
       - ~/temp/docker-files/restaurants-service/logs:/app/logs
       - ~/temp/docker-files/restaurants-service/alerts:/app/alerts
+      - ~/temp/docker-files/restaurants-service/metrics:/app/metrics
     networks:
       - app-network
     restart: unless-stopped
@@ -50,6 +51,7 @@ services:
     volumes:
       - ~/temp/docker-files/orders-service/logs:/app/logs
       - ~/temp/docker-files/orders-service/alerts:/app/alerts
+      - ~/temp/docker-files/orders-service/metrics:/app/metrics
     networks:
       - app-network
     restart: unless-stopped
@@ -70,6 +72,7 @@ services:
     volumes:
       - ~/temp/docker-files/users-service/logs:/app/logs
       - ~/temp/docker-files/users-service/alerts:/app/alerts
+      - ~/temp/docker-files/users-service/metrics:/app/metrics
     networks:
       - app-network
     restart: unless-stopped
@@ -90,6 +93,7 @@ services:
     volumes:
       - ~/temp/docker-files/delivery-service/logs:/app/logs
       - ~/temp/docker-files/delivery-service/alerts:/app/alerts
+      - ~/temp/docker-files/delivery-service/metrics:/app/metrics
     networks:
       - app-network
     restart: unless-stopped
@@ -192,6 +196,62 @@ services:
       - app-network
     restart: unless-stopped
 
+  email-service:
+    build:
+      context: ../email-service
+      dockerfile: Dockerfile
+    image: my-app/email-service:latest
+    container_name: email-service
+    ports:
+      - "31012:4000"
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  anomaly-detection-agent:
+    build:
+      context: ../anomaly-detection-agent
+      dockerfile: Dockerfile
+    image: my-app/anomaly-detection-agent:latest
+    container_name: anomaly-detection-agent
+    ports:
+      - "31007:3007"
+    environment:
+      - PORT=3007
+      - ANOMALY_SEND_EMAIL=${ANOMALY_SEND_EMAIL:-1}
+      - EMAIL_SERVICE_URL=http://email-service:4000/v1/email/send
+      - DOCKER_ENV=true
+    volumes:
+      - ~/temp/docker-files/anomaly-detection-agent/outputs:/app/outputs
+      - ~/temp/docker-files/anomaly-detection-agent/models:/app/models
+      - ~/temp/docker-files/anomaly-detection-agent/data:/app/data
+      - ~/temp/docker-files/log-aggregation-service/aggregated-logs:/app/data/raw/logs:ro
+      - ~/temp/docker-files/delivery-service/metrics:/app/data/raw/metrics/delivery-service:ro
+      - ~/temp/docker-files/orders-service/metrics:/app/data/raw/metrics/orders-service:ro
+      - ~/temp/docker-files/restaurants-service/metrics:/app/data/raw/metrics/restaurants-service:ro
+      - ~/temp/docker-files/users-service/metrics:/app/data/raw/metrics/users-service:ro
+    depends_on:
+      - email-service
+      - log-aggregation-service
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3007/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
   nginx-gateway:
     image: nginx:alpine
     container_name: nginx-gateway
@@ -209,6 +269,8 @@ services:
       - log-aggregation-service
       - logs-dashboard-frontend
       - observability-dashboard-frontend
+      - email-service
+      - anomaly-detection-agent
     networks:
       - app-network
     restart: unless-stopped
