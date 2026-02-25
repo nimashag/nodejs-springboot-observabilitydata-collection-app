@@ -2,7 +2,14 @@
 #!/usr/bin/env python3
 import json
 import csv
+import sys
 from pathlib import Path
+
+# Fix Windows console encoding for Unicode characters
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 INPUT_JSON = "data/raw/metrics/service_request_metrics_with_samples.json"
 OUT_CSV = "data/metrics/request_samples.csv"

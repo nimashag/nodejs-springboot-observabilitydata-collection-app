@@ -4,8 +4,15 @@ from __future__ import annotations
 import json
 import csv
 import os
+import sys
 import argparse
 from pathlib import Path
+
+# Fix Windows console encoding for Unicode characters
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 RAW_LOGS_DIR = Path("data/raw/logs")
 INPUT_FILE = None

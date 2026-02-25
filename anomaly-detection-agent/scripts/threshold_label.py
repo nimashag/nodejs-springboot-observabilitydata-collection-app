@@ -2,7 +2,14 @@
 
 #!/usr/bin/env python3
 import csv
+import sys
 from pathlib import Path
+
+# Fix Windows console encoding for Unicode characters
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 INPUT_CSV = "data/merged/logs_with_metrics_clean.csv"
 OUT_CSV = "data/merged/logs_with_metrics_only_matches_labeled.csv"
