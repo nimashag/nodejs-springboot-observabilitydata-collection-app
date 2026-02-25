@@ -10,10 +10,15 @@
     "start:no-email": "cross-env PYTHONIOENCODING=utf-8 ANOMALY_SEND_EMAIL=0 python scripts/run_realtime_pipeline.py --interval 2",
     "api": "node api-server.js",
     "api:dev": "node api-server.js",
-    "api:stop": "powershell -Command \"$pid = (Get-NetTCPConnection -LocalPort 3007 -ErrorAction SilentlyContinue).OwningProcess; if ($pid) { Stop-Process -Id $pid -Force; Write-Host 'Stopped API server on port 3007' } else { Write-Host 'No process found on port 3007' }\""
+    "api:stop": "powershell -Command \"$pid = (Get-NetTCPConnection -LocalPort 3007 -ErrorAction SilentlyContinue).OwningProcess; if ($pid) { Stop-Process -Id $pid -Force; Write-Host 'Stopped API server on port 3007' } else { Write-Host 'No process found on port 3007' }\"",
+    "dev": "concurrently --kill-others-on-fail --names \"PIPELINE,API\" --prefix-colors \"cyan,green\" \"npm run start:watch\" \"npm run api\"",
+    "dev:no-email": "concurrently --kill-others-on-fail --names \"PIPELINE,API\" --prefix-colors \"cyan,green\" \"npm run start:no-email\" \"npm run api\""
   },
   "dependencies": {
     "express": "^4.19.2",
     "cross-env": "^7.0.3"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
