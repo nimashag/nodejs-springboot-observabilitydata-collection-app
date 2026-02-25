@@ -2,10 +2,18 @@
   "name": "anomaly-detection-agent",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "start": "cross-env PYTHONIOENCODING=utf-8 python scripts/run_realtime_pipeline.py --once",
     "start:once": "cross-env PYTHONIOENCODING=utf-8 python scripts/run_realtime_pipeline.py --once",
     "start:watch": "cross-env PYTHONIOENCODING=utf-8 python scripts/run_realtime_pipeline.py --interval 2",
-    "start:no-email": "cross-env PYTHONIOENCODING=utf-8 ANOMALY_SEND_EMAIL=0 python scripts/run_realtime_pipeline.py --interval 2"
+    "start:no-email": "cross-env PYTHONIOENCODING=utf-8 ANOMALY_SEND_EMAIL=0 python scripts/run_realtime_pipeline.py --interval 2",
+    "api": "node api-server.js",
+    "api:dev": "node api-server.js",
+    "api:stop": "powershell -Command \"$pid = (Get-NetTCPConnection -LocalPort 3007 -ErrorAction SilentlyContinue).OwningProcess; if ($pid) { Stop-Process -Id $pid -Force; Write-Host 'Stopped API server on port 3007' } else { Write-Host 'No process found on port 3007' }\""
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cross-env": "^7.0.3"
   }
 }
