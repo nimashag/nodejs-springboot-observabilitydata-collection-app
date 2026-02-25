@@ -29,17 +29,17 @@ def run_step(cmd: list[str]) -> None:
 
 
 def run_once(model_path: str, with_threshold_label: bool) -> None:
-    run_step(["python3", "scripts/collect_logs_from_aggregation.py"])
-    run_step(["python3", "scripts/collect_metrics_from_services.py"])
-    run_step(["python3", "scripts/jsonl_to_csv_filtered.py"])
-    run_step(["python3", "scripts/merge_logs_and_metrics.py"])
-    run_step(["python3", "scripts/drop_log_duration.py"])
+    run_step(["python", "scripts/collect_logs_from_aggregation.py"])
+    run_step(["python", "scripts/collect_metrics_from_services.py"])
+    run_step(["python", "scripts/jsonl_to_csv_filtered.py"])
+    run_step(["python", "scripts/merge_logs_and_metrics.py"])
+    run_step(["python", "scripts/drop_log_duration.py"])
 
     if with_threshold_label:
-        run_step(["python3", "scripts/threshold_label.py"])
+        run_step(["python", "scripts/threshold_label.py"])
 
     run_step([
-        "python3",
+        "python",
         "scripts/rf_predict_incidents.py",
         "data/merged/logs_with_metrics_clean.csv",
         model_path,
