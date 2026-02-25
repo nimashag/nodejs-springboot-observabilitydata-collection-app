@@ -10,6 +10,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import sys
 import time
@@ -22,9 +23,18 @@ if sys.platform == "win32":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SOURCE_DIR = PROJECT_ROOT / "log-aggregation-service" / "aggregated-logs"
-DEST_DIR = PROJECT_ROOT / "anomaly-detection-agent" / "data" / "raw" / "logs"
+# Determine project root - handle both local dev and Docker environments
+_script_path = Path(__file__).resolve()
+if os.getenv("DOCKER_ENV") == "true" or Path("/app").exists():
+    # In Docker, working directory is /app
+    PROJECT_ROOT = Path("/app")
+    SOURCE_DIR = PROJECT_ROOT / "log-aggregation-service" / "aggregated-logs"
+    DEST_DIR = Path("/app/data/raw/logs")
+else:
+    # Local development - use relative path from script
+    PROJECT_ROOT = _script_path.parents[2]
+    SOURCE_DIR = PROJECT_ROOT / "log-aggregation-service" / "aggregated-logs"
+    DEST_DIR = PROJECT_ROOT / "anomaly-detection-agent" / "data" / "raw" / "logs"
 
 
 def should_copy(src: Path, dst: Path) -> bool:

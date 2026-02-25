@@ -221,18 +221,24 @@ services:
       - "31007:3007"
     environment:
       - PORT=3007
-      - ANOMALY_SEND_EMAIL=${ANOMALY_SEND_EMAIL:-1}
+      - PYTHONIOENCODING=utf-8
+      - ANOMALY_SEND_EMAIL=${ANOMALY_SEND_EMAIL:-0}
       - EMAIL_SERVICE_URL=http://email-service:4000/v1/email/send
       - DOCKER_ENV=true
     volumes:
       - ~/temp/docker-files/anomaly-detection-agent/outputs:/app/outputs
-      - ~/temp/docker-files/anomaly-detection-agent/models:/app/models
       - ~/temp/docker-files/anomaly-detection-agent/data:/app/data
-      - ~/temp/docker-files/log-aggregation-service/aggregated-logs:/app/data/raw/logs:ro
-      - ~/temp/docker-files/delivery-service/metrics:/app/data/raw/metrics/delivery-service:ro
-      - ~/temp/docker-files/orders-service/metrics:/app/data/raw/metrics/orders-service:ro
-      - ~/temp/docker-files/restaurants-service/metrics:/app/data/raw/metrics/restaurants-service:ro
-      - ~/temp/docker-files/users-service/metrics:/app/data/raw/metrics/users-service:ro
+      # Model experiments: Only mount if you want to override models from the image
+      # If the directory doesn't exist on host, the image's models will be used
+      # Uncomment the line below if you want to mount external models:
+      # - ~/temp/docker-files/anomaly-detection-agent/model_experiments:/app/model_experiments:ro
+      # Mount aggregated logs to the path expected by the script (relative to project root)
+      - ~/temp/docker-files/log-aggregation-service/aggregated-logs:/app/log-aggregation-service/aggregated-logs:ro
+      # Mount service metrics to paths expected by the script
+      - ~/temp/docker-files/delivery-service/metrics:/app/delivery-service/metrics:ro
+      - ~/temp/docker-files/orders-service/metrics:/app/orders-service/metrics:ro
+      - ~/temp/docker-files/restaurants-service/metrics:/app/restaurants-service/metrics:ro
+      - ~/temp/docker-files/users-service/metrics:/app/users-service/metrics:ro
     depends_on:
       - email-service
       - log-aggregation-service

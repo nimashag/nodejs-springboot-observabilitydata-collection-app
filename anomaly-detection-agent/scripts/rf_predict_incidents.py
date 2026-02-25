@@ -9,10 +9,21 @@ import requests
 import os
 
 # ---------------- CONFIG ----------------
-DEFAULT_INPUT_CSV = "data/merged/logs_with_metrics_clean.csv"
-DEFAULT_MODEL_PATH = "model_experiments/models/random_forest/rf_model.pkl"
+# Determine base path - handle both local dev and Docker environments
+_script_path = Path(__file__).resolve()
+if os.getenv("DOCKER_ENV") == "true" or Path("/app").exists():
+    # In Docker, working directory is /app
+    BASE_PATH = Path("/app")
+    DEFAULT_INPUT_CSV = str(BASE_PATH / "data/merged/logs_with_metrics_clean.csv")
+    DEFAULT_MODEL_PATH = str(BASE_PATH / "model_experiments/models/random_forest/rf_model.pkl")
+    OUT_DIR = BASE_PATH / "outputs"
+else:
+    # Local development - use relative paths
+    BASE_PATH = _script_path.parent.parent
+    DEFAULT_INPUT_CSV = "data/merged/logs_with_metrics_clean.csv"
+    DEFAULT_MODEL_PATH = "model_experiments/models/random_forest/rf_model.pkl"
+    OUT_DIR = BASE_PATH / "outputs"
 
-OUT_DIR = Path("outputs")
 OUT_PRED_CSV = OUT_DIR / "predictions_latest.csv"
 OUT_INCIDENTS_JSON = OUT_DIR / "incidents_latest.json"
 
@@ -147,11 +158,24 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
 
     input_path = Path(input_csv)
     model_file = Path(model_path)
+    
+    # Resolve relative paths to absolute if needed
+    if not input_path.is_absolute():
+        if os.getenv("DOCKER_ENV") == "true" or Path("/app").exists():
+            input_path = Path("/app") / input_path
+        else:
+            input_path = _script_path.parent.parent / input_path
+    
+    if not model_file.is_absolute():
+        if os.getenv("DOCKER_ENV") == "true" or Path("/app").exists():
+            model_file = Path("/app") / model_file
+        else:
+            model_file = _script_path.parent.parent / model_file
 
     if not input_path.exists():
         raise FileNotFoundError(f"Input CSV not found: {input_path}")
     if not model_file.exists():
-        raise FileNotFoundError(f"Model file not found: {model_file}")
+        raise FileNotFoundError(f"Model file not found: {model_file}. Resolved from: {model_path}")
 
     df = pd.read_csv(input_path)
     df.columns = [c.strip() for c in df.columns]

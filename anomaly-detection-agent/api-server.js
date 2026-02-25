@@ -10,10 +10,23 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3007;
 
-// Paths to output files
-const OUTPUTS_DIR = path.join(__dirname, "outputs");
+// Determine outputs directory - handle both local dev and Docker environments
+// In Docker, use /app/outputs; locally, use relative to script location
+const OUTPUTS_DIR = process.env.DOCKER_ENV === "true" || fs.existsSync("/app")
+  ? "/app/outputs"
+  : path.join(__dirname, "outputs");
+
 const INCIDENTS_JSON = path.join(OUTPUTS_DIR, "incidents_latest.json");
 const PREDICTIONS_CSV = path.join(OUTPUTS_DIR, "predictions_latest.csv");
+
+// Log paths on startup for debugging
+console.log(`[API] 📁 Initializing API server...`);
+console.log(`[API] 📁 Outputs directory: ${OUTPUTS_DIR}`);
+console.log(`[API] 📁 Incidents JSON: ${INCIDENTS_JSON}`);
+console.log(`[API] 📁 Predictions CSV: ${PREDICTIONS_CSV}`);
+console.log(`[API] 📁 DOCKER_ENV: ${process.env.DOCKER_ENV || 'not set'}`);
+console.log(`[API] 📁 Incidents file exists: ${fs.existsSync(INCIDENTS_JSON)}`);
+console.log(`[API] 📁 Predictions file exists: ${fs.existsSync(PREDICTIONS_CSV)}`);
 
 // CORS middleware
 app.use((req, res, next) => {
@@ -32,12 +45,15 @@ app.use(express.json());
 function readJsonFile(filePath) {
   try {
     if (!fs.existsSync(filePath)) {
+      console.warn(`⚠️  File not found: ${filePath}`);
       return null;
     }
     const raw = fs.readFileSync(filePath, "utf-8");
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    console.log(`✅ Successfully read ${filePath} (${raw.length} bytes)`);
+    return data;
   } catch (e) {
-    console.error(`Error reading ${filePath}:`, e);
+    console.error(`❌ Error reading ${filePath}:`, e);
     return null;
   }
 }
@@ -70,7 +86,7 @@ function readCsvFile(filePath) {
       generated_at: new Date().toISOString(),
     };
   } catch (e) {
-    console.error(`Error reading CSV ${filePath}:`, e);
+    console.error(`[API] ❌ Error reading CSV ${filePath}:`, e);
     return null;
   }
 }
@@ -87,13 +103,46 @@ app.get("/health", (req, res) => {
 
 // Get incidents
 app.get("/api/anomaly/incidents", (req, res) => {
-  const data = readJsonFile(INCIDENTS_JSON);
-  if (data === null) {
+  console.log(`[API] 📥 GET /api/anomaly/incidents - Checking: ${INCIDENTS_JSON}`);
+  
+  // Re-check file existence on each request (files might be created after server starts)
+  if (!fs.existsSync(INCIDENTS_JSON)) {
+    console.error(`[API] ❌ Incidents file not found at: ${INCIDENTS_JSON}`);
+    // List what's actually in the outputs directory
+    try {
+      if (fs.existsSync(OUTPUTS_DIR)) {
+        const files = fs.readdirSync(OUTPUTS_DIR);
+        console.log(`[API] 📂 Files in ${OUTPUTS_DIR}:`, files);
+        
+        // Check for alternative file names
+        const allFiles = files.filter(f => f.includes('incident') || f.includes('latest'));
+        if (allFiles.length > 0) {
+          console.log(`[API] ℹ️  Found related files: ${allFiles.join(', ')}`);
+        }
+      } else {
+        console.error(`[API] ❌ Outputs directory does not exist: ${OUTPUTS_DIR}`);
+      }
+    } catch (e) {
+      console.error(`[API] ❌ Error listing outputs directory:`, e);
+    }
     return res.status(404).json({
       error: "incidents_latest.json not found",
       expected_path: INCIDENTS_JSON,
+      outputs_dir: OUTPUTS_DIR,
+      timestamp: new Date().toISOString(),
     });
   }
+  
+  const data = readJsonFile(INCIDENTS_JSON);
+  if (data === null) {
+    console.error(`[API] ❌ Failed to read/parse incidents file`);
+    return res.status(500).json({
+      error: "Failed to read incidents file",
+      expected_path: INCIDENTS_JSON,
+    });
+  }
+  
+  console.log(`[API] ✅ Returning incidents data (${data.incidents?.length || 0} incidents, ${data.predicted_anomaly_count || 0} anomalies)`);
   return res.json(data);
 });
 
@@ -102,11 +151,53 @@ app.get("/api/anomaly/status", (req, res) => {
   const incidentsData = readJsonFile(INCIDENTS_JSON);
   const predictionsData = readCsvFile(PREDICTIONS_CSV);
 
+  // Check file system info
+  const incidentsExists = fs.existsSync(INCIDENTS_JSON);
+  const predictionsExists = fs.existsSync(PREDICTIONS_CSV);
+  
+  let incidentsFileInfo = null;
+  let predictionsFileInfo = null;
+  
+  if (incidentsExists) {
+    try {
+      const stats = fs.statSync(INCIDENTS_JSON);
+      incidentsFileInfo = {
+        size: stats.size,
+        modified: stats.mtime.toISOString(),
+      };
+    } catch (e) {
+      console.error(`Error getting incidents file stats:`, e);
+    }
+  }
+  
+  if (predictionsExists) {
+    try {
+      const stats = fs.statSync(PREDICTIONS_CSV);
+      predictionsFileInfo = {
+        size: stats.size,
+        modified: stats.mtime.toISOString(),
+      };
+    } catch (e) {
+      console.error(`Error getting predictions file stats:`, e);
+    }
+  }
+
   const status = {
     service: "anomaly-detection-agent",
     status: "running",
     port: PORT,
     timestamp: new Date().toISOString(),
+    paths: {
+      outputs_dir: OUTPUTS_DIR,
+      incidents_json: INCIDENTS_JSON,
+      predictions_csv: PREDICTIONS_CSV,
+    },
+    files: {
+      incidents_exists: incidentsExists,
+      predictions_exists: predictionsExists,
+      incidents_info: incidentsFileInfo,
+      predictions_info: predictionsFileInfo,
+    },
     data_available: {
       incidents: incidentsData !== null,
       predictions: predictionsData !== null,
@@ -175,14 +266,42 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Anomaly Detection Agent API running on http://localhost:${PORT}`);
-  console.log(`📁 Reading incidents from: ${INCIDENTS_JSON}`);
-  console.log(`📁 Reading predictions from: ${PREDICTIONS_CSV}`);
-  console.log(`\nAvailable endpoints:`);
-  console.log(`  GET /health`);
-  console.log(`  GET /api/anomaly/incidents`);
-  console.log(`  GET /api/anomaly/status`);
-  console.log(`  GET /api/anomaly/predictions`);
-  console.log(`  GET /api/anomaly/predictions/download`);
+  console.log(`[API] 🚀 Anomaly Detection Agent API running on http://localhost:${PORT}`);
+  console.log(`[API] 📁 Outputs directory: ${OUTPUTS_DIR}`);
+  console.log(`[API] 📁 Reading incidents from: ${INCIDENTS_JSON}`);
+  console.log(`[API] 📁 Reading predictions from: ${PREDICTIONS_CSV}`);
+  console.log(`[API] 📁 DOCKER_ENV: ${process.env.DOCKER_ENV || 'not set'}`);
+  console.log(`[API] 📁 Incidents file exists: ${fs.existsSync(INCIDENTS_JSON)}`);
+  console.log(`[API] 📁 Predictions file exists: ${fs.existsSync(PREDICTIONS_CSV)}`);
+  
+  // List files in outputs directory if it exists
+  if (fs.existsSync(OUTPUTS_DIR)) {
+    try {
+      const files = fs.readdirSync(OUTPUTS_DIR);
+      console.log(`[API] 📂 Files in outputs directory: ${files.join(', ')}`);
+      
+      // Check for incidents file specifically
+      if (files.includes('incidents_latest.json')) {
+        const stats = fs.statSync(INCIDENTS_JSON);
+        console.log(`[API] ✅ Found incidents_latest.json (${stats.size} bytes, modified: ${stats.mtime.toISOString()})`);
+      }
+      if (files.includes('predictions_latest.csv')) {
+        const stats = fs.statSync(PREDICTIONS_CSV);
+        console.log(`[API] ✅ Found predictions_latest.csv (${stats.size} bytes, modified: ${stats.mtime.toISOString()})`);
+      }
+    } catch (e) {
+      console.error(`[API] ❌ Error listing outputs directory:`, e);
+    }
+  } else {
+    console.warn(`[API] ⚠️  Outputs directory does not exist: ${OUTPUTS_DIR}`);
+  }
+  
+  console.log(`[API] \nAvailable endpoints:`);
+  console.log(`[API]   GET /health`);
+  console.log(`[API]   GET /api/anomaly/incidents`);
+  console.log(`[API]   GET /api/anomaly/status`);
+  console.log(`[API]   GET /api/anomaly/predictions`);
+  console.log(`[API]   GET /api/anomaly/predictions/download`);
+  console.log(`[API] ✅ API server ready and listening on port ${PORT}`);
 });
 

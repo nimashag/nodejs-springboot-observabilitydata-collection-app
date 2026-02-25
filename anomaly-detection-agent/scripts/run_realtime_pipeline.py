@@ -26,7 +26,14 @@ if sys.platform == "win32":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 
-ROOT = Path(__file__).resolve().parents[1]
+# Determine ROOT - handle both local dev and Docker environments
+_script_path = Path(__file__).resolve()
+if os.getenv("DOCKER_ENV") == "true" or Path("/app").exists():
+    # In Docker, working directory is /app
+    ROOT = Path("/app")
+else:
+    # Local development - use relative path from script
+    ROOT = _script_path.parents[1]
 
 # Use 'python' on Windows, 'python3' on Unix-like systems
 PYTHON_CMD = "python" if sys.platform == "win32" else "python3"
@@ -47,10 +54,17 @@ def run_once(model_path: str, with_threshold_label: bool) -> None:
     if with_threshold_label:
         run_step([PYTHON_CMD, "scripts/threshold_label.py"])
 
+    # Resolve paths to absolute if in Docker
+    input_csv = "data/merged/logs_with_metrics_clean.csv"
+    if os.getenv("DOCKER_ENV") == "true" or Path("/app").exists():
+        input_csv = str(ROOT / input_csv)
+        if not Path(model_path).is_absolute():
+            model_path = str(ROOT / model_path)
+
     run_step([
         PYTHON_CMD,
         "scripts/rf_predict_incidents.py",
-        "data/merged/logs_with_metrics_clean.csv",
+        input_csv,
         model_path,
     ])
 
@@ -63,9 +77,14 @@ def main() -> None:
         default=2,
         help="Loop interval in seconds (default: 2)",
     )
+    # Set default model path based on environment
+    default_model = "model_experiments/models/random_forest/rf_model.pkl"
+    if os.getenv("DOCKER_ENV") == "true" or Path("/app").exists():
+        default_model = str(ROOT / default_model)
+    
     parser.add_argument(
         "--model",
-        default="model_experiments/models/random_forest/rf_model.pkl",
+        default=default_model,
         help="Path to trained RF model",
     )
     parser.add_argument(
