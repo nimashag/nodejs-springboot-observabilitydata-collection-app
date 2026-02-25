@@ -1,0 +1,11 @@
+{
+  "name": "anomaly-detection-agent",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "python3 scripts/run_realtime_pipeline.py --once",
+    "start:once": "python3 scripts/run_realtime_pipeline.py --once",
+    "start:watch": "python3 scripts/run_realtime_pipeline.py --interval 2",
+    "start:no-email": "ANOMALY_SEND_EMAIL=0 python3 scripts/run_realtime_pipeline.py --interval 2"
+  }
+}

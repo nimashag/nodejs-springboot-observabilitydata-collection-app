@@ -1,121 +1,473 @@
 {
-  "generated_at": "2026-02-22T06:16:36.454970Z",
-  "input_csv": "data/test/logs_test.csv",
+  "generated_at": "2026-02-23T17:30:48.553954Z",
+  "input_csv": "data/merged/logs_with_metrics_clean.csv",
   "model_path": "model_experiments/models/random_forest/rf_model.pkl",
-  "total_rows": 10,
-  "predicted_anomaly_count": 5,
-  "predicted_normal_count": 5,
-  "predicted_anomaly_request_count": 5,
+  "total_rows": 454,
+  "predicted_anomaly_count": 156,
+  "predicted_normal_count": 298,
+  "predicted_anomaly_request_count": 24,
   "incident_story": {
     "title": "Incident Story (Auto-Generated)",
-    "summary": "5 anomalous request(s) detected. Most impacted service: restaurants-service.",
+    "summary": "24 anomalous request(s) detected. Most impacted service: restaurants-service.",
     "top_services": [
       [
         "restaurants-service",
-        4
+        21
       ],
       [
         "orders-service",
-        1
+        3
       ]
     ],
     "top_events": [
       [
-        "restaurant.list.start",
-        2
+        "http.request.received",
+        24
       ],
       [
-        "http.request.completed",
-        1
+        "http.request.completed.success",
+        23
       ],
       [
-        "jvm.gc.pause",
-        1
+        "restaurant.getOne.start",
+        11
       ],
       [
-        "memory.pressure",
-        1
+        "restaurant.service.get_by_id.start",
+        11
+      ],
+      [
+        "restaurant.service.get_by_id.success",
+        10
       ]
     ],
     "top_status_codes": [
       [
         "304",
-        2
-      ],
-      [
-        "502",
-        1
-      ],
-      [
-        "500",
-        1
+        20
       ],
       [
         "200",
+        3
+      ],
+      [
+        "500",
         1
       ]
     ]
   },
   "incidents": [
     {
-      "request_id": "4baca0ab-c3fa-415b-981a-64ea28786c31",
-      "service": "orders-service",
-      "status_code": 502,
-      "level": "error",
-      "level_encoded": 3,
-      "events": [
-        "http.request.completed"
-      ],
-      "reason": "duration_ms>=3000;cpu>=80;status_code>=500",
-      "row_count": 1
-    },
-    {
-      "request_id": "51ae920e-e382-497e-a208-21af98549759",
+      "request_id": "872124ef-d8e1-4b0d-bfbe-2d35114e426a",
       "service": "restaurants-service",
       "status_code": 500,
       "level": "error",
       "level_encoded": 3,
       "events": [
-        "jvm.gc.pause"
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.error",
+        "restaurant.getOne.error",
+        "http.request.completed.error"
       ],
-      "reason": "duration_ms>=3000;db_query_time_ms>=300;status_code>=500",
-      "row_count": 1
+      "reason": "duration_ms>=3000;cpu>=80;status_code>=500",
+      "row_count": 6
     },
     {
-      "request_id": "6361e320-77d3-4704-a406-9d33726957c0",
+      "request_id": "1b076375-e218-45e7-9ab1-b2172900c33f",
       "service": "restaurants-service",
       "status_code": 304,
       "level": "info",
       "level_encoded": 1,
       "events": [
-        "restaurant.list.start"
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
       ],
-      "reason": "db_query_time_ms>=300",
-      "row_count": 1
+      "reason": "cpu>=80",
+      "row_count": 6
     },
     {
-      "request_id": "6361e320-77d3-4704-a406-9d33726957c1",
+      "request_id": "9040dcc8-0968-458c-990e-515e98246a33",
       "service": "restaurants-service",
       "status_code": 304,
       "level": "info",
       "level_encoded": 1,
       "events": [
-        "restaurant.list.start"
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
       ],
-      "reason": "db_query_time_ms>=300",
-      "row_count": 1
+      "reason": "cpu>=80",
+      "row_count": 6
     },
     {
-      "request_id": "4258b3fc-01b3-4a6a-9072-59de121a6599",
+      "request_id": "102dea4b-b9dc-429d-84cf-4cd1e908c5f1",
       "service": "restaurants-service",
-      "status_code": 200,
-      "level": "warn",
-      "level_encoded": 2,
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
       "events": [
-        "memory.pressure"
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "361272f0-d10f-44b9-989f-a014e6184ad5",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "aa9af4f6-ab7a-4e76-a887-576a4d371c90",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "de36c457-0e83-4320-b9f4-84bf1d7d5fb9",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "1ab3557a-139b-4632-8c72-59674236c749",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "1790f843-0c9b-42ba-8ecc-7dcc1d0dd6fa",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "ce4fd5d6-6ad6-44ac-9231-06d74ac95504",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "fa78f7db-dd5e-4643-879e-72edce310f70",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "064b2b81-990d-4692-929d-c6d239ccc970",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "b1602887-9b48-463a-9863-71b1f023aef0",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "e107a94f-007e-49a7-bd41-0fb3c6764ece",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "3320f7bc-e06a-42e9-9457-e4fee8e1ebc7",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "3595db11-b2e0-443f-a440-fa4f25eb140e",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "24b5f65c-b74d-4c8b-9861-731745f06300",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "d7edf59b-f93a-461f-b4a3-8008a2aa037c",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "3a187a60-38df-48a1-aa8f-eafc822cf529",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "a1f9095a-3911-4d73-ba07-5012e0f5fb29",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "restaurant.getOne.start",
+        "restaurant.service.get_by_id.start",
+        "restaurant.service.get_by_id.success",
+        "restaurant.getOne.found",
+        "http.request.completed.success"
       ],
       "reason": "duration_ms>=3000;cpu>=80",
-      "row_count": 1
+      "row_count": 6
+    },
+    {
+      "request_id": "e82f073a-1d41-4ab4-a520-ef491af0b30f",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "menuItem.list.start",
+        "menuitem.service.list.start",
+        "menuitem.service.list.success",
+        "menuItem.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "duration_ms>=3000;cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "c1fc1f5f-b8f7-4f53-bc3d-33c6bbe5fe3a",
+      "service": "orders-service",
+      "status_code": 200,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "order.list.start",
+        "order.service.get_all.start",
+        "order.service.get_all.success",
+        "order.list.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
+    },
+    {
+      "request_id": "98f0b697-fbb3-49f8-bb40-af670c558a45",
+      "service": "orders-service",
+      "status_code": 200,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "http.request.completed.success",
+        "auth.token_validated",
+        "authorize.access_granted",
+        "order.create.start",
+        "order.create.fetching_menu_items",
+        "api.restaurant.fetch_menu_items.start",
+        "api.restaurant.fetch_menu_items.success",
+        "order.create.menu_items_fetched",
+        "order.service.create.start"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 18
+    },
+    {
+      "request_id": "5a2ce905-f021-466d-a225-1ea9d138724c",
+      "service": "orders-service",
+      "status_code": 200,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "auth.token_validated",
+        "authorize.access_granted",
+        "payment.intent.create.start",
+        "payment.intent.create.success",
+        "http.request.completed.success"
+      ],
+      "reason": "cpu>=80",
+      "row_count": 6
     }
   ]
 }

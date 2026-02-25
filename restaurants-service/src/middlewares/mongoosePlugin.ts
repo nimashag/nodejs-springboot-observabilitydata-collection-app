@@ -2,13 +2,7 @@
 // TypeScript errors here are expected - mongoose types will be available when integrated into services
 // @ts-ignore - mongoose types available in service context
 import mongoose from 'mongoose';
-import { trackDbQuery } from './metricsMiddleware';
-
-// Declare global for requestId storage
-declare global {
-  // eslint-disable-next-line no-var
-  var currentRequestId: string | undefined;
-}
+import { getCurrentRequestId, trackDbQuery } from './metricsMiddleware';
 
 /**
  * Mongoose plugin to track database query execution time per request
@@ -20,25 +14,23 @@ declare global {
  */
 
 export function mongooseQueryTracker(schema: mongoose.Schema): void {
+  const resolveRequestId = (context: any): string | undefined =>
+    context?.getOptions?.()?.requestId ||
+    context?.requestId ||
+    getCurrentRequestId();
+
   // Track queries (as any: Mongoose types can be restrictive for array of methods)
   schema.pre(['find', 'findOne', 'findOneAndUpdate', 'findOneAndDelete', 'count', 'countDocuments', 'distinct'] as any, function() {
     const startTime = Date.now();
     const query = this as any;
-    
-    // Get requestId from query context if available
-    const requestId = query.getOptions?.()?.requestId || 
-                     (query as any).requestId ||
-                     (typeof global !== 'undefined' ? (global as any).currentRequestId : undefined);
-    
-    if (requestId) {
-      query._metricsStartTime = startTime;
-      query._metricsRequestId = requestId;
-    }
+
+    query._metricsStartTime = startTime;
+    query._metricsRequestId = resolveRequestId(query);
   });
 
   schema.post(['find', 'findOne', 'findOneAndUpdate', 'findOneAndDelete', 'count', 'countDocuments', 'distinct'] as any, function() {
     const query = this as any;
-    if (query._metricsStartTime && query._metricsRequestId) {
+    if (query._metricsStartTime) {
       const queryTime = Date.now() - query._metricsStartTime;
       trackDbQuery(query._metricsRequestId, queryTime);
     }
@@ -48,19 +40,14 @@ export function mongooseQueryTracker(schema: mongoose.Schema): void {
   schema.pre('save', function() {
     const doc = this as any;
     const startTime = Date.now();
-    const requestId = doc.getOptions?.()?.requestId || 
-                     doc.requestId ||
-                     (typeof global !== 'undefined' ? (global as any).currentRequestId : undefined);
-    
-    if (requestId) {
-      doc._metricsStartTime = startTime;
-      doc._metricsRequestId = requestId;
-    }
+
+    doc._metricsStartTime = startTime;
+    doc._metricsRequestId = resolveRequestId(doc);
   });
 
   schema.post('save', function() {
     const doc = this as any;
-    if (doc._metricsStartTime && doc._metricsRequestId) {
+    if (doc._metricsStartTime) {
       const queryTime = Date.now() - doc._metricsStartTime;
       trackDbQuery(doc._metricsRequestId, queryTime);
     }
@@ -70,19 +57,14 @@ export function mongooseQueryTracker(schema: mongoose.Schema): void {
   schema.pre(['deleteOne', 'deleteMany', 'remove'] as any, function() {
     const query = this as any;
     const startTime = Date.now();
-    const requestId = query.getOptions?.()?.requestId || 
-                     (query as any).requestId ||
-                     (typeof global !== 'undefined' ? (global as any).currentRequestId : undefined);
-    
-    if (requestId) {
-      query._metricsStartTime = startTime;
-      query._metricsRequestId = requestId;
-    }
+
+    query._metricsStartTime = startTime;
+    query._metricsRequestId = resolveRequestId(query);
   });
 
   schema.post(['deleteOne', 'deleteMany', 'remove'] as any, function() {
     const query = this as any;
-    if (query._metricsStartTime && query._metricsRequestId) {
+    if (query._metricsStartTime) {
       const queryTime = Date.now() - query._metricsStartTime;
       trackDbQuery(query._metricsRequestId, queryTime);
     }
@@ -96,21 +78,9 @@ export function enhanceMongooseWithRequestId(req: any, res: any, next: any): voi
   const requestId = req.get?.('X-Request-Id') || req.headers?.['x-request-id'] || (req as any).metricsRequestId;
   
   if (requestId) {
-    // Store in global context for mongoose to access
-    if (typeof global !== 'undefined') {
-      (global as any).currentRequestId = requestId;
-    }
-    
-    // Also store in request for direct access
+    // Keep requestId on req for compatibility with existing handlers.
     (req as any).metricsRequestId = requestId;
   }
-  
-  res.on('finish', () => {
-    if (typeof global !== 'undefined') {
-      delete (global as any).currentRequestId;
-    }
-  });
-  
+
   next();
 }
-

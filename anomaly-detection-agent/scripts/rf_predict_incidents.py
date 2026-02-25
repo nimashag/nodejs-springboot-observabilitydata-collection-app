@@ -4,11 +4,12 @@ import joblib
 import pandas as pd
 from pathlib import Path
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 import requests
+import os
 
 # ---------------- CONFIG ----------------
-DEFAULT_INPUT_CSV = "data/test/logs_test.csv"
+DEFAULT_INPUT_CSV = "data/merged/logs_with_metrics_clean.csv"
 DEFAULT_MODEL_PATH = "model_experiments/models/random_forest/rf_model.pkl"
 
 OUT_DIR = Path("outputs")
@@ -21,7 +22,7 @@ FEATURE_LEVEL = "level"
 LEVEL_MAP = {"debug": 0, "info": 1, "warn": 2, "warning": 2, "error": 3, "fatal": 4}
 
 EMAIL_SERVICE_URL = "http://localhost:4000/v1/email/send"
-SEND_EMAIL = True
+SEND_EMAIL = os.getenv("ANOMALY_SEND_EMAIL", "1").strip().lower() not in {"0", "false", "no"}
 MIN_INCIDENTS_TO_EMAIL = 1
 # ----------------------------------------
 
@@ -250,7 +251,7 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
     incidents = sorted(incidents, key=lambda x: x["status_code"], reverse=True)
 
     payload = {
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "input_csv": str(input_path),
         "model_path": str(model_file),
         "total_rows": total,
