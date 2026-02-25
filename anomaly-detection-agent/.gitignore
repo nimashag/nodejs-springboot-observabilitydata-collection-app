@@ -1,0 +1,186 @@
+# Python
+# ======
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.manifest
+*.spec
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# pyenv
+.python-version
+
+# Environments
+.env
+.env.local
+.venv
+.venv.local
+
+
+# Node.js
+# =======
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.npm
+.yarn-integrity
+package-lock.json
+
+
+# Machine Learning / Data
+# ========================
+# Generated output files
+outputs/
+!outputs/.gitkeep
+
+# Data directories (often large/temporary)
+data/raw/*
+data/processed/*
+data/test/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/test/.gitkeep
+
+# Keep CSV/merged structure but ignore contents
+data/csv/*
+data/merged/*
+data/metrics/*
+!data/csv/.gitkeep
+!data/merged/.gitkeep
+!data/metrics/.gitkeep
+
+# Trained models (can be large)
+models/*.joblib
+models/*.pkl
+models/*.h5
+models/*.pt
+models/*.pth
+!models/.gitkeep
+
+# Model experiments
+model_experiments/
+!model_experiments/.gitkeep
+
+
+# IDEs and Editors
+# ================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+
+# Operating System
+# ================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+
+# Logs and temporary files
+# =========================
+*.log
+logs/
+*.tmp
+*.temp
+*.bak
+*.swp
+
+
+# Project-specific
+# ================
+# Keep README and documentation
+!README.md
+!QUICKSTART.md
+!SETUP_GUIDE.md
+!requirements.txt
+
+# Keep scripts directory structure
+!scripts/
+!scripts/*.py
+
+# API server
+!api-server.js
+!package.json
