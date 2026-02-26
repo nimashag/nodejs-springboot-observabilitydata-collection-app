@@ -99,8 +99,15 @@ export default function AnomalyDashboard() {
       setIsFetching(true);
       setError(null);
       const payload = await fetchIncidents();
+      console.log('[AnomalyDashboard] ✅ Data loaded:', {
+        total_rows: payload.total_rows,
+        predicted_anomaly_count: payload.predicted_anomaly_count,
+        incidents_count: payload.incidents?.length || 0,
+        has_incidents: (payload.incidents?.length || 0) > 0,
+      });
       setData(payload);
     } catch (err) {
+      console.error('[AnomalyDashboard] ❌ Error loading data:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch incidents');
     } finally {
       setIsLoading(false);

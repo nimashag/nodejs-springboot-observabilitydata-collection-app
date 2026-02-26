@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-02-25T17:04:26.948073Z",
-  "input_csv": "data\\merged\\logs_with_metrics_clean.csv",
-  "model_path": "model_experiments\\models\\random_forest\\rf_model.pkl",
-  "total_rows": 40,
+  "generated_at": "2026-02-26T04:31:29.095090Z",
+  "input_csv": "data/merged/logs_with_metrics_clean.csv",
+  "model_path": "model_experiments/models/random_forest/rf_model.pkl",
+  "total_rows": 76,
   "predicted_anomaly_count": 9,
-  "predicted_normal_count": 31,
+  "predicted_normal_count": 67,
   "predicted_anomaly_request_count": 2,
   "incident_story": {
     "title": "Incident Story (Auto-Generated)",

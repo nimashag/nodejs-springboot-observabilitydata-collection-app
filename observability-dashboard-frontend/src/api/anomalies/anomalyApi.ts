@@ -3,7 +3,7 @@ import type { IncidentsPayload } from "../../types/anomalies/anomaly.types";
 
 // Dynamically determine API base URL based on current hostname
 // This works for both local development and remote deployments (EC2, etc.)
-function getAnomalyApiBaseUrl(): string {
+function getApiBaseUrl(): string {
   // If explicitly set via environment variable, use it
   if (import.meta.env.VITE_ANOMALY_API_URL) {
     return import.meta.env.VITE_ANOMALY_API_URL;
@@ -28,9 +28,8 @@ function getAnomalyApiBaseUrl(): string {
   // For Docker deployments or when accessing through nginx gateway ports
   // Use nginx gateway (port 31000) which proxies to anomaly-detection-agent
   if (hostname === "localhost" || hostname === "127.0.0.1") {
-    // When accessing via Docker-exposed frontend port (30011) or dev port (3009), use direct service
-    // For local dev on port 3009, connect directly to anomaly service on port 3007
-    return "http://localhost:3007";
+    // When accessing via Docker-exposed frontend port (30011), use nginx gateway
+    return "http://localhost:31000";
   }
 
   // For remote deployments (EC2, etc.), use nginx gateway on the same host
@@ -53,7 +52,7 @@ function getAnomalyApiBaseUrl(): string {
   return apiUrl;
 }
 
-const API_BASE_URL = getAnomalyApiBaseUrl();
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -104,31 +103,95 @@ api.interceptors.response.use(
   },
 );
 
-// Health check
-export const checkHealth = async () => {
-  const response = await api.get("/health");
-  return response.data;
+export const anomalyApiService = {
+  // Health check
+  healthCheck: async () => {
+    const response = await api.get("/health");
+    return response.data;
+  },
+
+  // Fetch incidents from anomaly detection agent
+  getIncidents: async (): Promise<IncidentsPayload> => {
+    try {
+      const response = await api.get<IncidentsPayload>(
+        "/api/anomaly/incidents",
+      );
+      console.log("[AnomalyAPI] ✅ Successfully fetched incidents:", {
+        total_rows: response.data.total_rows,
+        predicted_anomaly_count: response.data.predicted_anomaly_count,
+        incidents_count: response.data.incidents?.length || 0,
+        generated_at: response.data.generated_at,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error("[AnomalyAPI] ❌ Error fetching incidents:", error);
+      if (error.response) {
+        throw new Error(
+          `Server error: ${error.response.status} - ${error.response.statusText}`,
+        );
+      } else if (error.request) {
+        throw new Error(
+          "Network error: Unable to reach the server. Please check if the anomaly-detection-agent service is running.",
+        );
+      } else {
+        throw new Error(error.message || "Failed to load incidents");
+      }
+    }
+  },
+
+  // Get service status
+  getStatus: async () => {
+    try {
+      const response = await api.get("/api/anomaly/status");
+      return response.data;
+    } catch (error: any) {
+      console.error("Error fetching status:", error);
+      if (error.response) {
+        throw new Error(
+          `Server error: ${error.response.status} - ${error.response.statusText}`,
+        );
+      } else if (error.request) {
+        throw new Error(
+          "Network error: Unable to reach the server. Please check if the anomaly-detection-agent service is running.",
+        );
+      } else {
+        throw new Error(error.message || "Failed to load status");
+      }
+    }
+  },
+
+  // Get predictions summary
+  getPredictions: async () => {
+    try {
+      const response = await api.get("/api/anomaly/predictions");
+      return response.data;
+    } catch (error: any) {
+      console.error("Error fetching predictions:", error);
+      if (error.response) {
+        throw new Error(
+          `Server error: ${error.response.status} - ${error.response.statusText}`,
+        );
+      } else if (error.request) {
+        throw new Error(
+          "Network error: Unable to reach the server. Please check if the anomaly-detection-agent service is running.",
+        );
+      } else {
+        throw new Error(error.message || "Failed to load predictions");
+      }
+    }
+  },
+
+  // Download predictions CSV
+  downloadPredictions: () => {
+    window.open(`${API_BASE_URL}/api/anomaly/predictions/download`, "_blank");
+  },
 };
 
-// Fetch incidents from anomaly detection agent
-export async function fetchIncidents(): Promise<IncidentsPayload> {
-  const response = await api.get<IncidentsPayload>("/api/incidents");
-  return response.data;
-}
+// Legacy exports for backward compatibility
+export const checkHealth = anomalyApiService.healthCheck;
+export const fetchIncidents = anomalyApiService.getIncidents;
+export const getStatus = anomalyApiService.getStatus;
+export const getPredictions = anomalyApiService.getPredictions;
+export const downloadPredictions = anomalyApiService.downloadPredictions;
 
-// Get service status
-export const getStatus = async () => {
-  const response = await api.get("/api/status");
-  return response.data;
-};
-
-// Get predictions summary
-export const getPredictions = async () => {
-  const response = await api.get("/api/predictions");
-  return response.data;
-};
-
-// Download predictions CSV
-export const downloadPredictions = () => {
-  window.open(`${API_BASE_URL}/api/predictions/download`, "_blank");
-};
+export default api;
