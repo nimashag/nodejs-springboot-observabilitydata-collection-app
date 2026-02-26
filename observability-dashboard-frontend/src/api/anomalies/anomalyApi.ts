@@ -5,9 +5,9 @@ import type { IncidentsPayload } from "../../types/anomalies/anomaly.types";
 // This works for both local development and remote deployments (EC2, etc.)
 function getApiBaseUrl(): string {
   // If explicitly set via environment variable, use it
-  if (import.meta.env.VITE_ANOMALY_API_URL) {
-    return import.meta.env.VITE_ANOMALY_API_URL;
-  }
+  // if (import.meta.env.VITE_ANOMALY_API_URL) {
+  //   return import.meta.env.VITE_ANOMALY_API_URL;
+  // }
 
   // Get current hostname, protocol, and port from the browser
   const { protocol, hostname, port } = window.location;

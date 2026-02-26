@@ -54,6 +54,14 @@ EXPOSE 3007
 ENV PYTHONIOENCODING=utf-8
 ENV NODE_ENV=production
 
-# Start both pipeline and API server concurrently
-CMD ["npm", "run", "dev:no-email"]
+# Start command - check RUN_PIPELINE env var to decide whether to run pipeline
+# If RUN_PIPELINE=false, run only API server
+# Otherwise, run both pipeline and API server concurrently
+CMD sh -c 'if [ "$RUN_PIPELINE" = "false" ]; then \
+        echo "Running API server only (RUN_PIPELINE=false)"; \
+        npm run api-only; \
+    else \
+        echo "Running pipeline and API server (RUN_PIPELINE=true or not set)"; \
+        npm run dev:no-email; \
+    fi'
 

@@ -225,8 +225,12 @@ services:
       - ANOMALY_SEND_EMAIL=${ANOMALY_SEND_EMAIL:-0}
       - EMAIL_SERVICE_URL=http://email-service:4000/v1/email/send
       - DOCKER_ENV=true
+      # Set RUN_PIPELINE=false to run only the API server (useful when you want to use existing data)
+      # Change to false to prevent pipeline from overwriting your data files
+      - RUN_PIPELINE=${RUN_PIPELINE:-false}
     volumes:
-      - ~/temp/docker-files/anomaly-detection-agent/outputs:/app/outputs
+      # Mount local outputs directory so both Docker and local environments use the same files
+      - ../anomaly-detection-agent/outputs:/app/outputs
       - ~/temp/docker-files/anomaly-detection-agent/data:/app/data
       # Model experiments: Only mount if you want to override models from the image
       # If the directory doesn't exist on host, the image's models will be used

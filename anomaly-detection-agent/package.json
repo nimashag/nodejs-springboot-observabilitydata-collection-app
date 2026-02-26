@@ -12,7 +12,8 @@
     "api:dev": "node api-server.js",
     "api:stop": "powershell -Command \"$pid = (Get-NetTCPConnection -LocalPort 3007 -ErrorAction SilentlyContinue).OwningProcess; if ($pid) { Stop-Process -Id $pid -Force; Write-Host 'Stopped API server on port 3007' } else { Write-Host 'No process found on port 3007' }\"",
     "dev": "concurrently --kill-others-on-fail --names \"PIPELINE,API\" --prefix-colors \"cyan,green\" \"npm run start:watch\" \"npm run api\"",
-    "dev:no-email": "concurrently --kill-others-on-fail --names \"PIPELINE,API\" --prefix-colors \"cyan,green\" \"npm run start:no-email\" \"npm run api\""
+    "dev:no-email": "concurrently --kill-others-on-fail --names \"PIPELINE,API\" --prefix-colors \"cyan,green\" \"npm run start:no-email\" \"npm run api\"",
+    "api-only": "node api-server.js"
   },
   "dependencies": {
     "express": "^4.19.2",

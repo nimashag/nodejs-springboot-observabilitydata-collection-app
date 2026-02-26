@@ -10,25 +10,12 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3007;
 
-// Determine outputs directory - handle both local dev and Docker environments
-// In Docker, use /app/outputs; locally, use relative to script location
-let OUTPUTS_DIR;
-if (process.env.DOCKER_ENV === "true") {
-  // Explicitly set Docker environment
-  OUTPUTS_DIR = "/app/outputs";
-} else if (fs.existsSync("/app") && fs.existsSync("/app/outputs")) {
-  // Check if /app exists and has outputs directory (Docker container)
-  OUTPUTS_DIR = "/app/outputs";
-} else {
-  // Local development - use path relative to api-server.js location
-  OUTPUTS_DIR = path.join(__dirname, "outputs");
-  // Normalize path separators for Windows
-  OUTPUTS_DIR = path.normalize(OUTPUTS_DIR);
-  
-  // Resolve to absolute path for better debugging
-  OUTPUTS_DIR = path.resolve(OUTPUTS_DIR);
-}
-
+// Determine outputs directory using relative path from __dirname
+// This pattern matches how log-aggregation-service and alert-agent-data-collect-service work
+// Works in both Docker and local environments:
+// - Docker: __dirname is /app, so outputs becomes /app/outputs (matches volume mount)
+// - Local: __dirname is anomaly-detection-agent, so outputs becomes anomaly-detection-agent/outputs
+const OUTPUTS_DIR = path.join(__dirname, "outputs");
 const INCIDENTS_JSON = path.join(OUTPUTS_DIR, "incidents_latest.json");
 const PREDICTIONS_CSV = path.join(OUTPUTS_DIR, "predictions_latest.csv");
 
@@ -53,46 +40,6 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-
-// Helper function to find incidents file in multiple possible locations
-function findIncidentsFile() {
-  const possiblePaths = [
-    INCIDENTS_JSON, // Primary path (already determined)
-  ];
-  
-  // Add alternative paths for local development
-  if (process.env.DOCKER_ENV !== "true" && !fs.existsSync("/app")) {
-    // Local development - try relative to current working directory
-    const cwdOutputs = path.join(process.cwd(), "anomaly-detection-agent", "outputs", "incidents_latest.json");
-    possiblePaths.push(path.resolve(cwdOutputs));
-    
-    // Try relative to __dirname (already in primary, but ensure it's absolute)
-    const dirnameOutputs = path.resolve(__dirname, "outputs", "incidents_latest.json");
-    if (!possiblePaths.includes(dirnameOutputs)) {
-      possiblePaths.push(dirnameOutputs);
-    }
-  }
-  
-  // Try Docker path if not already in list
-  const dockerPath = "/app/outputs/incidents_latest.json";
-  if (!possiblePaths.includes(dockerPath)) {
-    possiblePaths.push(dockerPath);
-  }
-  
-  // Try each path and return the first one that exists
-  for (const filePath of possiblePaths) {
-    if (fs.existsSync(filePath)) {
-      console.log(`[API] ✅ Found incidents file at: ${filePath}`);
-      return filePath;
-    }
-  }
-  
-  // Log all attempted paths for debugging
-  console.log(`[API] ❌ Incidents file not found in any of these locations:`);
-  possiblePaths.forEach(p => console.log(`[API]    - ${p}`));
-  
-  return null;
-}
 
 // Helper function to read JSON file safely
 function readJsonFile(filePath) {
@@ -156,24 +103,16 @@ app.get("/health", (req, res) => {
 
 // Get incidents
 app.get("/api/anomaly/incidents", (req, res) => {
-  console.log(`[API] 📥 GET /api/anomaly/incidents - Primary path: ${INCIDENTS_JSON}`);
-  
-  // Try to find the incidents file in multiple possible locations
-  const incidentsFilePath = findIncidentsFile();
-  
-  if (!incidentsFilePath) {
-    console.error(`[API] ❌ Incidents file not found in any location`);
-    // List what's actually in the outputs directory
+  console.log(`[API] 📥 GET /api/anomaly/incidents`);
+
+  const data = readJsonFile(INCIDENTS_JSON);
+  if (data === null) {
+    console.error(`[API] ❌ Failed to read/parse incidents file from: ${INCIDENTS_JSON}`);
+    // List what's actually in the outputs directory for debugging
     try {
       if (fs.existsSync(OUTPUTS_DIR)) {
         const files = fs.readdirSync(OUTPUTS_DIR);
         console.log(`[API] 📂 Files in ${OUTPUTS_DIR}:`, files);
-        
-        // Check for alternative file names
-        const allFiles = files.filter(f => f.includes('incident') || f.includes('latest'));
-        if (allFiles.length > 0) {
-          console.log(`[API] ℹ️  Found related files: ${allFiles.join(', ')}`);
-        }
       } else {
         console.error(`[API] ❌ Outputs directory does not exist: ${OUTPUTS_DIR}`);
       }
@@ -187,19 +126,10 @@ app.get("/api/anomaly/incidents", (req, res) => {
       timestamp: new Date().toISOString(),
     });
   }
-  
-  const data = readJsonFile(incidentsFilePath);
-  if (data === null) {
-    console.error(`[API] ❌ Failed to read/parse incidents file from: ${incidentsFilePath}`);
-    return res.status(500).json({
-      error: "Failed to read incidents file",
-      expected_path: incidentsFilePath,
-    });
-  }
-  
+
   // Log the actual data being returned for debugging
   console.log(`[API] ✅ Returning incidents data:`);
-  console.log(`[API]    - File path: ${incidentsFilePath}`);
+  console.log(`[API]    - File path: ${INCIDENTS_JSON}`);
   console.log(`[API]    - total_rows: ${data.total_rows}`);
   console.log(`[API]    - predicted_anomaly_count: ${data.predicted_anomaly_count}`);
   console.log(`[API]    - predicted_normal_count: ${data.predicted_normal_count}`);
@@ -210,20 +140,19 @@ app.get("/api/anomaly/incidents", (req, res) => {
 
 // Get service status
 app.get("/api/anomaly/status", (req, res) => {
-  const incidentsFilePath = findIncidentsFile() || INCIDENTS_JSON;
-  const incidentsData = readJsonFile(incidentsFilePath);
+  const incidentsData = readJsonFile(INCIDENTS_JSON);
   const predictionsData = readCsvFile(PREDICTIONS_CSV);
 
   // Check file system info
-  const incidentsExists = fs.existsSync(incidentsFilePath);
+  const incidentsExists = fs.existsSync(INCIDENTS_JSON);
   const predictionsExists = fs.existsSync(PREDICTIONS_CSV);
-  
+
   let incidentsFileInfo = null;
   let predictionsFileInfo = null;
-  
+
   if (incidentsExists) {
     try {
-      const stats = fs.statSync(incidentsFilePath);
+      const stats = fs.statSync(INCIDENTS_JSON);
       incidentsFileInfo = {
         size: stats.size,
         modified: stats.mtime.toISOString(),
@@ -232,7 +161,7 @@ app.get("/api/anomaly/status", (req, res) => {
       console.error(`Error getting incidents file stats:`, e);
     }
   }
-  
+
   if (predictionsExists) {
     try {
       const stats = fs.statSync(PREDICTIONS_CSV);
@@ -252,7 +181,7 @@ app.get("/api/anomaly/status", (req, res) => {
     timestamp: new Date().toISOString(),
     paths: {
       outputs_dir: OUTPUTS_DIR,
-      incidents_json: incidentsFilePath,
+      incidents_json: INCIDENTS_JSON,
       predictions_csv: PREDICTIONS_CSV,
     },
     files: {
@@ -271,11 +200,11 @@ app.get("/api/anomaly/status", (req, res) => {
     },
     stats: incidentsData
       ? {
-          total_rows: incidentsData.total_rows || 0,
-          predicted_anomaly_count: incidentsData.predicted_anomaly_count || 0,
-          predicted_normal_count: incidentsData.predicted_normal_count || 0,
-          incidents_count: incidentsData.incidents?.length || 0,
-        }
+        total_rows: incidentsData.total_rows || 0,
+        predicted_anomaly_count: incidentsData.predicted_anomaly_count || 0,
+        predicted_normal_count: incidentsData.predicted_normal_count || 0,
+        incidents_count: incidentsData.incidents?.length || 0,
+      }
       : null,
   };
 
@@ -331,59 +260,41 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`[API] 🚀 Anomaly Detection Agent API running on http://localhost:${PORT}`);
   console.log(`[API] 📁 Outputs directory: ${OUTPUTS_DIR}`);
-  console.log(`[API] 📁 Primary incidents path: ${INCIDENTS_JSON}`);
-  console.log(`[API] 📁 Reading predictions from: ${PREDICTIONS_CSV}`);
-  console.log(`[API] 📁 DOCKER_ENV: ${process.env.DOCKER_ENV || 'not set'}`);
-  
-  // Try to find the incidents file and show which one will be used
-  const foundIncidentsFile = findIncidentsFile();
-  if (foundIncidentsFile) {
-    console.log(`[API] ✅ Will use incidents file: ${foundIncidentsFile}`);
+  console.log(`[API] 📁 Incidents path: ${INCIDENTS_JSON}`);
+  console.log(`[API] 📁 Predictions path: ${PREDICTIONS_CSV}`);
+
+  // Check if files exist and log their info
+  if (fs.existsSync(INCIDENTS_JSON)) {
     try {
-      const stats = fs.statSync(foundIncidentsFile);
-      console.log(`[API]    File size: ${stats.size} bytes, modified: ${stats.mtime.toISOString()}`);
-      const fileData = JSON.parse(fs.readFileSync(foundIncidentsFile, 'utf-8'));
-      console.log(`[API]    File contains: total_rows=${fileData.total_rows}, anomalies=${fileData.predicted_anomaly_count}, incidents=${fileData.incidents?.length || 0}`);
+      const stats = fs.statSync(INCIDENTS_JSON);
+      console.log(`[API] ✅ Incidents file found: ${stats.size} bytes, modified: ${stats.mtime.toISOString()}`);
+      const fileData = JSON.parse(fs.readFileSync(INCIDENTS_JSON, 'utf-8'));
+      console.log(`[API]    Data: total_rows=${fileData.total_rows}, anomalies=${fileData.predicted_anomaly_count}, incidents=${fileData.incidents?.length || 0}`);
     } catch (e) {
       console.warn(`[API] ⚠️  Could not read incidents file: ${e.message}`);
     }
   } else {
-    console.warn(`[API] ⚠️  Incidents file not found - will search on each request`);
+    console.warn(`[API] ⚠️  Incidents file not found`);
   }
-  
+
   console.log(`[API] 📁 Predictions file exists: ${fs.existsSync(PREDICTIONS_CSV)}`);
-  
-  // List files in outputs directory if it exists
+
+  // List files in outputs directory
   if (fs.existsSync(OUTPUTS_DIR)) {
     try {
       const files = fs.readdirSync(OUTPUTS_DIR);
-      console.log(`[API] 📂 Files in outputs directory: ${files.join(', ')}`);
+      console.log(`[API] 📂 Files in outputs: ${files.join(', ')}`);
     } catch (e) {
-      console.error(`[API] ❌ Error listing outputs directory:`, e);
-    }
-  } else {
-    console.warn(`[API] ⚠️  Outputs directory does not exist: ${OUTPUTS_DIR}`);
-    console.warn(`[API] ⚠️  __dirname is: ${__dirname}`);
-    console.warn(`[API] ⚠️  Resolved absolute path: ${path.resolve(OUTPUTS_DIR)}`);
-    // Try to find outputs directory in common locations
-    const possiblePaths = [
-      path.join(process.cwd(), 'outputs'),
-      path.join(__dirname, '..', 'outputs'),
-      path.join(__dirname, 'outputs'),
-    ];
-    for (const possiblePath of possiblePaths) {
-      if (fs.existsSync(possiblePath)) {
-        console.warn(`[API] ℹ️  Found outputs directory at: ${possiblePath}`);
-      }
+      console.error(`[API] ❌ Error listing outputs:`, e);
     }
   }
-  
+
   console.log(`[API] \nAvailable endpoints:`);
   console.log(`[API]   GET /health`);
   console.log(`[API]   GET /api/anomaly/incidents`);
   console.log(`[API]   GET /api/anomaly/status`);
   console.log(`[API]   GET /api/anomaly/predictions`);
   console.log(`[API]   GET /api/anomaly/predictions/download`);
-  console.log(`[API] ✅ API server ready and listening on port ${PORT}`);
+  console.log(`[API] ✅ API server ready`);
 });
 
