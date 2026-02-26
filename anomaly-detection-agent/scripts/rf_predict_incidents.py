@@ -26,6 +26,7 @@ else:
 
 OUT_PRED_CSV = OUT_DIR / "predictions_latest.csv"
 OUT_INCIDENTS_JSON = OUT_DIR / "incidents_latest.json"
+OUT_INCIDENTS_HISTORY_DIR = OUT_DIR / "incidents"
 
 FEATURES_NUMERIC = ["duration_ms", "cpu_percent", "memory_mb", "db_query_time_ms", "status_code"]
 FEATURE_LEVEL = "level"
@@ -103,6 +104,56 @@ def build_story(incidents):
         "top_events": top_events,
         "top_status_codes": top_status,
     }
+
+
+def save_incidents_with_history(payload):
+    """
+    Save incidents to both:
+    1. incidents_latest.json (for dashboard quick access)
+    2. incidents/incidents_TIMESTAMP.json (for historical tracking)
+    
+    Also performs cleanup to keep only the last 100 timestamped files.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    
+    # Create history directory if it doesn't exist
+    OUT_INCIDENTS_HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Save timestamped version (preserves history)
+    timestamped_file = OUT_INCIDENTS_HISTORY_DIR / f"incidents_{timestamp}.json"
+    timestamped_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(f"✅ Saved timestamped: {timestamped_file}")
+    
+    # Save latest version (for dashboard quick access - backward compatible)
+    OUT_INCIDENTS_JSON.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(f"✅ Updated latest: {OUT_INCIDENTS_JSON}")
+    
+    # Cleanup old files (keep last 100)
+    cleanup_old_incidents(keep=100)
+
+
+def cleanup_old_incidents(keep=100):
+    """
+    Keep only the most recent N incident files to prevent disk space issues.
+    """
+    try:
+        if not OUT_INCIDENTS_HISTORY_DIR.exists():
+            return
+        
+        # Get all timestamped incident files
+        files = sorted(
+            [f for f in OUT_INCIDENTS_HISTORY_DIR.iterdir() 
+             if f.name.startswith('incidents_') and f.name.endswith('.json')],
+            key=lambda f: f.stat().st_mtime,
+            reverse=True
+        )
+        
+        # Remove old files beyond the keep limit
+        for old_file in files[keep:]:
+            old_file.unlink()
+            print(f"🗑️  Cleaned up old file: {old_file.name}")
+    except Exception as e:
+        print(f"⚠️  Error during cleanup: {e}")
 
 
 def send_incident_email(payload):
@@ -364,8 +415,8 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
         "incidents": incidents[:200],
     }
 
-    OUT_INCIDENTS_JSON.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"📁 Saved incidents JSON: {OUT_INCIDENTS_JSON}")
+    # Save with history tracking (timestamp + cleanup)
+    save_incidents_with_history(payload)
 
     # ✅ EMAIL TRIGGER MUST BE HERE (payload exists here)
     if SEND_EMAIL and len(payload.get("incidents", [])) >= MIN_INCIDENTS_TO_EMAIL:

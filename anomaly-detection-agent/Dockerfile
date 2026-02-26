@@ -62,6 +62,6 @@ CMD sh -c 'if [ "$RUN_PIPELINE" = "false" ]; then \
         npm run api-only; \
     else \
         echo "Running pipeline and API server (RUN_PIPELINE=true or not set)"; \
-        npm run dev:no-email; \
+        npm run dev; \
     fi'
 

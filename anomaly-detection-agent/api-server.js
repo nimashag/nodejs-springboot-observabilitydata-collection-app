@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 3007;
 // - Docker: __dirname is /app, so outputs becomes /app/outputs (matches volume mount)
 // - Local: __dirname is anomaly-detection-agent, so outputs becomes anomaly-detection-agent/outputs
 const OUTPUTS_DIR = path.join(__dirname, "outputs");
+const INCIDENTS_DIR = path.join(OUTPUTS_DIR, "incidents");
 const INCIDENTS_JSON = path.join(OUTPUTS_DIR, "incidents_latest.json");
 const PREDICTIONS_CSV = path.join(OUTPUTS_DIR, "predictions_latest.csv");
 
@@ -138,6 +139,131 @@ app.get("/api/anomaly/incidents", (req, res) => {
   return res.json(data);
 });
 
+// Get all historical incidents
+app.get("/api/anomaly/incidents/history", (req, res) => {
+  console.log(`[API] 📥 GET /api/anomaly/incidents/history`);
+
+  try {
+    if (!fs.existsSync(INCIDENTS_DIR)) {
+      return res.json({
+        historical_incidents: [],
+        total_files: 0,
+        message: "No historical incidents directory found",
+      });
+    }
+
+    // Read all timestamped incident files
+    const files = fs.readdirSync(INCIDENTS_DIR)
+      .filter(f => f.startsWith('incidents_') && f.endsWith('.json'))
+      .sort()
+      .reverse(); // Most recent first
+
+    const limit = parseInt(req.query.limit) || 50; // Default: last 50 files
+    const limitedFiles = files.slice(0, limit);
+
+    const historicalIncidents = [];
+    for (const file of limitedFiles) {
+      const filePath = path.join(INCIDENTS_DIR, file);
+      try {
+        const raw = fs.readFileSync(filePath, "utf-8");
+        const data = JSON.parse(raw);
+        historicalIncidents.push({
+          filename: file,
+          timestamp: data.generated_at,
+          total_rows: data.total_rows || 0,
+          predicted_anomaly_count: data.predicted_anomaly_count || 0,
+          incidents_count: data.incidents?.length || 0,
+          incidents: data.incidents || [],
+          incident_story: data.incident_story || {},
+        });
+      } catch (e) {
+        console.error(`[API] ⚠️  Error reading ${file}:`, e.message);
+      }
+    }
+
+    console.log(`[API] ✅ Returning ${historicalIncidents.length} historical incident snapshots`);
+    return res.json({
+      historical_incidents: historicalIncidents,
+      total_files: files.length,
+      returned_files: historicalIncidents.length,
+      limit: limit,
+    });
+  } catch (err) {
+    console.error(`[API] ❌ Error fetching historical incidents:`, err);
+    return res.status(500).json({
+      error: "Failed to fetch historical incidents",
+      message: err.message,
+    });
+  }
+});
+
+// Get all historical incidents aggregated (flattened list of all incidents)
+app.get("/api/anomaly/incidents/all", (req, res) => {
+  console.log(`[API] 📥 GET /api/anomaly/incidents/all`);
+
+  try {
+    if (!fs.existsSync(INCIDENTS_DIR)) {
+      return res.json({
+        all_incidents: [],
+        total_count: 0,
+        message: "No historical incidents directory found",
+      });
+    }
+
+    // Read all timestamped incident files
+    const files = fs.readdirSync(INCIDENTS_DIR)
+      .filter(f => f.startsWith('incidents_') && f.endsWith('.json'))
+      .sort()
+      .reverse(); // Most recent first
+
+    const limit = parseInt(req.query.limit) || 50; // Default: last 50 files
+    const limitedFiles = files.slice(0, limit);
+
+    const allIncidents = [];
+    const incidentMap = new Map(); // To deduplicate by request_id + timestamp
+
+    for (const file of limitedFiles) {
+      const filePath = path.join(INCIDENTS_DIR, file);
+      try {
+        const raw = fs.readFileSync(filePath, "utf-8");
+        const data = JSON.parse(raw);
+        const fileTimestamp = data.generated_at;
+
+        (data.incidents || []).forEach(incident => {
+          const key = `${incident.request_id}_${fileTimestamp}`;
+          if (!incidentMap.has(key)) {
+            incidentMap.set(key, {
+              ...incident,
+              detected_at: fileTimestamp,
+              source_file: file,
+            });
+          }
+        });
+      } catch (e) {
+        console.error(`[API] ⚠️  Error reading ${file}:`, e.message);
+      }
+    }
+
+    // Convert map to array and sort by detected_at (newest first)
+    const sortedIncidents = Array.from(incidentMap.values())
+      .sort((a, b) => new Date(b.detected_at) - new Date(a.detected_at));
+
+    console.log(`[API] ✅ Returning ${sortedIncidents.length} total incidents from ${limitedFiles.length} files`);
+    return res.json({
+      all_incidents: sortedIncidents,
+      total_count: sortedIncidents.length,
+      files_scanned: limitedFiles.length,
+      total_files: files.length,
+    });
+  } catch (err) {
+    console.error(`[API] ❌ Error fetching all incidents:`, err);
+    return res.status(500).json({
+      error: "Failed to fetch all incidents",
+      message: err.message,
+    });
+  }
+});
+
 // Get service status
 app.get("/api/anomaly/status", (req, res) => {
   const incidentsData = readJsonFile(INCIDENTS_JSON);
@@ -250,6 +376,8 @@ app.get("/", (req, res) => {
     endpoints: {
       health: "/health",
       incidents: "/api/anomaly/incidents",
+      incidentsHistory: "/api/anomaly/incidents/history",
+      allIncidents: "/api/anomaly/incidents/all",
       status: "/api/anomaly/status",
       predictions: "/api/anomaly/predictions",
       downloadPredictions: "/api/anomaly/predictions/download",
@@ -292,6 +420,8 @@ app.listen(PORT, () => {
   console.log(`[API] \nAvailable endpoints:`);
   console.log(`[API]   GET /health`);
   console.log(`[API]   GET /api/anomaly/incidents`);
+  console.log(`[API]   GET /api/anomaly/incidents/history?limit=50`);
+  console.log(`[API]   GET /api/anomaly/incidents/all?limit=50`);
   console.log(`[API]   GET /api/anomaly/status`);
   console.log(`[API]   GET /api/anomaly/predictions`);
   console.log(`[API]   GET /api/anomaly/predictions/download`);

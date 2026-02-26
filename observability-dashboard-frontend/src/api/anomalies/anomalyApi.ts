@@ -1,5 +1,9 @@
 import axios from "axios";
-import type { IncidentsPayload } from "../../types/anomalies/anomaly.types";
+import type {
+  IncidentsPayload,
+  HistoricalIncidentsResponse,
+  AllIncidentsResponse,
+} from "../../types/anomalies/anomaly.types";
 
 // Dynamically determine API base URL based on current hostname
 // This works for both local development and remote deployments (EC2, etc.)
@@ -185,6 +189,68 @@ export const anomalyApiService = {
   downloadPredictions: () => {
     window.open(`${API_BASE_URL}/api/anomaly/predictions/download`, "_blank");
   },
+
+  // Get historical incidents (snapshots)
+  getHistoricalIncidents: async (
+    limit: number = 50,
+  ): Promise<HistoricalIncidentsResponse> => {
+    try {
+      const response = await api.get<HistoricalIncidentsResponse>(
+        `/api/anomaly/incidents/history?limit=${limit}`,
+      );
+      console.log(
+        "[AnomalyAPI] ✅ Successfully fetched historical incidents:",
+        {
+          total_files: response.data.total_files,
+          returned_files: response.data.returned_files,
+          snapshots_count: response.data.historical_incidents?.length || 0,
+        },
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error(
+        "[AnomalyAPI] ❌ Error fetching historical incidents:",
+        error,
+      );
+      if (error.response) {
+        throw new Error(
+          `Server error: ${error.response.status} - ${error.response.statusText}`,
+        );
+      } else if (error.request) {
+        throw new Error("Network error: Unable to reach the server.");
+      } else {
+        throw new Error(error.message || "Failed to load historical incidents");
+      }
+    }
+  },
+
+  // Get all incidents (flattened from all historical files)
+  getAllIncidents: async (
+    limit: number = 50,
+  ): Promise<AllIncidentsResponse> => {
+    try {
+      const response = await api.get<AllIncidentsResponse>(
+        `/api/anomaly/incidents/all?limit=${limit}`,
+      );
+      console.log("[AnomalyAPI] ✅ Successfully fetched all incidents:", {
+        total_count: response.data.total_count,
+        files_scanned: response.data.files_scanned,
+        total_files: response.data.total_files,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error("[AnomalyAPI] ❌ Error fetching all incidents:", error);
+      if (error.response) {
+        throw new Error(
+          `Server error: ${error.response.status} - ${error.response.statusText}`,
+        );
+      } else if (error.request) {
+        throw new Error("Network error: Unable to reach the server.");
+      } else {
+        throw new Error(error.message || "Failed to load all incidents");
+      }
+    }
+  },
 };
 
 // Legacy exports for backward compatibility
@@ -193,5 +259,8 @@ export const fetchIncidents = anomalyApiService.getIncidents;
 export const getStatus = anomalyApiService.getStatus;
 export const getPredictions = anomalyApiService.getPredictions;
 export const downloadPredictions = anomalyApiService.downloadPredictions;
+export const fetchHistoricalIncidents =
+  anomalyApiService.getHistoricalIncidents;
+export const fetchAllIncidents = anomalyApiService.getAllIncidents;
 
 export default api;

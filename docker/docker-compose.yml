@@ -226,8 +226,8 @@ services:
       - EMAIL_SERVICE_URL=http://email-service:4000/v1/email/send
       - DOCKER_ENV=true
       # Set RUN_PIPELINE=false to run only the API server (useful when you want to use existing data)
-      # Change to false to prevent pipeline from overwriting your data files
-      - RUN_PIPELINE=${RUN_PIPELINE:-false}
+      # Set to true to run both pipeline and API server concurrently
+      - RUN_PIPELINE=${RUN_PIPELINE:-true}
     volumes:
       # Mount local outputs directory so both Docker and local environments use the same files
       - ../anomaly-detection-agent/outputs:/app/outputs
