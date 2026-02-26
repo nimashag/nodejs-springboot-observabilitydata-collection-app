@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../../../../metric-agent-frontend/src/lib/api";
-import { usePoll } from "../../../../metric-agent-frontend/src/hooks/usePoll";
-import { Drawer } from "../../../../metric-agent-frontend/src/components/Drawer";
-import { downloadCsv, downloadJson } from "../../../../metric-agent-frontend/src/lib/download";
+import { api } from "../../api/metrics/metricsApi";
+import { usePoll } from "../../hooks/usePoll";
+import { Drawer } from "../../components/metrics/Drawer";
+import { downloadCsv, downloadJson } from "../../utils/metrics/download";
 
 type AppSettings = {
   pollingEnabled: boolean;
@@ -36,7 +36,7 @@ function Button({
         "dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800/60",
         active &&
           "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-200",
-        props.className
+        props.className,
       )}
     >
       {children}
@@ -82,7 +82,7 @@ function Select({
       className={cx(
         "h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900",
         "dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100",
-        className
+        className,
       )}
     >
       {children}
@@ -91,7 +91,9 @@ function Select({
 }
 
 function Muted({ children }: { children: React.ReactNode }) {
-  return <div className="text-sm text-gray-500 dark:text-gray-400">{children}</div>;
+  return (
+    <div className="text-sm text-gray-500 dark:text-gray-400">{children}</div>
+  );
 }
 
 function ErrorBox({ text }: { text: string }) {
@@ -121,7 +123,8 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
 
   const services = useMemo(() => {
     const set = new Set<string>();
-    for (const a of actions as any[]) if (a?.service) set.add(String(a.service));
+    for (const a of actions as any[])
+      if (a?.service) set.add(String(a.service));
     return ["all", ...Array.from(set).sort()];
   }, [data?.generated_at]);
 
@@ -138,8 +141,11 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
       .filter((a) => (intent === "all" ? true : String(a.intent) === intent))
       .filter((a) => {
         if (!qq) return true;
-        const kpis = Array.isArray(a.required_kpis) ? a.required_kpis.map((x: any) => x?.name).join(" ") : "";
-        const blob = `${a.service} ${a.route} ${a.intent} ${kpis}`.toLowerCase();
+        const kpis = Array.isArray(a.required_kpis)
+          ? a.required_kpis.map((x: any) => x?.name).join(" ")
+          : "";
+        const blob =
+          `${a.service} ${a.route} ${a.intent} ${kpis}`.toLowerCase();
         return blob.includes(qq);
       });
   }, [actions, q, svc, intent]);
@@ -166,18 +172,30 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
         {/* Header row */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">Update Plan</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Update Plan
+            </div>
             <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Auto-telemetry actions (intent → required KPIs)
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button active={enabled && settings.pollingEnabled} onClick={() => setEnabled((x) => !x)}>
+            <Button
+              active={enabled && settings.pollingEnabled}
+              onClick={() => setEnabled((x) => !x)}
+            >
               {enabled ? "Live" : "Load"}
             </Button>
 
-            <Button onClick={() => downloadJson(`telemetry_update_plan_${Date.now()}.json`, data ?? {})}>
+            <Button
+              onClick={() =>
+                downloadJson(
+                  `telemetry_update_plan_${Date.now()}.json`,
+                  data ?? {},
+                )
+              }
+            >
               Export JSON
             </Button>
 
@@ -192,9 +210,12 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
                     intent: a.intent,
                     confidence: a.confidence,
                     required_kpis: Array.isArray(a.required_kpis)
-                      ? a.required_kpis.map((x: any) => x?.name).filter(Boolean).join("|")
+                      ? a.required_kpis
+                          .map((x: any) => x?.name)
+                          .filter(Boolean)
+                          .join("|")
                       : "",
-                  }))
+                  })),
                 )
               }
             >
@@ -206,7 +227,11 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
         {/* Controls row */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <TextInput value={q} onChange={setQ} placeholder="Filter... (route/intent/kpi)" />
+            <TextInput
+              value={q}
+              onChange={setQ}
+              placeholder="Filter... (route/intent/kpi)"
+            />
 
             <Select value={svc} onChange={setSvc}>
               {services.map((s) => (
@@ -225,14 +250,32 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
             </Select>
           </div>
 
-          <div className="text-sm text-gray-500 dark:text-gray-400">Actions: {actions.length}</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            Actions: {actions.length}
+          </div>
         </div>
 
         {/* States */}
-        {!settings.pollingEnabled ? <div className="mt-3"><Muted>Global polling is OFF (Settings).</Muted></div> : null}
-        {error ? <div className="mt-3"><ErrorBox text={error} /></div> : null}
-        {loading && !data && enabled ? <div className="mt-3"><Muted>Loading…</Muted></div> : null}
-        {!enabled ? <div className="mt-3"><Muted>Paused by default (plan is large). Click “Load”.</Muted></div> : null}
+        {!settings.pollingEnabled ? (
+          <div className="mt-3">
+            <Muted>Global polling is OFF (Settings).</Muted>
+          </div>
+        ) : null}
+        {error ? (
+          <div className="mt-3">
+            <ErrorBox text={error} />
+          </div>
+        ) : null}
+        {loading && !data && enabled ? (
+          <div className="mt-3">
+            <Muted>Loading…</Muted>
+          </div>
+        ) : null}
+        {!enabled ? (
+          <div className="mt-3">
+            <Muted>Paused by default (plan is large). Click “Load”.</Muted>
+          </div>
+        ) : null}
 
         {/* Table */}
         {enabled ? (
@@ -247,7 +290,9 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
               </div>
 
               {pageRows.length === 0 ? (
-                <div className="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">No results ✅</div>
+                <div className="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  No results ✅
+                </div>
               ) : (
                 pageRows.map((a: any, idx: number) => (
                   <div
@@ -255,15 +300,26 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
                     onClick={() => setSelected(a)}
                     className="grid cursor-pointer grid-cols-[200px_1.2fr_180px_1fr_120px] gap-4 border-b border-gray-100 px-5 py-3 text-sm hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/40"
                   >
-                    <div className="font-mono text-xs text-gray-700 dark:text-gray-200">{a.service ?? "—"}</div>
-                    <div className="font-mono text-xs text-gray-600 dark:text-gray-300">{a.route ?? "—"}</div>
-                    <div className="font-mono text-xs text-gray-600 dark:text-gray-300">{a.intent ?? "—"}</div>
+                    <div className="font-mono text-xs text-gray-700 dark:text-gray-200">
+                      {a.service ?? "—"}
+                    </div>
+                    <div className="font-mono text-xs text-gray-600 dark:text-gray-300">
+                      {a.route ?? "—"}
+                    </div>
+                    <div className="font-mono text-xs text-gray-600 dark:text-gray-300">
+                      {a.intent ?? "—"}
+                    </div>
                     <div className="font-mono text-xs text-gray-600 dark:text-gray-300">
                       {Array.isArray(a.required_kpis)
-                        ? a.required_kpis.map((x: any) => x?.name).filter(Boolean).join(", ")
+                        ? a.required_kpis
+                            .map((x: any) => x?.name)
+                            .filter(Boolean)
+                            .join(", ")
                         : "—"}
                     </div>
-                    <div className="font-mono text-xs text-gray-600 dark:text-gray-300">{a.confidence ?? "—"}</div>
+                    <div className="font-mono text-xs text-gray-600 dark:text-gray-300">
+                      {a.confidence ?? "—"}
+                    </div>
                   </div>
                 ))
               )}
@@ -272,10 +328,16 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
             {/* Pagination row */}
             <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <Button disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                <Button
+                  disabled={safePage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
                   ← Prev
                 </Button>
-                <Button disabled={safePage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                <Button
+                  disabled={safePage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
                   Next →
                 </Button>
 
@@ -285,7 +347,9 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="text-sm text-gray-500 dark:text-gray-400">Rows per page</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Rows per page
+                </div>
                 <Select value={pageSize} onChange={setPageSize}>
                   <option value="25">25</option>
                   <option value="50">50</option>
@@ -310,7 +374,13 @@ export default function UpdatePlan({ settings }: { settings: AppSettings }) {
         </pre>
 
         <div className="mt-3">
-          <Button onClick={() => downloadJson(`plan_action_${Date.now()}.json`, selected)}>Download this action</Button>
+          <Button
+            onClick={() =>
+              downloadJson(`plan_action_${Date.now()}.json`, selected)
+            }
+          >
+            Download this action
+          </Button>
         </div>
       </Drawer>
     </div>

@@ -8,15 +8,3 @@ export default defineConfig({
     port: 3009,
   },
 });
-    proxy: {
-      "/api": {
-        target: "http://localhost:8787",
-        changeOrigin: true,
-      },
-      "/health": {
-        target: "http://localhost:8787",
-        changeOrigin: true,
-      },
-    },
-  },
-});

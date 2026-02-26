@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { api } from "../../../../metric-agent-frontend/src/lib/api";
-import { usePoll } from "../../../../metric-agent-frontend/src/hooks/usePoll";
-import { Drawer } from "../../../../metric-agent-frontend/src/components/Drawer";
-import { downloadCsv, downloadJson } from "../../../../metric-agent-frontend/src/lib/download";
+import { api } from "../../api/metrics/metricsApi";
+import { usePoll } from "../../hooks/usePoll";
+import { Drawer } from "../../components/metrics/Drawer";
+import { downloadCsv, downloadJson } from "../../utils/metrics/download";
 
 type AppSettings = {
   pollingEnabled: boolean;
@@ -54,7 +54,7 @@ function Button({
         "dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800/60",
         active &&
           "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-200",
-        props.className
+        props.className,
       )}
     >
       {children}
@@ -100,7 +100,7 @@ function Select({
       className={cx(
         "h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900",
         "dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100",
-        className
+        className,
       )}
     >
       {children}
@@ -119,16 +119,27 @@ function Badge({
     kind === "crit"
       ? "border-red-300 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200"
       : kind === "warn"
-      ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
-      : kind === "info"
-      ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
-      : "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950/30 dark:text-gray-200";
+        ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
+        : kind === "info"
+          ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
+          : "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950/30 dark:text-gray-200";
 
-  return <span className={cx("inline-flex rounded-full border px-2 py-1 text-xs", styles)}>{children}</span>;
+  return (
+    <span
+      className={cx(
+        "inline-flex rounded-full border px-2 py-1 text-xs",
+        styles,
+      )}
+    >
+      {children}
+    </span>
+  );
 }
 
 function Muted({ children }: { children: React.ReactNode }) {
-  return <div className="text-sm text-gray-500 dark:text-gray-400">{children}</div>;
+  return (
+    <div className="text-sm text-gray-500 dark:text-gray-400">{children}</div>
+  );
 }
 
 function ErrorBox({ text }: { text: string }) {
@@ -155,7 +166,9 @@ export default function Signals({ settings }: { settings: AppSettings }) {
     enabled: settings.pollingEnabled && enabled,
   });
 
-  const raw = (data?.signals ?? []).filter((x: any) => x && (x.signal || x.error));
+  const raw = (data?.signals ?? []).filter(
+    (x: any) => x && (x.signal || x.error),
+  );
 
   const services = useMemo(() => {
     const set = new Set<string>();
@@ -170,14 +183,19 @@ export default function Signals({ settings }: { settings: AppSettings }) {
       .filter((s: any) => (sev === "all" ? true : String(s.severity) === sev))
       .filter((s: any) => {
         if (!qq) return true;
-        const blob = `${s.service} ${s.signal ?? ""} ${s.metric ?? ""} ${s.error ?? ""}`.toLowerCase();
+        const blob =
+          `${s.service} ${s.signal ?? ""} ${s.metric ?? ""} ${s.error ?? ""}`.toLowerCase();
         return blob.includes(qq);
       })
       .sort((a: any, b: any) => {
-        if (sort === "severity_desc") return severityRank(b.severity) - severityRank(a.severity);
-        if (sort === "confidence_desc") return (b.confidence ?? 0) - (a.confidence ?? 0);
-        if (sort === "time_desc") return (b.timestamp ?? 0) - (a.timestamp ?? 0);
-        if (sort === "service_asc") return String(a.service).localeCompare(String(b.service));
+        if (sort === "severity_desc")
+          return severityRank(b.severity) - severityRank(a.severity);
+        if (sort === "confidence_desc")
+          return (b.confidence ?? 0) - (a.confidence ?? 0);
+        if (sort === "time_desc")
+          return (b.timestamp ?? 0) - (a.timestamp ?? 0);
+        if (sort === "service_asc")
+          return String(a.service).localeCompare(String(b.service));
         return 0;
       });
   }, [raw, q, svc, sev, sort]);
@@ -191,20 +209,28 @@ export default function Signals({ settings }: { settings: AppSettings }) {
         {/* Header row */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">Signals</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Signals
+            </div>
             <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Anomalies detected by signal-detector
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button active={enabled && settings.pollingEnabled} onClick={() => setEnabled((x) => !x)}>
+            <Button
+              active={enabled && settings.pollingEnabled}
+              onClick={() => setEnabled((x) => !x)}
+            >
               {enabled ? "Live" : "Paused"}
             </Button>
 
             <Button
               onClick={() =>
-                downloadJson(`signals_${Date.now()}.json`, data ?? { generated_at: Date.now(), signals: [] })
+                downloadJson(
+                  `signals_${Date.now()}.json`,
+                  data ?? { generated_at: Date.now(), signals: [] },
+                )
               }
             >
               Export JSON
@@ -225,7 +251,7 @@ export default function Signals({ settings }: { settings: AppSettings }) {
                     z_score: s.z_score ?? "",
                     timestamp: s.timestamp ?? "",
                     error: s.error ?? "",
-                  }))
+                  })),
                 )
               }
             >
@@ -237,7 +263,11 @@ export default function Signals({ settings }: { settings: AppSettings }) {
         {/* Controls row */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <TextInput value={q} onChange={setQ} placeholder="Filter... (service/signal/metric)" />
+            <TextInput
+              value={q}
+              onChange={setQ}
+              placeholder="Filter... (service/signal/metric)"
+            />
 
             <Select value={svc} onChange={setSvc}>
               {services.map((s) => (
@@ -268,9 +298,21 @@ export default function Signals({ settings }: { settings: AppSettings }) {
         </div>
 
         {/* States */}
-        {!settings.pollingEnabled ? <div className="mt-3"><Muted>Global polling is OFF (Settings).</Muted></div> : null}
-        {error ? <div className="mt-3"><ErrorBox text={error} /></div> : null}
-        {loading && !data ? <div className="mt-3"><Muted>Loading…</Muted></div> : null}
+        {!settings.pollingEnabled ? (
+          <div className="mt-3">
+            <Muted>Global polling is OFF (Settings).</Muted>
+          </div>
+        ) : null}
+        {error ? (
+          <div className="mt-3">
+            <ErrorBox text={error} />
+          </div>
+        ) : null}
+        {loading && !data ? (
+          <div className="mt-3">
+            <Muted>Loading…</Muted>
+          </div>
+        ) : null}
 
         {/* Table */}
         <div className="mt-5 overflow-hidden rounded-2xl bg-white dark:bg-gray-900">
@@ -285,7 +327,9 @@ export default function Signals({ settings }: { settings: AppSettings }) {
           </div>
 
           {filtered.slice(0, 200).length === 0 ? (
-            <div className="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">No matching signals ✅</div>
+            <div className="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
+              No matching signals ✅
+            </div>
           ) : (
             filtered.slice(0, 200).map((s: any, idx: number) => (
               <div
@@ -293,8 +337,12 @@ export default function Signals({ settings }: { settings: AppSettings }) {
                 onClick={() => setSelected(s)}
                 className="grid cursor-pointer grid-cols-[200px_140px_140px_140px_1fr_140px] gap-4 border-b border-gray-100 px-5 py-3 text-sm hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/40"
               >
-                <div className="font-mono text-xs text-gray-700 dark:text-gray-200">{s.service}</div>
-                <div className="font-mono text-xs text-gray-600 dark:text-gray-300">{s.signal ?? "error"}</div>
+                <div className="font-mono text-xs text-gray-700 dark:text-gray-200">
+                  {s.service}
+                </div>
+                <div className="font-mono text-xs text-gray-600 dark:text-gray-300">
+                  {s.signal ?? "error"}
+                </div>
 
                 <div>
                   {s.severity === "critical" ? (
@@ -309,7 +357,9 @@ export default function Signals({ settings }: { settings: AppSettings }) {
                 </div>
 
                 <div className="font-mono text-xs text-gray-600 dark:text-gray-300">
-                  {typeof s.confidence === "number" ? `${(s.confidence * 100).toFixed(0)}%` : "—"}
+                  {typeof s.confidence === "number"
+                    ? `${(s.confidence * 100).toFixed(0)}%`
+                    : "—"}
                 </div>
 
                 <div className="font-mono text-xs text-gray-600 dark:text-gray-300">
@@ -339,46 +389,60 @@ export default function Signals({ settings }: { settings: AppSettings }) {
         <div className="mt-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950/40">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Metric</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                Metric
+              </div>
               <div className="mt-1 font-mono text-xs text-gray-800 dark:text-gray-100">
                 {selected?.metric ?? "—"}
               </div>
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950/40">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Current</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                Current
+              </div>
               <div className="mt-1 font-mono text-xs text-gray-800 dark:text-gray-100">
                 {selected?.current ?? selected?.current_delta ?? "—"}
               </div>
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950/40">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Baseline mean</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                Baseline mean
+              </div>
               <div className="mt-1 font-mono text-xs text-gray-800 dark:text-gray-100">
                 {selected?.baseline_mean ?? "—"}
               </div>
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950/40">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Z-score</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                Z-score
+              </div>
               <div className="mt-1 font-mono text-xs text-gray-800 dark:text-gray-100">
                 {selected?.z_score ?? "—"}
               </div>
             </div>
           </div>
 
-          {Array.isArray(selected?.top_slow_routes) && selected.top_slow_routes.length ? (
+          {Array.isArray(selected?.top_slow_routes) &&
+          selected.top_slow_routes.length ? (
             <div>
-              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Top slow routes</div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                Top slow routes
+              </div>
               <pre className="mt-2 max-h-[340px] overflow-auto rounded-xl border border-gray-200 bg-gray-50 p-4 text-xs dark:border-gray-800 dark:bg-gray-950/40">
                 {JSON.stringify(selected.top_slow_routes, null, 2)}
               </pre>
             </div>
           ) : null}
 
-          {Array.isArray(selected?.top_error_routes) && selected.top_error_routes.length ? (
+          {Array.isArray(selected?.top_error_routes) &&
+          selected.top_error_routes.length ? (
             <div>
-              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Top error routes</div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                Top error routes
+              </div>
               <pre className="mt-2 max-h-[340px] overflow-auto rounded-xl border border-gray-200 bg-gray-50 p-4 text-xs dark:border-gray-800 dark:bg-gray-950/40">
                 {JSON.stringify(selected.top_error_routes, null, 2)}
               </pre>
@@ -387,14 +451,20 @@ export default function Signals({ settings }: { settings: AppSettings }) {
 
           {selected?.error ? (
             <div>
-              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Error</div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                Error
+              </div>
               <pre className="mt-2 overflow-auto rounded-xl border border-gray-200 bg-gray-50 p-4 text-xs dark:border-gray-800 dark:bg-gray-950/40">
                 {String(selected.error)}
               </pre>
             </div>
           ) : null}
 
-          <Button onClick={() => downloadJson(`signal_${Date.now()}.json`, selected)}>Download this signal</Button>
+          <Button
+            onClick={() => downloadJson(`signal_${Date.now()}.json`, selected)}
+          >
+            Download this signal
+          </Button>
         </div>
       </Drawer>
     </div>
