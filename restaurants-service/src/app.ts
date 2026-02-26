@@ -1,16 +1,13 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors'; 
+import './middlewares/registerMongooseMetricsPlugin';
 import restaurantsRoutes from './routes/restaurants.routes';
 import path from 'path';
 import { requestLogger } from './middlewares/requestLogger';
 import { initializeAlertCollector, alertCollectorMiddleware } from './collectors/alert-collector';
 import { createMetricsMiddleware } from './middlewares/metricsMiddleware';
-import { enhanceMongooseWithRequestId, mongooseQueryTracker } from './middlewares/mongoosePlugin';
+import { enhanceMongooseWithRequestId } from './middlewares/mongoosePlugin';
 import { telemetryMiddleware } from "./middlewares/telemetry.middleware";
-
-// Apply mongoose plugin BEFORE connecting to database
-mongoose.plugin(mongooseQueryTracker);
 
 const app = express();
 
@@ -23,7 +20,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// createMetricsMiddleware FIRST so requestId exists; enhanceMongooseWithRequestId sets global for DB tracking
+// createMetricsMiddleware FIRST so requestId exists; enhanceMongooseWithRequestId keeps requestId on req for compatibility
 app.use(createMetricsMiddleware('restaurants-service', './metrics'));
 app.use(enhanceMongooseWithRequestId);
 

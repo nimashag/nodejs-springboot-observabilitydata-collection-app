@@ -3,9 +3,9 @@
  */
 const http = require('http');
 
-const ML_HOST = 'localhost';
+const ML_HOST = '127.0.0.1'; // Use IPv4 to avoid IPv6 connection issues
 const ML_PORT = 5001;
-const MAX_RETRIES = 10;
+const MAX_RETRIES = 30; // Increased to 30 seconds to allow ML service to load models
 const RETRY_DELAY = 1000; // 1 second
 
 let retries = 0;
@@ -18,6 +18,7 @@ function checkMLService() {
         port: ML_PORT,
         path: '/health',
         method: 'GET',
+        family: 4, // Force IPv4 to avoid IPv6 connection issues
         timeout: 2000
       },
       (res) => {
@@ -44,7 +45,7 @@ function checkMLService() {
 
 async function waitForML() {
   console.log('[Wait] Waiting for ML service to be ready...');
-  
+
   while (retries < MAX_RETRIES) {
     try {
       await checkMLService();
@@ -58,7 +59,7 @@ async function waitForML() {
       }
     }
   }
-  
+
   console.warn('[Wait] ⚠ ML service did not become ready after', MAX_RETRIES, 'attempts');
   console.warn('[Wait] Starting AATA anyway (ML predictions will be disabled)');
   return false;

@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { api } from "../../../../metric-agent-frontend/src/lib/api";
-import { downloadJson, downloadText } from "../../../../metric-agent-frontend/src/lib/download";
+import { api } from "../../api/metrics/metricsApi";
+import { downloadJson, downloadText } from "../../utils/metrics/download";
 
 type NavKey = "overview" | "signals" | "kpi" | "plan" | "prom" | "settings";
 
@@ -63,7 +63,7 @@ function Button({
         "dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800/60",
         active &&
           "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-200",
-        props.className
+        props.className,
       )}
     >
       {children}
@@ -86,10 +86,18 @@ function Card({
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
       <div className="flex items-start justify-between gap-4 px-5 pt-5">
         <div>
-          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {title}
+          </div>
+          {subtitle ? (
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {subtitle}
+            </div>
+          ) : null}
         </div>
-        {right ? <div className="flex flex-wrap items-center gap-2">{right}</div> : null}
+        {right ? (
+          <div className="flex flex-wrap items-center gap-2">{right}</div>
+        ) : null}
       </div>
       <div className="px-5 pb-5 pt-4">{children}</div>
     </div>
@@ -97,7 +105,11 @@ function Card({
 }
 
 function Muted({ children }: { children: ReactNode }) {
-  return <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">{children}</div>;
+  return (
+    <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+      {children}
+    </div>
+  );
 }
 
 function Badge({
@@ -107,15 +119,16 @@ function Badge({
   kind: "neutral" | "ok" | "warn" | "crit";
   children: ReactNode;
 }) {
-  const base = "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium";
+  const base =
+    "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium";
   const styles =
     kind === "ok"
       ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200"
       : kind === "warn"
-      ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
-      : kind === "crit"
-      ? "border-red-300 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200"
-      : "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950/40 dark:text-gray-300";
+        ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
+        : kind === "crit"
+          ? "border-red-300 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200"
+          : "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950/40 dark:text-gray-300";
 
   return <span className={cx(base, styles)}>{children}</span>;
 }
@@ -137,7 +150,7 @@ function TextInput({
       className={cx(
         "h-10 w-[220px] max-w-full rounded-xl border px-3 text-sm outline-none transition",
         "border-gray-200 bg-white text-gray-900 focus:border-blue-300 focus:ring-4 focus:ring-blue-100",
-        "dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-700/60 dark:focus:ring-blue-900/30"
+        "dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-700/60 dark:focus:ring-blue-900/30",
       )}
     />
   );
@@ -149,7 +162,7 @@ function CodeBox({ children }: { children: ReactNode }) {
       className={cx(
         "mt-3 overflow-auto rounded-2xl border p-4 text-xs leading-relaxed",
         "border-gray-200 bg-gray-50 text-gray-900",
-        "dark:border-gray-800 dark:bg-gray-950/40 dark:text-gray-100"
+        "dark:border-gray-800 dark:bg-gray-950/40 dark:text-gray-100",
       )}
     >
       {children}
@@ -173,7 +186,8 @@ export default function SettingsPage({
   const [diag, setDiag] = useState<DiagRow[]>([]);
   const [diagRunning, setDiagRunning] = useState(false);
 
-  const setPollingEnabled = (v: boolean) => onChange({ ...settings, pollingEnabled: v });
+  const setPollingEnabled = (v: boolean) =>
+    onChange({ ...settings, pollingEnabled: v });
 
   const setInterval = (key: keyof AppSettings["intervals"], v: string) => {
     const n = clampMs(Number(v), 500, 60000);
@@ -183,13 +197,18 @@ export default function SettingsPage({
   async function runDiagnostics() {
     setDiagRunning(true);
 
-    const tests: Array<{ key: string; label: string; fn: () => Promise<any> }> = [
-      { key: "health", label: "Health", fn: () => api.health() },
-      { key: "signals", label: "Signals", fn: () => api.signals() },
-      { key: "kpi", label: "KPI Coverage", fn: () => api.kpiCoverage() },
-      { key: "plan", label: "Update Plan", fn: () => api.updatePlan() },
-      { key: "prom", label: "Prom Suggestions", fn: () => api.promSuggestions() },
-    ];
+    const tests: Array<{ key: string; label: string; fn: () => Promise<any> }> =
+      [
+        { key: "health", label: "Health", fn: () => api.health() },
+        { key: "signals", label: "Signals", fn: () => api.signals() },
+        { key: "kpi", label: "KPI Coverage", fn: () => api.kpiCoverage() },
+        { key: "plan", label: "Update Plan", fn: () => api.updatePlan() },
+        {
+          key: "prom",
+          label: "Prom Suggestions",
+          fn: () => api.promSuggestions(),
+        },
+      ];
 
     const out: DiagRow[] = [];
 
@@ -225,10 +244,13 @@ export default function SettingsPage({
     ]);
 
     const signals =
-      signalsRes.status === "fulfilled" ? signalsRes.value : { generated_at: Date.now(), signals: [] };
+      signalsRes.status === "fulfilled"
+        ? signalsRes.value
+        : { generated_at: Date.now(), signals: [] };
     const kpi = kpiRes.status === "fulfilled" ? kpiRes.value : {};
     const plan = planRes.status === "fulfilled" ? planRes.value : {};
-    const prom = promRes.status === "fulfilled" ? String(promRes.value ?? "") : "";
+    const prom =
+      promRes.status === "fulfilled" ? String(promRes.value ?? "") : "";
 
     downloadJson(`signals_${Date.now()}.json`, signals);
     downloadJson(`kpi_coverage_${Date.now()}.json`, kpi);
@@ -260,7 +282,10 @@ export default function SettingsPage({
         subtitle="Master switches for the whole UI"
         right={
           <>
-            <Button active={settings.pollingEnabled} onClick={() => setPollingEnabled(!settings.pollingEnabled)}>
+            <Button
+              active={settings.pollingEnabled}
+              onClick={() => setPollingEnabled(!settings.pollingEnabled)}
+            >
               {settings.pollingEnabled ? "Polling ON" : "Polling OFF"}
             </Button>
             <Button onClick={() => onJump("signals")}>Go Signals →</Button>
@@ -268,7 +293,10 @@ export default function SettingsPage({
           </>
         }
       >
-        <Muted>If you’re debugging backend, turn polling OFF so the UI stops firing requests.</Muted>
+        <Muted>
+          If you’re debugging backend, turn polling OFF so the UI stops firing
+          requests.
+        </Muted>
       </Card>
 
       <Card title="Intervals" subtitle="Default polling intervals (ms)">
@@ -286,10 +314,18 @@ export default function SettingsPage({
               key={key}
               className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3 last:border-b-0 last:pb-0 dark:border-gray-800"
             >
-              <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {label}
+              </div>
               <div className="flex items-center gap-2">
-                <TextInput value={String(intervals[key])} onChange={(v) => setInterval(key, v)} type="number" />
-                <span className="text-xs text-gray-400 dark:text-gray-500">ms</span>
+                <TextInput
+                  value={String(intervals[key])}
+                  onChange={(v) => setInterval(key, v)}
+                  type="number"
+                />
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  ms
+                </span>
               </div>
             </div>
           ))}
@@ -304,16 +340,28 @@ export default function SettingsPage({
         right={<Button onClick={onResetDefaults}>Reset defaults</Button>}
       >
         <div className="flex flex-wrap items-center gap-2">
-          <div className="text-xs text-gray-500 dark:text-gray-400">Default Prom view:</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            Default Prom view:
+          </div>
           <Button
             active={settings.ui.defaultPromView === "raw"}
-            onClick={() => onChange({ ...settings, ui: { ...settings.ui, defaultPromView: "raw" } })}
+            onClick={() =>
+              onChange({
+                ...settings,
+                ui: { ...settings.ui, defaultPromView: "raw" },
+              })
+            }
           >
             Raw
           </Button>
           <Button
             active={settings.ui.defaultPromView === "structured"}
-            onClick={() => onChange({ ...settings, ui: { ...settings.ui, defaultPromView: "structured" } })}
+            onClick={() =>
+              onChange({
+                ...settings,
+                ui: { ...settings.ui, defaultPromView: "structured" },
+              })
+            }
           >
             Structured
           </Button>
@@ -325,7 +373,11 @@ export default function SettingsPage({
         subtitle="Ping endpoints and see if backend is alive"
         right={
           <>
-            <Button active={diagRunning} onClick={runDiagnostics} disabled={diagRunning}>
+            <Button
+              active={diagRunning}
+              onClick={runDiagnostics}
+              disabled={diagRunning}
+            >
               {diagRunning ? "Running…" : "Run diagnostics"}
             </Button>
             <Button onClick={copyDebug} disabled={!diag.length}>
@@ -351,19 +403,31 @@ export default function SettingsPage({
                   key={d.key}
                   className="grid grid-cols-4 gap-3 border-b border-gray-100 px-4 py-3 text-sm last:border-b-0 dark:border-gray-800"
                 >
-                  <div className="font-mono text-xs text-gray-900 dark:text-gray-100">{d.label}</div>
-                  <div>{d.ok ? <Badge kind="ok">ok</Badge> : <Badge kind="crit">fail</Badge>}</div>
+                  <div className="font-mono text-xs text-gray-900 dark:text-gray-100">
+                    {d.label}
+                  </div>
+                  <div>
+                    {d.ok ? (
+                      <Badge kind="ok">ok</Badge>
+                    ) : (
+                      <Badge kind="crit">fail</Badge>
+                    )}
+                  </div>
                   <div className="font-mono text-xs text-gray-600 dark:text-gray-300">
                     {typeof d.ms === "number" ? `${d.ms}ms` : "—"}
                   </div>
-                  <div className="font-mono text-xs text-gray-600 dark:text-gray-300">{formatTime(d.at)}</div>
+                  <div className="font-mono text-xs text-gray-600 dark:text-gray-300">
+                    {formatTime(d.at)}
+                  </div>
                 </div>
               ))}
             </div>
 
             {diag.some((d) => d.error) ? (
               <div className="mt-4">
-                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Errors</div>
+                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  Errors
+                </div>
                 <CodeBox>
                   {diag
                     .filter((d) => d.error)
@@ -382,7 +446,8 @@ export default function SettingsPage({
         right={<Button onClick={exportEverything}>Export everything</Button>}
       >
         <Muted>
-          This pulls fresh data once (best effort) and downloads 4 files: signals, kpi coverage, update plan, prom txt.
+          This pulls fresh data once (best effort) and downloads 4 files:
+          signals, kpi coverage, update plan, prom txt.
         </Muted>
       </Card>
     </div>

@@ -1,8 +1,8 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { api } from "../../../../metric-agent-frontend/src/lib/api";
-import { usePoll } from "../../../../metric-agent-frontend/src/hooks/usePoll";
-import { Drawer } from "../../../../metric-agent-frontend/src/components/Drawer";
-import { downloadCsv, downloadJson } from "../../../../metric-agent-frontend/src/lib/download";
+import { api } from "../../api/metrics/metricsApi";
+import { usePoll } from "../../hooks/usePoll";
+import { Drawer } from "../../components/metrics/Drawer";
+import { downloadCsv, downloadJson } from "../../utils/metrics/download";
 
 type AppSettings = {
   pollingEnabled: boolean;
@@ -50,9 +50,13 @@ function Card({
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
       <div className="flex items-start justify-between gap-4 px-5 pt-5">
         <div>
-          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</div>
+          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {title}
+          </div>
           {subtitle ? (
-            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtitle}</div>
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {subtitle}
+            </div>
           ) : null}
         </div>
         {right ? <div className="flex items-center gap-2">{right}</div> : null}
@@ -66,14 +70,22 @@ function Card({
 function ErrorBox({ text }: { text: string }) {
   return (
     <div className="rounded-xl border border-dashed border-red-300 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/30">
-      <div className="text-sm font-semibold text-red-700 dark:text-red-300">Error</div>
-      <div className="mt-2 font-mono text-xs text-red-700/90 dark:text-red-200/90">{text}</div>
+      <div className="text-sm font-semibold text-red-700 dark:text-red-300">
+        Error
+      </div>
+      <div className="mt-2 font-mono text-xs text-red-700/90 dark:text-red-200/90">
+        {text}
+      </div>
     </div>
   );
 }
 
 function Muted({ children }: { children: ReactNode }) {
-  return <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">{children}</div>;
+  return (
+    <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+      {children}
+    </div>
+  );
 }
 
 function Badge({
@@ -87,13 +99,18 @@ function Badge({
     kind === "ok"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300"
       : kind === "warn"
-      ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300"
-      : kind === "crit"
-      ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300"
-      : "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200";
+        ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300"
+        : kind === "crit"
+          ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300"
+          : "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200";
 
   return (
-    <span className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium", styles)}>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium",
+        styles,
+      )}
+    >
       {children}
     </span>
   );
@@ -149,8 +166,9 @@ function Button({
         "h-9 rounded-xl border px-3 text-xs font-medium transition",
         "border-gray-200 bg-white text-gray-800 hover:bg-gray-50",
         "dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800/50",
-        active && "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800/60 dark:bg-blue-950/30 dark:text-blue-300",
-        disabled && "opacity-60 cursor-not-allowed"
+        active &&
+          "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800/60 dark:bg-blue-950/30 dark:text-blue-300",
+        disabled && "opacity-60 cursor-not-allowed",
       )}
     >
       {children}
@@ -174,13 +192,19 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
     const all = data?.results ?? [];
     const qq = q.trim().toLowerCase();
     return all
-      .filter((r: any) => (showOnlyMissing ? (r.missing_kpis ?? []).length > 0 : true))
+      .filter((r: any) =>
+        showOnlyMissing ? (r.missing_kpis ?? []).length > 0 : true,
+      )
       .filter((r: any) => {
         if (!qq) return true;
-        const blob = `${r.service} ${(r.missing_kpis ?? []).join(" ")} ${r.url}`.toLowerCase();
+        const blob =
+          `${r.service} ${(r.missing_kpis ?? []).join(" ")} ${r.url}`.toLowerCase();
         return blob.includes(qq);
       })
-      .sort((a: any, b: any) => (b.missing_kpis?.length ?? 0) - (a.missing_kpis?.length ?? 0));
+      .sort(
+        (a: any, b: any) =>
+          (b.missing_kpis?.length ?? 0) - (a.missing_kpis?.length ?? 0),
+      );
   }, [data?.generated_at, q, showOnlyMissing]);
 
   const [selected, setSelected] = useState<any | null>(null);
@@ -192,21 +216,46 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
         subtitle="Shows missing KPIs per service"
         right={
           <div className="flex flex-wrap items-center gap-2">
-            <Button active={enabled && settings.pollingEnabled} onClick={() => setEnabled((x) => !x)}>
+            <Button
+              active={enabled && settings.pollingEnabled}
+              onClick={() => setEnabled((x) => !x)}
+            >
               {enabled ? "Live" : "Paused"}
             </Button>
 
-            <Button onClick={() => downloadJson(`kpi_coverage_${Date.now()}.json`, data ?? {})}>Export JSON</Button>
+            <Button
+              onClick={() =>
+                downloadJson(`kpi_coverage_${Date.now()}.json`, data ?? {})
+              }
+            >
+              Export JSON
+            </Button>
 
-            <Button onClick={() => downloadCsv(`kpi_coverage_${Date.now()}.csv`, data?.results ?? [])}>Export CSV</Button>
+            <Button
+              onClick={() =>
+                downloadCsv(
+                  `kpi_coverage_${Date.now()}.csv`,
+                  data?.results ?? [],
+                )
+              }
+            >
+              Export CSV
+            </Button>
           </div>
         }
       >
         <Toolbar
           left={
             <div className="flex flex-wrap items-center gap-2">
-              <TextInput value={q} onChange={setQ} placeholder="Filter… (service/kpi/url)" />
-              <Button active={showOnlyMissing} onClick={() => setShowOnlyMissing((x) => !x)}>
+              <TextInput
+                value={q}
+                onChange={setQ}
+                placeholder="Filter… (service/kpi/url)"
+              />
+              <Button
+                active={showOnlyMissing}
+                onClick={() => setShowOnlyMissing((x) => !x)}
+              >
                 {showOnlyMissing ? "Only missing" : "Show all"}
               </Button>
             </div>
@@ -214,7 +263,9 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
           right={<div>Generated: {formatTime(data?.generated_at)}</div>}
         />
 
-        {!settings.pollingEnabled ? <Muted>Global polling is OFF (Settings).</Muted> : null}
+        {!settings.pollingEnabled ? (
+          <Muted>Global polling is OFF (Settings).</Muted>
+        ) : null}
         {error ? <ErrorBox text={error} /> : null}
         {loading && !data ? <Muted>Loading…</Muted> : null}
 
@@ -238,16 +289,24 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
               >
                 <div className="font-mono text-[12px]">{r.service}</div>
                 <div>
-                  {ok ? <Badge kind="ok">complete</Badge> : <Badge kind="warn">{missing.length} missing</Badge>}
+                  {ok ? (
+                    <Badge kind="ok">complete</Badge>
+                  ) : (
+                    <Badge kind="warn">{missing.length} missing</Badge>
+                  )}
                 </div>
-                <div className="font-mono text-[12px]">{ok ? "—" : missing.join(", ")}</div>
+                <div className="font-mono text-[12px]">
+                  {ok ? "—" : missing.join(", ")}
+                </div>
                 <div className="font-mono text-[12px]">{r.url}</div>
               </div>
             );
           })}
 
           {!rows.length ? (
-            <div className="px-4 py-4 text-xs text-gray-500 dark:text-gray-400">No results ✅</div>
+            <div className="px-4 py-4 text-xs text-gray-500 dark:text-gray-400">
+              No results ✅
+            </div>
           ) : null}
         </div>
 
@@ -268,7 +327,12 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
 
         <button
           className="mt-3 h-9 rounded-xl border border-gray-200 bg-white px-3 text-xs font-medium text-gray-800 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800/50"
-          onClick={() => downloadJson(`kpi_${selected?.service ?? "service"}_${Date.now()}.json`, selected)}
+          onClick={() =>
+            downloadJson(
+              `kpi_${selected?.service ?? "service"}_${Date.now()}.json`,
+              selected,
+            )
+          }
         >
           Download this service report
         </button>

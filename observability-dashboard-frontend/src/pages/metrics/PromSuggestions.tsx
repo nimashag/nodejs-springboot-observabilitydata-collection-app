@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../../../../metric-agent-frontend/src/lib/api";
-import { usePoll } from "../../../../metric-agent-frontend/src/hooks/usePoll";
-import { downloadText } from "../../../../metric-agent-frontend/src/lib/download";
-import { parsePromSuggestions } from "../../../../metric-agent-frontend/src/lib/parsePromSuggestions";
+import { api } from "../../api/metrics/metricsApi";
+import { usePoll } from "../../hooks/usePoll";
+import { downloadText } from "../../utils/metrics/download";
+import { parsePromSuggestions } from "../../utils/metrics/parsePromSuggestions";
 
 type AppSettings = {
   pollingEnabled: boolean;
@@ -36,7 +36,7 @@ function Button({
         "dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800/60",
         active &&
           "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-200",
-        props.className
+        props.className,
       )}
     >
       {children}
@@ -59,10 +59,18 @@ function Card({
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
       <div className="flex items-start justify-between gap-4 px-5 pt-5">
         <div>
-          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</div>
-          {subtitle ? <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtitle}</div> : null}
+          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {title}
+          </div>
+          {subtitle ? (
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {subtitle}
+            </div>
+          ) : null}
         </div>
-        {right ? <div className="flex flex-wrap items-center gap-2">{right}</div> : null}
+        {right ? (
+          <div className="flex flex-wrap items-center gap-2">{right}</div>
+        ) : null}
       </div>
 
       <div className="px-5 pb-5 pt-4">{children}</div>
@@ -73,14 +81,22 @@ function Card({
 function ErrorBox({ text }: { text: string }) {
   return (
     <div className="rounded-xl border border-dashed border-red-300 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/30">
-      <div className="text-sm font-semibold text-red-700 dark:text-red-300">Error</div>
-      <div className="mt-2 font-mono text-xs text-red-700/90 dark:text-red-200/90">{text}</div>
+      <div className="text-sm font-semibold text-red-700 dark:text-red-300">
+        Error
+      </div>
+      <div className="mt-2 font-mono text-xs text-red-700/90 dark:text-red-200/90">
+        {text}
+      </div>
     </div>
   );
 }
 
 function Muted({ children }: { children: React.ReactNode }) {
-  return <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">{children}</div>;
+  return (
+    <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+      {children}
+    </div>
+  );
 }
 
 function TextInput({
@@ -100,7 +116,7 @@ function TextInput({
       className={cx(
         "h-10 w-[360px] max-w-full rounded-xl border px-3 text-sm outline-none transition",
         "border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100",
-        "dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-700/60 dark:focus:ring-blue-900/30"
+        "dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-700/60 dark:focus:ring-blue-900/30",
       )}
     />
   );
@@ -112,7 +128,7 @@ function CodeBox({ children }: { children: React.ReactNode }) {
       className={cx(
         "mt-3 max-h-[560px] overflow-auto rounded-2xl border p-4 text-xs leading-relaxed",
         "border-gray-200 bg-gray-50 text-gray-900",
-        "dark:border-gray-800 dark:bg-gray-950/40 dark:text-gray-100"
+        "dark:border-gray-800 dark:bg-gray-950/40 dark:text-gray-100",
       )}
     >
       {children}
@@ -120,7 +136,11 @@ function CodeBox({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function PromSuggestions({ settings }: { settings: AppSettings }) {
+export default function PromSuggestions({
+  settings,
+}: {
+  settings: AppSettings;
+}) {
   const [enabled, setEnabled] = useState(false);
 
   const { data, error, loading } = usePoll(api.promSuggestions, {
@@ -128,7 +148,9 @@ export default function PromSuggestions({ settings }: { settings: AppSettings })
     enabled: settings.pollingEnabled && enabled,
   });
 
-  const [promView, setPromView] = useState<"raw" | "structured">(settings.ui.defaultPromView);
+  const [promView, setPromView] = useState<"raw" | "structured">(
+    settings.ui.defaultPromView,
+  );
   const [promSearch, setPromSearch] = useState("");
 
   useEffect(() => {
@@ -166,24 +188,42 @@ export default function PromSuggestions({ settings }: { settings: AppSettings })
             active={enabled && settings.pollingEnabled}
             onClick={() => setEnabled((x) => !x)}
             disabled={!settings.pollingEnabled && !enabled}
-            title={!settings.pollingEnabled ? "Polling is OFF in Settings" : undefined}
+            title={
+              !settings.pollingEnabled
+                ? "Polling is OFF in Settings"
+                : undefined
+            }
           >
             {enabled ? "Live" : "Load"}
           </Button>
 
-          <Button active={promView === "raw"} onClick={() => setPromView("raw")}>
+          <Button
+            active={promView === "raw"}
+            onClick={() => setPromView("raw")}
+          >
             Raw
           </Button>
 
-          <Button active={promView === "structured"} onClick={() => setPromView("structured")}>
+          <Button
+            active={promView === "structured"}
+            onClick={() => setPromView("structured")}
+          >
             Structured
           </Button>
 
-          <Button onClick={() => downloadText(`prom_suggestions_${Date.now()}.txt`, promText)}>Export TXT</Button>
+          <Button
+            onClick={() =>
+              downloadText(`prom_suggestions_${Date.now()}.txt`, promText)
+            }
+          >
+            Export TXT
+          </Button>
         </>
       }
     >
-      {!settings.pollingEnabled ? <Muted>Global polling is OFF (Settings).</Muted> : null}
+      {!settings.pollingEnabled ? (
+        <Muted>Global polling is OFF (Settings).</Muted>
+      ) : null}
       {error ? <ErrorBox text={error} /> : null}
       {loading && !data && enabled ? <Muted>Loading…</Muted> : null}
       {!enabled ? <Muted>Click “Load” to fetch the file.</Muted> : null}
@@ -199,7 +239,9 @@ export default function PromSuggestions({ settings }: { settings: AppSettings })
               />
             </div>
 
-            <div className="text-xs text-gray-500 dark:text-gray-400">{statsText}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {statsText}
+            </div>
           </div>
 
           {promView === "raw" ? (
@@ -228,7 +270,9 @@ export default function PromSuggestions({ settings }: { settings: AppSettings })
                   </div>
 
                   <div className="px-5 pb-5 pt-4">
-                    <div className="mb-2 font-mono text-xs text-gray-800 dark:text-gray-200">{b.routeLine}</div>
+                    <div className="mb-2 font-mono text-xs text-gray-800 dark:text-gray-200">
+                      {b.routeLine}
+                    </div>
                     <CodeBox>{b.lines.map((l) => l.text).join("\n")}</CodeBox>
                   </div>
                 </div>

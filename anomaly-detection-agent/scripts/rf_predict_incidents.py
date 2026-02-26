@@ -4,16 +4,29 @@ import joblib
 import pandas as pd
 from pathlib import Path
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 import requests
+import os
 
 # ---------------- CONFIG ----------------
-DEFAULT_INPUT_CSV = "data/test/logs_test.csv"
-DEFAULT_MODEL_PATH = "model_experiments/models/random_forest/rf_model.pkl"
+# Determine base path - handle both local dev and Docker environments
+_script_path = Path(__file__).resolve()
+if os.getenv("DOCKER_ENV") == "true" or Path("/app").exists():
+    # In Docker, working directory is /app
+    BASE_PATH = Path("/app")
+    DEFAULT_INPUT_CSV = str(BASE_PATH / "data/merged/logs_with_metrics_clean.csv")
+    DEFAULT_MODEL_PATH = str(BASE_PATH / "model_experiments/models/random_forest/rf_model.pkl")
+    OUT_DIR = BASE_PATH / "outputs"
+else:
+    # Local development - use relative paths
+    BASE_PATH = _script_path.parent.parent
+    DEFAULT_INPUT_CSV = "data/merged/logs_with_metrics_clean.csv"
+    DEFAULT_MODEL_PATH = "model_experiments/models/random_forest/rf_model.pkl"
+    OUT_DIR = BASE_PATH / "outputs"
 
-OUT_DIR = Path("outputs")
 OUT_PRED_CSV = OUT_DIR / "predictions_latest.csv"
 OUT_INCIDENTS_JSON = OUT_DIR / "incidents_latest.json"
+OUT_INCIDENTS_HISTORY_DIR = OUT_DIR / "incidents"
 
 FEATURES_NUMERIC = ["duration_ms", "cpu_percent", "memory_mb", "db_query_time_ms", "status_code"]
 FEATURE_LEVEL = "level"
@@ -21,7 +34,7 @@ FEATURE_LEVEL = "level"
 LEVEL_MAP = {"debug": 0, "info": 1, "warn": 2, "warning": 2, "error": 3, "fatal": 4}
 
 EMAIL_SERVICE_URL = "http://localhost:4000/v1/email/send"
-SEND_EMAIL = True
+SEND_EMAIL = os.getenv("ANOMALY_SEND_EMAIL", "1").strip().lower() not in {"0", "false", "no"}
 MIN_INCIDENTS_TO_EMAIL = 1
 # ----------------------------------------
 
@@ -93,6 +106,56 @@ def build_story(incidents):
     }
 
 
+def save_incidents_with_history(payload):
+    """
+    Save incidents to both:
+    1. incidents_latest.json (for dashboard quick access)
+    2. incidents/incidents_TIMESTAMP.json (for historical tracking)
+    
+    Also performs cleanup to keep only the last 100 timestamped files.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    
+    # Create history directory if it doesn't exist
+    OUT_INCIDENTS_HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Save timestamped version (preserves history)
+    timestamped_file = OUT_INCIDENTS_HISTORY_DIR / f"incidents_{timestamp}.json"
+    timestamped_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(f"✅ Saved timestamped: {timestamped_file}")
+    
+    # Save latest version (for dashboard quick access - backward compatible)
+    OUT_INCIDENTS_JSON.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(f"✅ Updated latest: {OUT_INCIDENTS_JSON}")
+    
+    # Cleanup old files (keep last 100)
+    cleanup_old_incidents(keep=100)
+
+
+def cleanup_old_incidents(keep=100):
+    """
+    Keep only the most recent N incident files to prevent disk space issues.
+    """
+    try:
+        if not OUT_INCIDENTS_HISTORY_DIR.exists():
+            return
+        
+        # Get all timestamped incident files
+        files = sorted(
+            [f for f in OUT_INCIDENTS_HISTORY_DIR.iterdir() 
+             if f.name.startswith('incidents_') and f.name.endswith('.json')],
+            key=lambda f: f.stat().st_mtime,
+            reverse=True
+        )
+        
+        # Remove old files beyond the keep limit
+        for old_file in files[keep:]:
+            old_file.unlink()
+            print(f"🗑️  Cleaned up old file: {old_file.name}")
+    except Exception as e:
+        print(f"⚠️  Error during cleanup: {e}")
+
+
 def send_incident_email(payload):
     incidents = payload.get("incidents", [])
     story = payload.get("incident_story", {})
@@ -144,13 +207,78 @@ def send_incident_email(payload):
 def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Convert to Path objects for resolution
     input_path = Path(input_csv)
     model_file = Path(model_path)
+    
+    # Determine if we're in Docker or local environment
+    is_docker = os.getenv("DOCKER_ENV") == "true" or Path("/app").exists()
+    project_root = Path("/app") if is_docker else _script_path.parent.parent
+    
+    # Resolve paths to absolute for file operations
+    if not input_path.is_absolute():
+        input_path = project_root / input_path
+    else:
+        # If absolute path was provided, use it as-is
+        pass
+    
+    if not model_file.is_absolute():
+        model_file = project_root / model_file
+    else:
+        # If absolute path was provided, use it as-is
+        pass
+    
+    # Convert absolute paths to relative paths for JSON output
+    # This ensures the JSON always contains relative paths regardless of how the script was called
+    try:
+        if is_docker:
+            # In Docker, convert /app/... to relative path
+            if str(input_path).startswith("/app/"):
+                input_csv_relative = str(input_path)[5:]  # Remove "/app/"
+            elif str(input_path).startswith("/app"):
+                input_csv_relative = str(input_path)[4:]  # Remove "/app"
+            else:
+                input_csv_relative = str(input_path.relative_to(project_root))
+            
+            if str(model_file).startswith("/app/"):
+                model_path_relative = str(model_file)[5:]  # Remove "/app/"
+            elif str(model_file).startswith("/app"):
+                model_path_relative = str(model_file)[4:]  # Remove "/app"
+            else:
+                model_path_relative = str(model_file.relative_to(project_root))
+        else:
+            # In local dev, convert absolute path to relative from project root
+            input_csv_relative = str(input_path.relative_to(project_root))
+            model_path_relative = str(model_file.relative_to(project_root))
+    except (ValueError, AttributeError):
+        # Fallback: if we can't make it relative, use the original input
+        # but normalize separators
+        input_csv_relative = input_csv.replace("\\", "/")
+        model_path_relative = model_path.replace("\\", "/")
+        # Remove leading slashes and /app/ prefix if present
+        if input_csv_relative.startswith("/app/"):
+            input_csv_relative = input_csv_relative[5:]
+        elif input_csv_relative.startswith("/"):
+            input_csv_relative = input_csv_relative[1:]
+        if model_path_relative.startswith("/app/"):
+            model_path_relative = model_path_relative[5:]
+        elif model_path_relative.startswith("/"):
+            model_path_relative = model_path_relative[1:]
+
+    # Normalize path separators
+    input_csv_relative = input_csv_relative.replace("\\", "/")
+    model_path_relative = model_path_relative.replace("\\", "/")
+
+    # Debug logging for path resolution (helpful for troubleshooting)
+    print(f"[DEBUG] Environment: {'Docker' if is_docker else 'Local'}")
+    print(f"[DEBUG] Project root: {project_root}")
+    print(f"[DEBUG] Input CSV - Original: {input_csv}, Absolute: {input_path}, Relative (for JSON): {input_csv_relative}")
+    print(f"[DEBUG] Model path - Original: {model_path}, Absolute: {model_file}, Relative (for JSON): {model_path_relative}")
 
     if not input_path.exists():
         raise FileNotFoundError(f"Input CSV not found: {input_path}")
     if not model_file.exists():
-        raise FileNotFoundError(f"Model file not found: {model_file}")
+        raise FileNotFoundError(f"Model file not found: {model_file}. Resolved from: {model_path}")
 
     df = pd.read_csv(input_path)
     df.columns = [c.strip() for c in df.columns]
@@ -192,7 +320,33 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
     print(f"🚨 Predicted anomalies: {anomaly_count}")
     print(f"🟢 Predicted normals  : {total - anomaly_count}")
 
-    df.to_csv(OUT_PRED_CSV, index=False)
+    # Ensure CSV column order matches expected output format:
+    # service,request_id,level,event,status_code,generated_at,duration_ms,cpu_percent,memory_mb,db_query_time_ms,level_encoded,pred_anomaly_label,pred_anomaly_score
+    # Get base columns in expected order, then add computed columns
+    base_columns = ["service", "request_id", "level", "event", "status_code", "generated_at", 
+                    "duration_ms", "cpu_percent", "memory_mb", "db_query_time_ms"]
+    computed_columns = ["level_encoded", "pred_anomaly_label", "pred_anomaly_score"]
+    
+    # Build final column order: base columns (that exist) + any other columns + computed columns
+    final_columns = []
+    for col in base_columns:
+        if col in df.columns:
+            final_columns.append(col)
+    
+    # Add any other columns that aren't in base or computed lists
+    for col in df.columns:
+        if col not in base_columns and col not in computed_columns:
+            final_columns.append(col)
+    
+    # Add computed columns at the end
+    for col in computed_columns:
+        if col in df.columns:
+            final_columns.append(col)
+    
+    # Reorder dataframe to match expected column order
+    df_output = df[final_columns] if final_columns else df
+    
+    df_output.to_csv(OUT_PRED_CSV, index=False)
     print(f"📁 Saved predictions CSV: {OUT_PRED_CSV}")
 
     incidents = []
@@ -250,9 +404,9 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
     incidents = sorted(incidents, key=lambda x: x["status_code"], reverse=True)
 
     payload = {
-        "generated_at": datetime.utcnow().isoformat() + "Z",
-        "input_csv": str(input_path),
-        "model_path": str(model_file),
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "input_csv": input_csv_relative,  # Use relative path for JSON output
+        "model_path": model_path_relative,  # Use relative path for JSON output
         "total_rows": total,
         "predicted_anomaly_count": anomaly_count,
         "predicted_normal_count": total - anomaly_count,
@@ -261,12 +415,16 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
         "incidents": incidents[:200],
     }
 
-    OUT_INCIDENTS_JSON.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"📁 Saved incidents JSON: {OUT_INCIDENTS_JSON}")
+    # Save with history tracking (timestamp + cleanup)
+    save_incidents_with_history(payload)
 
     # ✅ EMAIL TRIGGER MUST BE HERE (payload exists here)
     if SEND_EMAIL and len(payload.get("incidents", [])) >= MIN_INCIDENTS_TO_EMAIL:
-        send_incident_email(payload)
+        try:
+            send_incident_email(payload)
+        except Exception as e:
+            # Do not fail anomaly pipeline if email service is unavailable.
+            print(f"⚠️ Email send skipped due to error: {e}")
     else:
         print("ℹ️ No email sent (no incidents)")
 

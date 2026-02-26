@@ -1,0 +1,14 @@
+{
+  "name": "metric-agent-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Metric Agent Backend API Server",
+  "main": "agent/api/server.js",
+  "scripts": {
+    "start": "node agent/api/server.js",
+    "dev": "node agent/api/server.js"
+  },
+  "keywords": ["metrics", "observability", "telemetry"],
+  "author": "",
+  "license": "ISC"
+}

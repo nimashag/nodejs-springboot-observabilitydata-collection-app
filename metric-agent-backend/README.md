@@ -1,4 +1,5 @@
-# 📊 Metric Signal Discovery Agent  
+# 📊 Metric Signal Discovery Agent
+
 **Intelligent Telemetry Discovery, KPI Coverage & Auto-Configuration System**
 
 ---
@@ -24,6 +25,7 @@ This project is an **intelligent observability agent** that automatically:
 This system is **not rule-based observability**.
 
 It introduces:
+
 - **ML-based route intent classification**
 - **Automatic telemetry configuration** without DevOps intervention
 - A bridge between **code-level APIs** and **operational metrics**
@@ -37,21 +39,24 @@ In short:
 ## 🧠 Machine Learning – What It Actually Does
 
 ### ❌ What ML is NOT
+
 - Not just classifying routes for fun
 - Not static regex rules
 - Not manual mappings
 
 ### ✅ What ML DOES
-- Learns **operational intent** of API routes  
+
+- Learns **operational intent** of API routes
 - Works on **new / unseen routes**
 - Enables automatic KPI recommendations
 
 ### Example
+
 PATCH /orders/:id/status
 ML predicts:
 
-
 System auto-recommends:
+
 - p95 latency
 - error rate
 - state transition failure count
@@ -62,7 +67,6 @@ System auto-recommends:
 
 Examples:
 generic_api, catalog_ops, payments, external_callback, state_transition, dispatch_workflow, availability_ops, identity_profile
-
 
 These labels directly map to **real operational KPIs**, not HTTP verbs.
 
@@ -78,6 +82,7 @@ These labels directly map to **real operational KPIs**, not HTTP verbs.
 6. Model predicts intent for unseen routes
 
 ### Model Quality
+
 - Accuracy: **~0.95**
 - Macro F1: **~0.90**
 - Weighted F1: **~0.96**
@@ -89,6 +94,7 @@ These labels directly map to **real operational KPIs**, not HTTP verbs.
 ## ⚙️ How to Run – Full Pipeline
 
 ### 1. Pull Live Telemetry
+
 ```bash
 node agent/pull-telemetry.js > agent/ml/data/telemetry_snapshot.json
 
@@ -143,15 +149,15 @@ node agent/api/server.js
 
 Runs on:
 
-http://localhost:8787
+http://localhost:3006
 
 Available Endpoints
-GET /health
-GET /api/signals
-GET /api/kpi-coverage
-GET /api/recommendations
-GET /api/update-plan
-GET /api/prom-suggestions
+GET /api/metric/health
+GET /api/metric/signals
+GET /api/metric/kpi-coverage
+GET /api/metric/recommendations
+GET /api/metric/update-plan
+GET /api/metric/prom-suggestions
 
 🎨 Dashboard UI (React + Vite)
 Install & Run UI
@@ -164,3 +170,4 @@ UI runs on:
 
 http://localhost:5173
 (or next available port)
+```

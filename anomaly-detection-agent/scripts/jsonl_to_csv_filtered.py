@@ -2,8 +2,12 @@
 import json
 import csv
 import os
+import argparse
+from pathlib import Path
+from typing import Optional
 
-INPUT_FILE = "data/raw/logs/aggregated-2026-01-02.jsonl"
+RAW_LOGS_DIR = Path("data/raw/logs")
+INPUT_FILE = None
 OUTPUT_FILE = "data/csv/log-requests.csv"
 
 FIELDS = [
@@ -15,13 +19,46 @@ FIELDS = [
     "duration_ms"
 ]
 
+def resolve_input_file(input_file: Optional[str]) -> Path:
+    if input_file:
+        path = Path(input_file)
+        if not path.exists():
+            raise SystemExit(f"❌ Input file not found: {path}")
+        return path
+
+    if not RAW_LOGS_DIR.exists():
+        raise SystemExit(f"❌ Raw logs directory not found: {RAW_LOGS_DIR}")
+
+    candidates = sorted(RAW_LOGS_DIR.glob("aggregated-*.jsonl"))
+    if not candidates:
+        raise SystemExit(f"❌ No aggregated log files found in: {RAW_LOGS_DIR}")
+
+    # Newest file by modified time (works for both dated and timestamped filenames).
+    return max(candidates, key=lambda p: p.stat().st_mtime)
+
 def main():
-    os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
+    parser = argparse.ArgumentParser(description="Convert latest aggregated JSONL logs into CSV.")
+    parser.add_argument(
+        "--input",
+        default=INPUT_FILE,
+        help="Optional input JSONL file. If omitted, newest data/raw/logs/aggregated-*.jsonl is used.",
+    )
+    parser.add_argument(
+        "--output",
+        default=OUTPUT_FILE,
+        help=f"Output CSV path (default: {OUTPUT_FILE})",
+    )
+    args = parser.parse_args()
+
+    input_file = resolve_input_file(args.input)
+    output_file = Path(args.output)
+
+    os.makedirs(output_file.parent, exist_ok=True)
 
     total = written = skipped = 0
 
-    with open(INPUT_FILE, "r", encoding="utf-8", errors="ignore") as fin, \
-         open(OUTPUT_FILE, "w", newline="", encoding="utf-8") as fout:
+    with open(input_file, "r", encoding="utf-8", errors="ignore") as fin, \
+         open(output_file, "w", newline="", encoding="utf-8") as fout:
 
         writer = csv.DictWriter(fout, fieldnames=FIELDS)
         writer.writeheader()
@@ -56,7 +93,8 @@ def main():
             writer.writerow(row)
             written += 1
 
-    print("✅ CSV written:", OUTPUT_FILE)
+    print("✅ Source JSONL:", input_file)
+    print("✅ CSV written:", output_file)
     print(f"Lines read={total} | written={written} | skipped={skipped}")
 
 if __name__ == "__main__":

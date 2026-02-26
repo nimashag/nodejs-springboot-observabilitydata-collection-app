@@ -67,8 +67,8 @@ export class MLClient {
   };
 
   constructor(
-    mlServiceUrl: string = 'localhost',
-    mlServicePort: number = 5000,
+    mlServiceUrl: string = '127.0.0.1', // Use IPv4 to avoid IPv6 connection issues
+    mlServicePort: number = 5001,
     timeout: number = 5000,
     enabled: boolean = true
   ) {
@@ -236,6 +236,7 @@ export class MLClient {
         port: this.mlServicePort,
         path: path,
         method: method,
+        family: 4, // Force IPv4 to avoid IPv6 connection issues
         headers: {
           'Content-Type': 'application/json',
           ...(postData && { 'Content-Length': Buffer.byteLength(postData) })
@@ -291,7 +292,7 @@ export function getMLClient(
 ): MLClient {
   if (!mlClientInstance) {
     mlClientInstance = new MLClient(
-      mlServiceUrl || process.env.ML_SERVICE_URL || 'localhost',
+      mlServiceUrl || process.env.ML_SERVICE_URL || '127.0.0.1', // Use IPv4 to avoid IPv6 connection issues
       mlServicePort || (process.env.ML_SERVICE_PORT ? parseInt(process.env.ML_SERVICE_PORT) : 5001),
       timeout || (process.env.ML_SERVICE_TIMEOUT ? parseInt(process.env.ML_SERVICE_TIMEOUT) : 5000),
       enabled !== undefined ? enabled : (process.env.ML_PREDICTIONS_ENABLED !== 'false')

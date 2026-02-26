@@ -1,26 +1,44 @@
-import axios from "axios";
+import axios from 'axios';
 export type { ThresholdRecommendation, AdaptiveConfig } from '../../types/alerts/alert.types';
 
 // Dynamically determine API base URL based on current hostname
 // This works for both local development and remote deployments (EC2, etc.)
 function getApiBaseUrl(): string {
   // If explicitly set via environment variable, use it
-  if ((import.meta as any).env?.VITE_ALERT_AGENT_API_URL) {
-    return (import.meta as any).env.VITE_ALERT_AGENT_API_URL;
+  // if (import.meta.env.VITE_ALERT_AGENT_API_URL) {
+  //   return import.meta.env.VITE_ALERT_AGENT_API_URL;
+  // }
+
+  // Get current hostname, protocol, and port from the browser
+  const { protocol, hostname, port } = window.location;
+  const currentPort = port || (protocol === 'https:' ? '443' : '80');
+  
+  // For local development (direct service access), use direct service port
+  // Only use direct port if accessing on the service's actual port (3008) or its exposed port (31008)
+  if ((hostname === 'localhost' || hostname === '127.0.0.1') && 
+      (currentPort === '3008' || currentPort === '31008')) {
+    // Direct service access - use the port we're already on or the exposed port
+    return currentPort === '3008' ? 'http://localhost:3008' : 'http://localhost:31008';
   }
 
-  // Get current hostname and protocol from the browser
-  const { protocol, hostname } = window.location;
-
-  // For local development, use direct service port
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return "http://localhost:3008";
+  // For Docker deployments or when accessing through nginx gateway ports
+  // Use nginx gateway (port 31000) which proxies to alert-agent-data-collect-service
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    // When accessing via Docker-exposed frontend port (30011), use nginx gateway
+    return 'http://localhost:31000';
   }
 
   // For remote deployments (EC2, etc.), use nginx gateway on the same host
   // Use port 31000 (nginx gateway) on the same hostname
-  const nginxPort = "31000";
-  return `${protocol}//${hostname}:${nginxPort}`;
+  // Always use http (not https) for the API gateway
+  const apiProtocol = protocol === 'https:' ? 'https:' : 'http:';
+  const nginxPort = '31000';
+  const apiUrl = `${apiProtocol}//${hostname}:${nginxPort}`;
+  
+  // Debug logging (remove in production if needed)
+  console.log('[AlertAPI] Detected hostname:', hostname, 'port:', currentPort, 'Using API URL:', apiUrl);
+  
+  return apiUrl;
 }
 
 const API_BASE_URL = getApiBaseUrl();
@@ -28,7 +46,7 @@ const API_BASE_URL = getApiBaseUrl();
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 second timeout
 });
@@ -285,4 +303,3 @@ export const alertApiService = {
 };
 
 export default api;
-

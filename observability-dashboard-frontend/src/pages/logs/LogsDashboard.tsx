@@ -26,14 +26,24 @@ export default function LogsDashboard() {
     try {
       setLoading(true);
       
+      console.log('[LogsDashboard] Loading dashboard data...');
+      
       // Get recent logs for display (first 10)
       const recentResponse = await queryLogs({ limit: 10 });
-      setRecentLogs(recentResponse.logs);
+      console.log('[LogsDashboard] Recent logs:', { 
+        count: recentResponse.count, 
+        logsCount: recentResponse.logs?.length 
+      });
+      setRecentLogs(recentResponse.logs || []);
       
       // Get total count and all services (query with high limit to get all services)
       const allLogsResponse = await queryLogs({ limit: 50000 });
+      console.log('[LogsDashboard] All logs:', { 
+        count: allLogsResponse.count, 
+        logsCount: allLogsResponse.logs?.length 
+      });
       const allServices = new Set(
-        allLogsResponse.logs.map((log) => log.service).filter((s): s is string => Boolean(s))
+        (allLogsResponse.logs || []).map((log) => log.service).filter((s): s is string => Boolean(s))
       );
       
       // Get error count (only need count, not logs)
@@ -43,10 +53,17 @@ export default function LogsDashboard() {
       const warnResponse = await queryLogs({ level: 'warn', limit: 1, offset: 0 });
       
       setStats({
+        total: allLogsResponse.count || 0,
+        errors: errorResponse.count || 0,
+        warnings: warnResponse.count || 0,
+        services: allServices,
+      });
+      
+      console.log('[LogsDashboard] Stats set:', {
         total: allLogsResponse.count,
         errors: errorResponse.count,
         warnings: warnResponse.count,
-        services: allServices,
+        services: allServices.size
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);

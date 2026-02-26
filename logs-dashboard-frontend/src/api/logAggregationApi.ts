@@ -19,12 +19,23 @@ function getApiBaseUrl(): string {
   //   return import.meta.env.VITE_LOG_AGGREGATION_API_URL;
   // }
 
-  // Get current hostname and protocol from the browser
-  const { protocol, hostname } = window.location;
+  // Get current hostname, protocol, and port from the browser
+  const { protocol, hostname, port } = window.location;
+  const currentPort = port || (protocol === 'https:' ? '443' : '80');
   
-  // For local development, use direct service port
+  // For local development (direct service access), use direct service port
+  // Only use direct port if accessing on the service's actual port (3005) or its exposed port (31005)
+  if ((hostname === 'localhost' || hostname === '127.0.0.1') && 
+      (currentPort === '3005' || currentPort === '31005')) {
+    // Direct service access - use the port we're already on or the exposed port
+    return currentPort === '3005' ? 'http://localhost:3005' : 'http://localhost:31005';
+  }
+
+  // For Docker deployments or when accessing through nginx gateway ports
+  // Use nginx gateway (port 31000) which proxies to log-aggregation-service
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:3005';
+    // When accessing via Docker-exposed frontend port (30010), use nginx gateway
+    return 'http://localhost:31000';
   }
 
   // For remote deployments (EC2, etc.), use nginx gateway on the same host
@@ -35,7 +46,7 @@ function getApiBaseUrl(): string {
   const apiUrl = `${apiProtocol}//${hostname}:${nginxPort}`;
   
   // Debug logging (remove in production if needed)
-  console.log('[LogAggregationAPI] Detected hostname:', hostname, 'Using API URL:', apiUrl);
+  console.log('[LogAggregationAPI] Detected hostname:', hostname, 'port:', currentPort, 'Using API URL:', apiUrl);
   
   return apiUrl;
 }
@@ -108,4 +119,3 @@ export const redactPII = async (text: string) => {
   const response = await api.post('/api/pii/redact', { text });
   return response.data;
 };
-

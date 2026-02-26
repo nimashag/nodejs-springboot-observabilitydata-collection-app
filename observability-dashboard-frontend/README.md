@@ -5,6 +5,7 @@ Unified frontend service for displaying logs and alerts analytics in a single da
 ## Overview
 
 This is a unified observability dashboard that combines:
+
 - **Log Analytics** - From log aggregation service
 - **Alert Analytics** - From alert agent data collection service
 
@@ -16,27 +17,63 @@ This is a unified observability dashboard that combines:
 ## Installation
 
 1. Navigate to the observability-dashboard-frontend directory:
+
 ```bash
 cd observability-dashboard-frontend
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
+## Configuration
+
+### Local Development Setup
+
+For local development (running services on their individual ports), ensure your `.env` file contains:
+
+```env
+VITE_LOG_AGGREGATION_API_URL=http://localhost:3005
+VITE_ALERT_AGENT_API_URL=http://localhost:3008
+VITE_ANOMALY_API_URL=http://localhost:3007
+```
+
+### Docker Deployment Setup
+
+For Docker deployments (using nginx gateway on port 31000), either:
+
+**Option 1:** Comment out the environment variables in `.env`:
+
+```env
+# VITE_LOG_AGGREGATION_API_URL=http://localhost:3005
+# VITE_ALERT_AGENT_API_URL=http://localhost:3008
+# VITE_ANOMALY_API_URL=http://localhost:3007
+```
+
+**Option 2:** Use the `.env.docker` template:
+
+```bash
+cp .env.docker .env
+```
+
+This will make the app automatically use the nginx gateway on port 31000.
+
 ## Development
 
 Start the development server:
+
 ```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:5175`
+The application will be available at `http://localhost:3009`
 
 ## Build
 
 Build for production:
+
 ```bash
 npm run build
 ```
@@ -46,6 +83,7 @@ The built files will be in the `dist/` directory.
 ## Preview Production Build
 
 Preview the production build:
+
 ```bash
 npm run preview
 ```
@@ -92,11 +130,13 @@ observability-dashboard-frontend/
 ## Docker
 
 Build Docker image:
+
 ```bash
 docker build -t observability-dashboard-frontend .
 ```
 
 Run container:
+
 ```bash
 docker run -p 30011:80 observability-dashboard-frontend
 ```
@@ -104,4 +144,3 @@ docker run -p 30011:80 observability-dashboard-frontend
 ## License
 
 Part of the Research Project for observability in microservice architectures.
-

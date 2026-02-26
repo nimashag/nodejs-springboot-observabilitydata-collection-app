@@ -5,21 +5,31 @@ Collect metrics.jsonl from each service into anomaly-detection-agent/data/raw/me
 
 import json
 import csv
+import os
 import time
 from pathlib import Path
 
-# Paths relative to project root
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+# Determine project root - handle both local dev and Docker environments
+_script_path = Path(__file__).resolve()
+if os.getenv("DOCKER_ENV") == "true" or Path("/app").exists():
+    # In Docker, working directory is /app
+    PROJECT_ROOT = Path("/app")
+    OUTPUT_DIR_RAW = Path("/app/data/raw/metrics")
+    OUTPUT_JSONL = OUTPUT_DIR_RAW / 'combined_metrics.jsonl'
+    OUTPUT_CSV = Path("/app/data/metrics/request_samples.csv")
+else:
+    # Local development - use relative path from script
+    PROJECT_ROOT = _script_path.parent.parent.parent
+    OUTPUT_DIR_RAW = PROJECT_ROOT / 'anomaly-detection-agent' / 'data' / 'raw' / 'metrics'
+    OUTPUT_JSONL = OUTPUT_DIR_RAW / 'combined_metrics.jsonl'
+    OUTPUT_CSV = PROJECT_ROOT / 'anomaly-detection-agent' / 'data' / 'metrics' / 'request_samples.csv'
+
 SERVICES = [
     'orders-service',
     'restaurants-service',
     'delivery-service',
     'users-service',
 ]
-
-OUTPUT_DIR_RAW = PROJECT_ROOT / 'anomaly-detection-agent' / 'data' / 'raw' / 'metrics'
-OUTPUT_JSONL = OUTPUT_DIR_RAW / 'combined_metrics.jsonl'
-OUTPUT_CSV = PROJECT_ROOT / 'anomaly-detection-agent' / 'data' / 'metrics' / 'request_samples.csv'
 
 
 def collect_metrics():

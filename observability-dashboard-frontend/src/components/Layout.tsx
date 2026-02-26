@@ -82,9 +82,7 @@ const Layout = ({ children }: LayoutProps) => {
       label: 'Anomalies',
       icon: TrendingUp,
       subItems: [
-        { path: '/anomalies/subpart1', label: 'Subpart 1' },
-        { path: '/anomalies/subpart2', label: 'Subpart 2' },
-        { path: '/anomalies/subpart3', label: 'Subpart 3' }
+        { path: '/anomalies/dashboard', label: 'Dashboard' }
       ]
     }
   ]
@@ -260,4 +258,3 @@ const Layout = ({ children }: LayoutProps) => {
 }
 
 export default Layout
-

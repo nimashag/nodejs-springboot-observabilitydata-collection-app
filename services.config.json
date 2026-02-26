@@ -49,11 +49,11 @@
       "k8sPath": ""
     },
     {
-      "name": "alert-dashboard-frontend",
-      "prefix": "alert-dashboard",
-      "folder": "alert-dashboard-frontend",
-      "port": 80,
-      "dockerImage": "my-app/alert-dashboard-frontend:latest",
+      "name": "metric-agent-backend",
+      "prefix": "metric-agent",
+      "folder": "metric-agent-backend",
+      "port": 3006,
+      "dockerImage": "my-app/metric-agent-backend:latest",
       "k8sPath": ""
     },
     {
@@ -70,6 +70,30 @@
       "folder": "logs-dashboard-frontend",
       "port": 80,
       "dockerImage": "my-app/logs-dashboard-frontend:latest",
+      "k8sPath": ""
+    },
+    {
+      "name": "observability-dashboard-frontend",
+      "prefix": "observability-dashboard",
+      "folder": "observability-dashboard-frontend",
+      "port": 80,
+      "dockerImage": "my-app/observability-dashboard-frontend:latest",
+      "k8sPath": ""
+    },
+    {
+      "name": "email-service",
+      "prefix": "email",
+      "folder": "email-service",
+      "port": 4000,
+      "dockerImage": "my-app/email-service:latest",
+      "k8sPath": ""
+    },
+    {
+      "name": "anomaly-detection-agent",
+      "prefix": "anomaly-detection",
+      "folder": "anomaly-detection-agent",
+      "port": 3007,
+      "dockerImage": "my-app/anomaly-detection-agent:latest",
       "k8sPath": ""
     }
   ],

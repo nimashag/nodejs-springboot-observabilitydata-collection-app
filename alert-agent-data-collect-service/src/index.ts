@@ -556,7 +556,16 @@ const server = http.createServer(async (req, res) => {
     // Debug logging
     console.log(`[ROUTE] ${req.method} ${urlPath}`);
 
+    // Webhook endpoint - POST /api/alerts (requires authentication if API_KEY is set)
     if (req.method === "POST" && urlPath === "/api/alerts") {
+      if (!authenticateRequest(req)) {
+        res.writeHead(401);
+        res.end(
+          JSON.stringify({ error: "Unauthorized. Valid API key required." }),
+        );
+        return;
+      }
+
       let body = "";
       req.on("data", (chunk) => {
         body += chunk.toString();
@@ -589,7 +598,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // POST /api/apply-threshold - Apply a threshold recommendation to update the config
+    // POST /api/apply-threshold - Apply a threshold recommendation to update the config (UI feature)
     if (req.method === "POST" && urlPath === "/api/apply-threshold") {
       let body = "";
       req.on("data", (chunk) => {
@@ -717,7 +726,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // POST /api/send-email - Manually send email notification
+    // POST /api/send-email - Manually send email notification (UI testing feature)
     if (req.method === "POST" && urlPath === "/api/send-email") {
       console.log("[EMAIL] Received email send request");
       let body = "";
@@ -728,7 +737,7 @@ const server = http.createServer(async (req, res) => {
       req.on("end", async () => {
         try {
           const data = JSON.parse(body);
-          
+
           if (!mlClient) {
             res.writeHead(503);
             res.end(
@@ -741,18 +750,19 @@ const server = http.createServer(async (req, res) => {
           }
 
           // Forward request to ML service
-          const mlServiceUrl = process.env.ML_SERVICE_URL || "localhost";
-          const mlServicePort = process.env.ML_SERVICE_PORT 
-            ? parseInt(process.env.ML_SERVICE_PORT) 
+          const mlServiceUrl = process.env.ML_SERVICE_URL || "127.0.0.1"; // Use IPv4 to avoid IPv6 connection issues
+          const mlServicePort = process.env.ML_SERVICE_PORT
+            ? parseInt(process.env.ML_SERVICE_PORT)
             : 5001;
 
           const postData = JSON.stringify(data);
-          
+
           const options = {
             hostname: mlServiceUrl,
             port: mlServicePort,
             path: "/email/send",
             method: "POST",
+            family: 4, // Force IPv4 to avoid IPv6 connection issues
             headers: {
               "Content-Type": "application/json",
               "Content-Length": Buffer.byteLength(postData),
@@ -856,13 +866,8 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (!authenticateRequest(req)) {
-      res.writeHead(401);
-      res.end(
-        JSON.stringify({ error: "Unauthorized. Valid API key required." }),
-      );
-      return;
-    }
+    // All GET endpoints below don't require authentication (read-only access)
+    // Only POST/webhook endpoints require authentication
 
     if (!analysisData) {
       if (processingError) {
@@ -1251,7 +1256,9 @@ collector = new AlertDataCollector();
     console.log(`API: http://localhost:${PORT}/api/analysis`);
     console.log(`Webhook: POST http://localhost:${PORT}/api/alerts`);
     if (API_KEY) {
-      console.log("Authentication: Enabled (API key required)");
+      console.log(
+        "Authentication: Enabled (API key required for webhook endpoint only)",
+      );
     } else {
       console.log("Authentication: Disabled (no API key set)");
     }

@@ -56,10 +56,12 @@ async function getText(url: string): Promise<string> {
 }
 
 export const api = {
-  health: () => getJson<{ ok: boolean; service: string; ts: number }>("/health"),
-  signals: () => getJson<SignalsResponse>("/api/signals"),
-  kpiCoverage: () => getJson<KpiCoverageResponse>("/api/kpi-coverage"),
-  updatePlan: () => getJson<UpdatePlanResponse>("/api/update-plan"),
-  recommendations: () => getJson<RecommendationsResponse>("/api/recommendations"),
-  promSuggestions: () => getText("/api/prom-suggestions"),
+  health: () =>
+    getJson<{ ok: boolean; service: string; ts: number }>("/health"),
+  signals: () => getJson<SignalsResponse>("/api/metric/signals"),
+  kpiCoverage: () => getJson<KpiCoverageResponse>("/api/metric/kpi-coverage"),
+  updatePlan: () => getJson<UpdatePlanResponse>("/api/metric/update-plan"),
+  recommendations: () =>
+    getJson<RecommendationsResponse>("/api/metric/recommendations"),
+  promSuggestions: () => getText("/api/metric/prom-suggestions"),
 };

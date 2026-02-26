@@ -1,7 +1,10 @@
-version: '3.8'
+version: "3.8"
 
 services:
   frontend-service:
+    build:
+      context: ../frontend-service
+      dockerfile: Dockerfile
     image: my-app/frontend-service:latest
     container_name: frontend-service
     ports:
@@ -11,6 +14,9 @@ services:
     restart: unless-stopped
 
   restaurants-service:
+    build:
+      context: ../restaurants-service
+      dockerfile: Dockerfile
     image: my-app/restaurants-service:latest
     container_name: restaurants-service
     ports:
@@ -23,11 +29,16 @@ services:
     volumes:
       - uploads-data:/app/uploads
       - ~/temp/docker-files/restaurants-service/logs:/app/logs
+      - ~/temp/docker-files/restaurants-service/alerts:/app/alerts
+      - ~/temp/docker-files/restaurants-service/metrics:/app/metrics
     networks:
       - app-network
     restart: unless-stopped
 
   orders-service:
+    build:
+      context: ../orders-service
+      dockerfile: Dockerfile
     image: my-app/orders-service:latest
     container_name: orders-service
     ports:
@@ -39,11 +50,16 @@ services:
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
     volumes:
       - ~/temp/docker-files/orders-service/logs:/app/logs
+      - ~/temp/docker-files/orders-service/alerts:/app/alerts
+      - ~/temp/docker-files/orders-service/metrics:/app/metrics
     networks:
       - app-network
     restart: unless-stopped
 
   users-service:
+    build:
+      context: ../users-service
+      dockerfile: Dockerfile
     image: my-app/users-service:latest
     container_name: users-service
     ports:
@@ -55,11 +71,16 @@ services:
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
     volumes:
       - ~/temp/docker-files/users-service/logs:/app/logs
+      - ~/temp/docker-files/users-service/alerts:/app/alerts
+      - ~/temp/docker-files/users-service/metrics:/app/metrics
     networks:
       - app-network
     restart: unless-stopped
 
   delivery-service:
+    build:
+      context: ../delivery-service
+      dockerfile: Dockerfile
     image: my-app/delivery-service:latest
     container_name: delivery-service
     ports:
@@ -71,23 +92,16 @@ services:
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
     volumes:
       - ~/temp/docker-files/delivery-service/logs:/app/logs
-    networks:
-      - app-network
-    restart: unless-stopped
-
-  alert-agent-data-collect-service:
-    image: my-app/alert-agent-data-collect-service:latest
-    container_name: alert-agent-data-collect-service
-    ports:
-      - "31008:3008"
-    volumes:
-      - ..:/project:ro
-    working_dir: /project/alert-agent-data-collect-service
+      - ~/temp/docker-files/delivery-service/alerts:/app/alerts
+      - ~/temp/docker-files/delivery-service/metrics:/app/metrics
     networks:
       - app-network
     restart: unless-stopped
 
   log-aggregation-service:
+    build:
+      context: ../log-aggregation-service
+      dockerfile: Dockerfile
     image: my-app/log-aggregation-service:latest
     container_name: log-aggregation-service
     ports:
@@ -109,13 +123,91 @@ services:
     mem_limit: 900m
     memswap_limit: 900m
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3005/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3005/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  alert-agent-data-collect-service:
+    build:
+      context: ../alert-agent-data-collect-service
+      dockerfile: Dockerfile
+    image: my-app/alert-agent-data-collect-service:latest
+    container_name: alert-agent-data-collect-service
+    ports:
+      - "31008:3008"
+    environment:
+      - PORT=3008
+      - API_KEY=${ALERT_AGENT_API_KEY:-your-secret-api-key-here}
+      - ALLOWED_ORIGINS=
+      - ALERT_COLLECTION_INTERVAL=60000
+      - DOCKER_ENV=true
+    volumes:
+      - ~/temp/docker-files/alert-agent-data-collect-service/output:/app/output
+      - ~/temp/docker-files/alert-agent-data-collect-service/ml-module/models:/app/ml-module/models
+      - ~/temp/docker-files/delivery-service/alerts:/app/alerts/delivery-service:ro
+      - ~/temp/docker-files/orders-service/alerts:/app/alerts/orders-service:ro
+      - ~/temp/docker-files/restaurants-service/alerts:/app/alerts/restaurants-service:ro
+      - ~/temp/docker-files/users-service/alerts:/app/alerts/users-service:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3008/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  metric-agent-backend:
+    build:
+      context: ../metric-agent-backend
+      dockerfile: Dockerfile
+    image: my-app/metric-agent-backend:latest
+    container_name: metric-agent-backend
+    ports:
+      - "31006:3006"
+    environment:
+      - PORT=3006
+      - DOCKER_ENV=true
+    volumes:
+      - ~/temp/docker-files/delivery-service/metrics:/app/metrics/delivery-service:ro
+      - ~/temp/docker-files/orders-service/metrics:/app/metrics/orders-service:ro
+      - ~/temp/docker-files/restaurants-service/metrics:/app/metrics/restaurants-service:ro
+      - ~/temp/docker-files/users-service/metrics:/app/metrics/users-service:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3006/api/metric/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
   logs-dashboard-frontend:
+    build:
+      context: ../logs-dashboard-frontend
+      dockerfile: Dockerfile
     image: my-app/logs-dashboard-frontend:latest
     container_name: logs-dashboard-frontend
     ports:
@@ -123,6 +215,84 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+
+  observability-dashboard-frontend:
+    build:
+      context: ../observability-dashboard-frontend
+      dockerfile: Dockerfile
+    image: my-app/observability-dashboard-frontend:latest
+    container_name: observability-dashboard-frontend
+    ports:
+      - "30011:80"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  email-service:
+    build:
+      context: ../email-service
+      dockerfile: Dockerfile
+    image: my-app/email-service:latest
+    container_name: email-service
+    ports:
+      - "31012:4000"
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  anomaly-detection-agent:
+    build:
+      context: ../anomaly-detection-agent
+      dockerfile: Dockerfile
+    image: my-app/anomaly-detection-agent:latest
+    container_name: anomaly-detection-agent
+    ports:
+      - "31007:3007"
+    environment:
+      - PORT=3007
+      - PYTHONIOENCODING=utf-8
+      - ANOMALY_SEND_EMAIL=${ANOMALY_SEND_EMAIL:-0}
+      - EMAIL_SERVICE_URL=http://email-service:4000/v1/email/send
+      - DOCKER_ENV=true
+      # Set RUN_PIPELINE=false to run only the API server (useful when you want to use existing data)
+      # Set to true to run both pipeline and API server concurrently
+      - RUN_PIPELINE=${RUN_PIPELINE:-true}
+    volumes:
+      # Mount local outputs directory so both Docker and local environments use the same files
+      - ../anomaly-detection-agent/outputs:/app/outputs
+      - ~/temp/docker-files/anomaly-detection-agent/data:/app/data
+      # Model experiments: Only mount if you want to override models from the image
+      # If the directory doesn't exist on host, the image's models will be used
+      # Uncomment the line below if you want to mount external models:
+      # - ~/temp/docker-files/anomaly-detection-agent/model_experiments:/app/model_experiments:ro
+      # Mount aggregated logs to the path expected by the script (relative to project root)
+      - ~/temp/docker-files/log-aggregation-service/aggregated-logs:/app/log-aggregation-service/aggregated-logs:ro
+      # Mount service metrics to paths expected by the script
+      - ~/temp/docker-files/delivery-service/metrics:/app/delivery-service/metrics:ro
+      - ~/temp/docker-files/orders-service/metrics:/app/orders-service/metrics:ro
+      - ~/temp/docker-files/restaurants-service/metrics:/app/restaurants-service/metrics:ro
+      - ~/temp/docker-files/users-service/metrics:/app/users-service/metrics:ro
+    depends_on:
+      - email-service
+      - log-aggregation-service
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3007/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   nginx-gateway:
     image: nginx:alpine
@@ -138,9 +308,12 @@ services:
       - users-service
       - delivery-service
       - alert-agent-data-collect-service
-      - alert-dashboard-frontend
+      - metric-agent-backend
       - log-aggregation-service
       - logs-dashboard-frontend
+      - observability-dashboard-frontend
+      - email-service
+      - anomaly-detection-agent
     networks:
       - app-network
     restart: unless-stopped
@@ -152,4 +325,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-
