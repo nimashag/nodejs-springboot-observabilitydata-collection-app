@@ -1,13 +1,13 @@
 {
-  "generated_at": 1767459831780,
+  "generated_at": 1771863671952,
   "services": [
     {
       "service": "orders-service",
       "snapshot": {
-        "total_requests": 1,
+        "total_requests": 9,
         "total_errors": 0,
-        "avg_latency_ms": 7,
-        "rss_mb": 52,
+        "avg_latency_ms": 2,
+        "rss_mb": 76,
         "heap_used_mb": 27,
         "heap_used_mb_java": 27
       },
@@ -20,10 +20,10 @@
     {
       "service": "restaurants-service",
       "snapshot": {
-        "total_requests": 1,
+        "total_requests": 9,
         "total_errors": 0,
-        "avg_latency_ms": 6,
-        "rss_mb": 52,
+        "avg_latency_ms": 2,
+        "rss_mb": 71,
         "heap_used_mb": 24,
         "heap_used_mb_java": 24
       },
@@ -36,10 +36,10 @@
     {
       "service": "delivery-service",
       "snapshot": {
-        "total_requests": 1,
+        "total_requests": 9,
         "total_errors": 0,
-        "avg_latency_ms": 6,
-        "rss_mb": 51,
+        "avg_latency_ms": 2,
+        "rss_mb": 75,
         "heap_used_mb": 28,
         "heap_used_mb_java": 28
       },
@@ -52,12 +52,12 @@
     {
       "service": "users-service",
       "snapshot": {
-        "total_requests": 1,
+        "total_requests": 9,
         "total_errors": 0,
-        "avg_latency_ms": 48,
+        "avg_latency_ms": 5,
         "rss_mb": 251,
-        "heap_used_mb": 38,
-        "heap_used_mb_java": 38
+        "heap_used_mb": 51,
+        "heap_used_mb_java": 51
       },
       "discovered": {
         "top_routes": [],

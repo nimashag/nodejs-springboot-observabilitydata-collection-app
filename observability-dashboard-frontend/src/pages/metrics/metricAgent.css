@@ -1,0 +1,719 @@
+/* ================================
+   Metric Agent (SCOPED DARK THEME)
+   Same look as original index.css
+   ================================ */
+
+.metric-agent {
+  /* This makes the metric area look like the old app even inside white product pages */
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(124, 108, 255, 0.12), transparent),
+    radial-gradient(900px 500px at 80% 0%, rgba(45, 212, 191, 0.08), transparent),
+    #0b0d12;
+  color: rgba(255, 255, 255, 0.92);
+  padding: 18px;
+  border-radius: 18px;
+}
+
+/* Scope all variables to metric-agent only */
+.metric-agent {
+  --bg: #0b0d12;
+  --panel: #0f121a;
+  --panel2: #0c0f16;
+  --border: rgba(255, 255, 255, 0.08);
+  --border2: rgba(255, 255, 255, 0.06);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.65);
+  --muted2: rgba(255, 255, 255, 0.45);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --radius: 16px;
+  --radius2: 12px;
+  --accent: #7c6cff; /* Linear-ish purple */
+  --good: #2dd4bf;
+}
+
+/* Keep box-sizing local-ish */
+.metric-agent * {
+  box-sizing: border-box;
+}
+
+/* IMPORTANT:
+   In the full product, we DO NOT control html/body/root.
+   So we style inside the metric-agent container only. */
+
+.metric-agent .app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: auto;
+  min-height: 720px;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.metric-agent .sidebar {
+  border-right: 1px solid var(--border);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 30%), var(--panel2);
+}
+
+.metric-agent .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.metric-agent .brandMark {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 30% 30%, rgba(124, 108, 255, 0.9), rgba(124, 108, 255, 0.2));
+  box-shadow: 0 10px 30px rgba(124, 108, 255, 0.15);
+}
+
+.metric-agent .brandName {
+  font-weight: 650;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
+.metric-agent .brandSub {
+  font-size: 12px;
+  color: var(--muted2);
+  margin-top: 2px;
+}
+
+.metric-agent .sidebarSection {
+  padding: 2px 6px;
+}
+
+.metric-agent .sidebarLabel {
+  font-size: 11px;
+  color: var(--muted2);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 6px 8px 10px;
+}
+
+.metric-agent .nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metric-agent .navItem {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  padding: 10px 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 120ms ease;
+}
+
+.metric-agent .navItem:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.metric-agent .navItemActive {
+  background: rgba(124, 108, 255, 0.1);
+  border-color: rgba(124, 108, 255, 0.22);
+}
+
+.metric-agent .navDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.metric-agent .navItemActive .navDot {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(124, 108, 255, 0.12);
+}
+
+.metric-agent .navText {
+  flex: 1;
+  font-size: 13px;
+  text-align: left;
+}
+
+/* Badge (small one) */
+.metric-agent .badge {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 3px 8px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Sidebar footer */
+.metric-agent .sidebarFooter {
+  margin-top: auto;
+  padding: 8px 6px;
+}
+
+.metric-agent .pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border2);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 999px;
+  padding: 8px 10px;
+}
+
+.metric-agent .pillDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--good);
+  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.12);
+}
+
+.metric-agent .pillText {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Main */
+.metric-agent .main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: transparent;
+}
+
+/* Topbar */
+.metric-agent .topbar {
+  height: 64px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  background: rgba(15, 18, 26, 0.6);
+  backdrop-filter: blur(10px);
+}
+
+.metric-agent .pageTitle {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+
+.metric-agent .topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.metric-agent .search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border2);
+  border-radius: 999px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  min-width: 320px;
+}
+
+.metric-agent .searchIcon {
+  font-size: 12px;
+  color: var(--muted2);
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.metric-agent .searchInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  width: 100%;
+  font-size: 13px;
+}
+
+/* Buttons */
+.metric-agent .btn {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+
+.metric-agent .btnActive {
+  border-color: rgba(120, 120, 255, 0.35);
+  background: rgba(120, 120, 255, 0.12);
+}
+
+/* Content */
+.metric-agent .content {
+  padding: 18px;
+}
+
+/* Grid */
+.metric-agent .grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* Cards */
+.metric-agent .card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.metric-agent .cardHeader {
+  padding: 14px 14px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.metric-agent .cardTitle {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.metric-agent .cardSub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+.metric-agent .cardBody {
+  padding: 14px;
+}
+
+.metric-agent .cardRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* KV */
+.metric-agent .kv {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.metric-agent .kvRow {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 10px;
+}
+.metric-agent .kvRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.metric-agent .kvKey {
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+.metric-agent .kvVal {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Status dot */
+.metric-agent .status {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+}
+.metric-agent .status.ok {
+  background: var(--good);
+  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.12);
+}
+
+/* Empty box */
+.metric-agent .empty {
+  border: 1px dashed rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius2);
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.metric-agent .emptyTitle {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.metric-agent .emptySub {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+/* Muted + mono */
+.metric-agent .muted {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+.metric-agent .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+/* Table */
+.metric-agent .table {
+  margin-top: 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius2);
+  overflow: hidden;
+}
+
+.metric-agent .tHead,
+.metric-agent .tRow {
+  display: grid;
+  grid-template-columns: 180px 1.2fr 140px 120px 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+  align-items: center;
+}
+
+.metric-agent .tHead {
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 11px;
+  color: var(--muted2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--border2);
+}
+
+.metric-agent .tRow {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.metric-agent .tRow:last-child {
+  border-bottom: none;
+}
+
+.metric-agent .tRow:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Toolbar / inputs */
+.metric-agent .toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0 12px;
+}
+
+.metric-agent .toolbarLeft,
+.metric-agent .toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.metric-agent .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.metric-agent .meta {
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+.metric-agent .input,
+.metric-agent .select {
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border2);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 0 10px;
+  font-size: 12px;
+  outline: none;
+}
+
+.metric-agent .input {
+  width: 280px;
+}
+
+/* Select arrow */
+.metric-agent .select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0 34px 0 10px;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.65) 50%),
+    linear-gradient(135deg, rgba(255,255,255,0.65) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 50%,
+    calc(100% - 11px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  color-scheme: dark;
+}
+
+.metric-agent .select:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.metric-agent .select:focus {
+  outline: none;
+  border-color: rgba(124, 108, 255, 0.35);
+  box-shadow: 0 0 0 4px rgba(124, 108, 255, 0.12);
+}
+
+.metric-agent .select option {
+  background: #0f121a;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.metric-agent .select option:checked,
+.metric-agent .select option:hover {
+  background: rgba(124, 108, 255, 0.22);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Badges (severity) */
+.metric-agent .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.metric-agent .badge-ok {
+  border-color: rgba(60, 255, 160, 0.25);
+  background: rgba(60, 255, 160, 0.08);
+}
+
+.metric-agent .badge-warn {
+  border-color: rgba(255, 190, 70, 0.30);
+  background: rgba(255, 190, 70, 0.10);
+}
+
+.metric-agent .badge-crit {
+  border-color: rgba(255, 80, 80, 0.35);
+  background: rgba(255, 80, 80, 0.10);
+}
+
+.metric-agent .badge-neutral {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Per-page table column layouts */
+.metric-agent .tableSignals .tSignals {
+  grid-template-columns: 180px 160px 120px 120px 1fr 120px;
+}
+
+.metric-agent .tableKpi .tKpi {
+  grid-template-columns: 180px 140px 1fr 1fr;
+}
+
+.metric-agent .tablePlan .tPlan {
+  grid-template-columns: 180px 1.2fr 160px 1fr 120px;
+}
+
+/* Code */
+.metric-agent .code {
+  margin-top: 10px;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: auto;
+  max-height: 560px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Drawer */
+.metric-agent .drawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 999;
+}
+
+.metric-agent .drawer {
+  width: min(560px, 92vw);
+  height: 100%;
+  border-left: 1px solid var(--border2);
+  background: rgba(10, 10, 12, 0.92);
+  padding: 16px;
+  overflow: auto;
+}
+
+.metric-agent .drawerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.metric-agent .drawerTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.metric-agent .drawerSub {
+  font-size: 12px;
+  color: var(--muted2);
+  margin-top: 4px;
+}
+
+.metric-agent .drawerBody {
+  padding-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.metric-agent .iconBtn {
+  height: 34px;
+  width: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border2);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+}
+
+.metric-agent .iconBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Overview Analytics */
+.metric-agent .chartGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-agent .chartCard {
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px;
+}
+
+.metric-agent .chartTitle {
+  font-size: 12px;
+  color: var(--muted2);
+  margin-bottom: 4px;
+}
+
+.metric-agent .chartSub {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.metric-agent .spark {
+  color: rgba(124, 108, 255, 0.9);
+  opacity: 0.95;
+}
+
+.metric-agent .barList {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.metric-agent .barRow {
+  display: grid;
+  grid-template-columns: 1fr 2fr 50px;
+  gap: 10px;
+  align-items: center;
+}
+
+.metric-agent .barLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.86);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-agent .barTrack {
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+
+.metric-agent .barFill {
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(124, 108, 255, 0.55);
+}
+
+.metric-agent .barVal {
+  text-align: right;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Mobile */
+@media (max-width: 980px) {
+  .metric-agent .app {
+    grid-template-columns: 1fr;
+  }
+  .metric-agent .sidebar {
+    display: none;
+  }
+  .metric-agent .grid {
+    grid-template-columns: 1fr;
+  }
+  .metric-agent .search {
+    min-width: 220px;
+  }
+  .metric-agent .chartGrid {
+    grid-template-columns: 1fr;
+  }
+}
