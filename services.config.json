@@ -49,6 +49,14 @@
       "k8sPath": ""
     },
     {
+      "name": "metric-agent-backend",
+      "prefix": "metric-agent",
+      "folder": "metric-agent-backend",
+      "port": 3006,
+      "dockerImage": "my-app/metric-agent-backend:latest",
+      "k8sPath": ""
+    },
+    {
       "name": "log-aggregation-service",
       "prefix": "log-aggregation",
       "folder": "log-aggregation-service",
