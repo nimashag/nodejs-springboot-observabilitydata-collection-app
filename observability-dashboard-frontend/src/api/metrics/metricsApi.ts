@@ -8,15 +8,15 @@ function getApiBaseUrl(): string {
   const currentPort = port || (protocol === "https:" ? "443" : "80");
 
   // For local development (direct service access), use direct service port
-  // Only use direct port if accessing on the service's actual port (8787) or its exposed port (31787)
+  // Only use direct port if accessing on the service's actual port (3006) or its exposed port (31006)
   if (
     (hostname === "localhost" || hostname === "127.0.0.1") &&
-    (currentPort === "8787" || currentPort === "31787")
+    (currentPort === "3006" || currentPort === "31006")
   ) {
     // Direct service access - use the port we're already on or the exposed port
-    return currentPort === "8787"
-      ? "http://localhost:8787"
-      : "http://localhost:31787";
+    return currentPort === "3006"
+      ? "http://localhost:3006"
+      : "http://localhost:31006";
   }
 
   // For Docker deployments or when accessing through nginx gateway ports
@@ -111,37 +111,37 @@ export type HealthResponse = {
 export const metricsApiService = {
   // Health check
   async getHealth(): Promise<HealthResponse> {
-    const response = await axiosClient.get("/health");
+    const response = await axiosClient.get("/api/metric/health");
     return response.data;
   },
 
   // Get signals
   async getSignals(): Promise<SignalsResponse> {
-    const response = await axiosClient.get("/api/signals");
+    const response = await axiosClient.get("/api/metric/signals");
     return response.data;
   },
 
   // Get KPI coverage
   async getKpiCoverage(): Promise<KpiCoverageResponse> {
-    const response = await axiosClient.get("/api/kpi-coverage");
+    const response = await axiosClient.get("/api/metric/kpi-coverage");
     return response.data;
   },
 
   // Get update plan
   async getUpdatePlan(): Promise<UpdatePlanResponse> {
-    const response = await axiosClient.get("/api/update-plan");
+    const response = await axiosClient.get("/api/metric/update-plan");
     return response.data;
   },
 
   // Get recommendations
   async getRecommendations(): Promise<RecommendationsResponse> {
-    const response = await axiosClient.get("/api/recommendations");
+    const response = await axiosClient.get("/api/metric/recommendations");
     return response.data;
   },
 
   // Get Prometheus suggestions
   async getPromSuggestions(): Promise<string> {
-    const response = await axiosClient.get("/api/prom-suggestions", {
+    const response = await axiosClient.get("/api/metric/prom-suggestions", {
       headers: {
         Accept: "text/plain",
       },

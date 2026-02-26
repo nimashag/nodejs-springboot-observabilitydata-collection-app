@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 // agent/ folder (parent of api/)
 const AGENT_DIR = path.resolve(__dirname, "..");
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 8787;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3006;
 
 // If you want to restrict CORS later, set:
 // process.env.ALLOWED_ORIGINS="http://localhost:5173,http://localhost:3000"
@@ -127,11 +127,11 @@ const server = http.createServer((req, res) => {
   }
 
   // Routes
-  if (pathname === "/health") {
+  if (pathname === "/api/metric/health") {
     return ok(req, res, { ok: true, service: "agent-api", ts: Date.now() });
   }
 
-  if (pathname === "/api/signals") {
+  if (pathname === "/api/metric/signals") {
     return ok(
       req,
       res,
@@ -143,11 +143,11 @@ const server = http.createServer((req, res) => {
     );
   }
 
-  if (pathname === "/api/baseline") {
+  if (pathname === "/api/metric/baseline") {
     return ok(req, res, readJsonFileSafe(files.baseline, { services: {} }));
   }
 
-  if (pathname === "/api/kpi-coverage") {
+  if (pathname === "/api/metric/kpi-coverage") {
     return ok(
       req,
       res,
@@ -158,7 +158,7 @@ const server = http.createServer((req, res) => {
     );
   }
 
-  if (pathname === "/api/recommendations") {
+  if (pathname === "/api/metric/recommendations") {
     return ok(
       req,
       res,
@@ -169,7 +169,7 @@ const server = http.createServer((req, res) => {
     );
   }
 
-  if (pathname === "/api/update-plan") {
+  if (pathname === "/api/metric/update-plan") {
     return ok(
       req,
       res,
@@ -181,7 +181,7 @@ const server = http.createServer((req, res) => {
     );
   }
 
-  if (pathname === "/api/prom-suggestions") {
+  if (pathname === "/api/metric/prom-suggestions") {
     return sendText(
       req,
       res,
@@ -191,7 +191,7 @@ const server = http.createServer((req, res) => {
   }
 
   // One endpoint for the frontend (so UI can load everything in 1 request)
-  if (pathname === "/api/summary") {
+  if (pathname === "/api/metric/summary") {
     const summary = {
       generated_at: Date.now(),
       signals: readJsonFileSafe(files.signals, { generated_at: Date.now(), samples: 0, signals: [] }),
@@ -209,12 +209,12 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`[agent-api] running on http://localhost:${PORT}`);
   console.log(`[agent-api] endpoints:`);
-  console.log(`  GET /health`);
-  console.log(`  GET /api/signals`);
-  console.log(`  GET /api/baseline`);
-  console.log(`  GET /api/kpi-coverage`);
-  console.log(`  GET /api/recommendations`);
-  console.log(`  GET /api/update-plan`);
-  console.log(`  GET /api/prom-suggestions`);
-  console.log(`  GET /api/summary`);
+  console.log(`  GET /api/metric/health`);
+  console.log(`  GET /api/metric/signals`);
+  console.log(`  GET /api/metric/baseline`);
+  console.log(`  GET /api/metric/kpi-coverage`);
+  console.log(`  GET /api/metric/recommendations`);
+  console.log(`  GET /api/metric/update-plan`);
+  console.log(`  GET /api/metric/prom-suggestions`);
+  console.log(`  GET /api/metric/summary`);
 });
