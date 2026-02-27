@@ -151,7 +151,6 @@ services:
       - DOCKER_ENV=true
     volumes:
       - ~/temp/docker-files/alert-agent-data-collect-service/output:/app/output
-      - ~/temp/docker-files/alert-agent-data-collect-service/ml-module/models:/app/ml-module/models
       - ~/temp/docker-files/delivery-service/alerts:/app/alerts/delivery-service:ro
       - ~/temp/docker-files/orders-service/alerts:/app/alerts/orders-service:ro
       - ~/temp/docker-files/restaurants-service/alerts:/app/alerts/restaurants-service:ro
