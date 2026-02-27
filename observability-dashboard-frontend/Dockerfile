@@ -15,7 +15,7 @@ RUN npm install --include=optional
 
 # Explicitly install Rollup native binary (workaround for npm optional deps bug)
 # This ensures the native binary is available even if npm didn't install it as optional
-RUN npm install --no-save @rollup/rollup-linux-x64-gnu || true
+RUN rm -rf node_modules package-lock.json \ && npm install
 
 # Copy source code and configuration files
 COPY . .
