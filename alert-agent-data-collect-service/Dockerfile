@@ -26,14 +26,18 @@ COPY ml-module/requirements_enhanced.txt ./ml-module/
 RUN pip install --no-cache-dir -r ml-module/requirements.txt && \
     pip install --no-cache-dir flask>=3.0.0 flask-cors>=4.0.0
 
-# Copy source code
+# Copy source code (includes pre-trained ML models from git)
 COPY . .
 
 # Build TypeScript
 RUN npm run build
 
-# Create necessary directories
-RUN mkdir -p output ml-module/models
+# Create output directory
+RUN mkdir -p output
+
+# Verify ML models exist in the image (fail build if missing)
+RUN ls -la ml-module/models/*.joblib && echo "[✓] ML models verified in image" || \
+    (echo "[✗] ERROR: ML models not found! Ensure models are committed to git." && exit 1)
 
 # Expose port
 EXPOSE 3008
