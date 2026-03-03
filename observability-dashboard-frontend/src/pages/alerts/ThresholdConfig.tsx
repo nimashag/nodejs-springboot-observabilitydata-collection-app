@@ -231,10 +231,10 @@ const ThresholdConfig = () => {
 
   const getConfidenceColor = (confidence: string) => {
     switch (confidence.toLowerCase()) {
-      case 'high': return 'bg-green-100 text-green-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'low': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'high': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+      case 'low': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
     }
   }
 
@@ -481,11 +481,11 @@ const ThresholdConfig = () => {
   const getCategoryBadge = (category: string) => {
     switch (category) {
       case 'error':
-        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Error</span>
+        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Error</span>
       case 'latency':
-        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Latency</span>
+        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Latency</span>
       case 'availability':
-        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Availability</span>
+        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Availability</span>
       default:
         return null
     }
@@ -546,8 +546,8 @@ const ThresholdConfig = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600"></div>
-        <p className="text-gray-600 font-medium">Loading adaptive threshold intelligence...</p>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600 dark:border-primary-400"></div>
+        <p className="text-gray-600 dark:text-gray-400 font-medium">Loading adaptive threshold intelligence...</p>
       </div>
     )
   }
@@ -605,19 +605,19 @@ const ThresholdConfig = () => {
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 {showExportMenu && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                  <div className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black dark:ring-gray-700 ring-opacity-5 z-50">
                     <div className="py-1">
                       <button
                         onClick={() => {
                           exportMonthlySummaryPDF()
                           setShowExportMenu(false)
                         }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-400 transition-colors"
                       >
                         <FileText className="w-5 h-5 text-red-500" />
                         <div className="text-left">
                           <div className="font-medium">Monthly Summary (PDF)</div>
-                          <div className="text-xs text-gray-500">Comprehensive PDF report</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">Comprehensive PDF report</div>
                         </div>
                       </button>
                       <button
@@ -626,12 +626,12 @@ const ThresholdConfig = () => {
                           setShowExportMenu(false)
                         }}
                         disabled={!config}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-400 transition-colors disabled:opacity-50"
                       >
                         <Database className="w-5 h-5 text-blue-500" />
                         <div className="text-left">
                           <div className="font-medium">Config Data (JSON)</div>
-                          <div className="text-xs text-gray-500">Raw configuration data</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">Raw configuration data</div>
                         </div>
                       </button>
                     </div>
@@ -652,47 +652,47 @@ const ThresholdConfig = () => {
       )}
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-600 rounded-lg p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-red-800">Error Loading Data</h3>
-            <p className="text-red-700 text-sm mt-1">{error}</p>
+            <h3 className="font-semibold text-red-800 dark:text-red-200">Error Loading Data</h3>
+            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{error}</p>
           </div>
         </div>
       )}
 
       {/* Apply Success Notification */}
       {applySuccess && (
-        <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 flex items-start gap-3">
-          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+        <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 dark:border-green-600 rounded-lg p-4 flex items-start gap-3">
+          <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-green-800">Threshold Applied Successfully</h3>
-            <p className="text-green-700 text-sm mt-1">{applySuccess}</p>
+            <h3 className="font-semibold text-green-800 dark:text-green-200">Threshold Applied Successfully</h3>
+            <p className="text-green-700 dark:text-green-300 text-sm mt-1">{applySuccess}</p>
           </div>
         </div>
       )}
 
       {/* Apply Error Notification */}
       {applyError && (
-        <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-600 rounded-lg p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-red-800">Failed to Apply Threshold</h3>
-            <p className="text-red-700 text-sm mt-1">{applyError}</p>
+            <h3 className="font-semibold text-red-800 dark:text-red-200">Failed to Apply Threshold</h3>
+            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{applyError}</p>
           </div>
         </div>
       )}
 
       {/* Navigation Tabs */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab('overview')}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'overview'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <BarChart3 className="w-5 h-5" />
@@ -702,14 +702,14 @@ const ThresholdConfig = () => {
               onClick={() => setActiveTab('recommendations')}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'recommendations'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <Target className="w-5 h-5" />
               Recommendations
               {totalRecommendations > 0 && (
-                <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-primary-100 text-primary-700 rounded-full">
+                <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded-full">
                   {totalRecommendations}
                 </span>
               )}
@@ -718,8 +718,8 @@ const ThresholdConfig = () => {
               onClick={() => setActiveTab('performance')}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'performance'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <LineChart className="w-5 h-5" />
@@ -729,8 +729,8 @@ const ThresholdConfig = () => {
               onClick={() => setActiveTab('configuration')}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'configuration'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <Settings className="w-5 h-5" />
@@ -745,42 +745,42 @@ const ThresholdConfig = () => {
         <div className="space-y-6">
           {/* Key Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-blue-500 dark:border-blue-400">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600">Total Recommendations</h3>
-                <Target className="w-5 h-5 text-blue-500" />
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Recommendations</h3>
+                <Target className="w-5 h-5 text-blue-500 dark:text-blue-400" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">{totalRecommendations}</p>
-              <p className="text-xs text-gray-500 mt-2">Across {Object.keys(serviceGroups).length} services</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{totalRecommendations}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Across {Object.keys(serviceGroups).length} services</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-green-500 dark:border-green-400">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600">High Confidence</h3>
-                <Shield className="w-5 h-5 text-green-500" />
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">High Confidence</h3>
+                <Shield className="w-5 h-5 text-green-500 dark:text-green-400" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">{highConfidenceCount}</p>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{highConfidenceCount}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 {totalRecommendations > 0 ? ((highConfidenceCount / totalRecommendations) * 100).toFixed(1) : 0}% of total
               </p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-yellow-500 dark:border-yellow-400">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600">Avg Adjustment</h3>
-                <TrendingUp className="w-5 h-5 text-yellow-500" />
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Adjustment</h3>
+                <TrendingUp className="w-5 h-5 text-yellow-500 dark:text-yellow-400" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">{avgAdjustment.toFixed(1)}%</p>
-              <p className="text-xs text-gray-500 mt-2">Mean threshold change</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{avgAdjustment.toFixed(1)}%</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Mean threshold change</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-purple-500 dark:border-purple-400">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600">Data Samples</h3>
-                <Database className="w-5 h-5 text-purple-500" />
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Data Samples</h3>
+                <Database className="w-5 h-5 text-purple-500 dark:text-purple-400" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">{totalSamples.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 mt-2">Historical data points analyzed</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{totalSamples.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Historical data points analyzed</p>
             </div>
           </div>
 
@@ -788,9 +788,9 @@ const ThresholdConfig = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Category Distribution */}
             {categoryData.length > 0 && (
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-primary-600" />
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                   Threshold Category Distribution
                 </h3>
                 <ResponsiveContainer width="100%" height={300}>
@@ -816,9 +816,9 @@ const ThresholdConfig = () => {
             )}
 
             {/* Confidence Distribution */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-primary-600" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 Confidence Level Analysis
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -834,9 +834,9 @@ const ThresholdConfig = () => {
           </div>
 
           {/* Service-wise Breakdown */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Server className="w-5 h-5 text-primary-600" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Server className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               Service-wise Threshold Analysis
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -845,33 +845,33 @@ const ThresholdConfig = () => {
                 const avgAdj = serviceRecs.reduce((sum, r) => sum + Math.abs(r.adjustment_percentage), 0) / serviceRecs.length
                 
                 return (
-                  <div key={serviceName} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 hover:shadow-md transition-all">
+                  <div key={serviceName} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <Cpu className="w-4 h-4 text-primary-600" />
+                      <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <Cpu className="w-4 h-4 text-primary-600 dark:text-primary-400" />
                         {serviceName}
                       </h4>
-                      <span className="px-2 py-1 text-xs font-bold bg-primary-100 text-primary-700 rounded-full">
+                      <span className="px-2 py-1 text-xs font-bold bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded-full">
                         {serviceRecs.length}
                       </span>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">High Confidence:</span>
-                        <span className="font-semibold text-green-600">{highConf}</span>
+                        <span className="text-gray-600 dark:text-gray-400">High Confidence:</span>
+                        <span className="font-semibold text-green-600 dark:text-green-400">{highConf}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Avg Adjustment:</span>
-                        <span className="font-semibold text-gray-900">{avgAdj.toFixed(1)}%</span>
+                        <span className="text-gray-600 dark:text-gray-400">Avg Adjustment:</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{avgAdj.toFixed(1)}%</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Total Samples:</span>
-                        <span className="font-semibold text-gray-900">
+                        <span className="text-gray-600 dark:text-gray-400">Total Samples:</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">
                           {serviceRecs.reduce((sum, r) => sum + r.based_on_samples, 0).toLocaleString()}
                         </span>
                       </div>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                       <div className="flex flex-wrap gap-1">
                         {serviceRecs.map((rec, idx) => (
                           <span
@@ -897,40 +897,40 @@ const ThresholdConfig = () => {
 
       {/* Configuration Tab */}
       {activeTab === 'configuration' && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Settings className="w-5 h-5 text-primary-600" />
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               Threshold Types & Configuration
             </h3>
-            <p className="text-sm text-gray-600 mt-1">Configuration parameters for alert monitoring</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Configuration parameters for alert monitoring</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Threshold Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Description
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Default Value
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Current Values
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {THRESHOLD_INFO.map((threshold, index) => {
                   const Icon = threshold.icon
                   return (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getCategoryBadge(threshold.category)}
                       </td>
@@ -938,16 +938,16 @@ const ThresholdConfig = () => {
                         <div className="flex items-center gap-2">
                           <Icon className={`w-5 h-5 ${threshold.color}`} />
                           <div>
-                            <div className="text-sm font-semibold text-gray-900">{threshold.name}</div>
-                            <div className="text-xs text-gray-500 font-mono">{threshold.key}</div>
+                            <div className="text-sm font-semibold text-gray-900 dark:text-white">{threshold.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">{threshold.key}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-600 max-w-md">{threshold.description}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 max-w-md">{threshold.description}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-bold text-primary-600">{threshold.defaultValue}</span>
+                        <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{threshold.defaultValue}</span>
                       </td>
                       <td className="px-6 py-4">
                         {config && (
@@ -956,9 +956,9 @@ const ThresholdConfig = () => {
                               const value = (serviceThresholds as any)[threshold.key]
                               if (value === undefined) return null
                               return (
-                                <div key={serviceName} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
-                                  <span className="text-gray-600">{serviceName.replace('-service', '')}:</span>
-                                  <span className="font-semibold text-gray-900">{formatValue(value, threshold.key)}</span>
+                                <div key={serviceName} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+                                  <span className="text-gray-600 dark:text-gray-400">{serviceName.replace('-service', '')}:</span>
+                                  <span className="font-semibold text-gray-900 dark:text-white">{formatValue(value, threshold.key)}</span>
                                 </div>
                               )
                             })}
@@ -999,20 +999,20 @@ const ThresholdConfig = () => {
               const CategoryIcon = config.icon;
 
               return (
-                <div key={category} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <div className={`px-6 py-4 border-b ${config.borderColor} ${config.bgColor}`}>
+                <div key={category} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                  <div className={`px-6 py-4 border-b ${config.borderColor} ${config.bgColor} dark:bg-opacity-20`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <CategoryIcon className={`w-5 h-5 ${config.color}`} />
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                           {config.name}
                         </h3>
-                        <span className="ml-2 px-3 py-1 text-xs font-bold rounded-full bg-white text-gray-700 shadow-sm">
+                        <span className="ml-2 px-3 py-1 text-xs font-bold rounded-full bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 shadow-sm">
                           {categoryRecs.length} recommendation{categoryRecs.length !== 1 ? 's' : ''}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-600">
+                        <span className="text-gray-600 dark:text-gray-400">"
                           Avg Confidence: 
                           <span className="ml-1 font-semibold">
                             {(categoryRecs.filter(r => r.confidence.toLowerCase() === 'high').length / categoryRecs.length * 100).toFixed(0)}% High
@@ -1022,33 +1022,33 @@ const ThresholdConfig = () => {
                     </div>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Service
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Threshold Type
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Current Value
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Recommended Value
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Impact
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Confidence
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Actions
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         {categoryRecs.map((rec, index) => {
                           const formatValue = (value: number, unit: string) => {
                             if (unit === 'rate') {
@@ -1058,25 +1058,25 @@ const ThresholdConfig = () => {
                           };
 
                           const changeIcon = rec.adjustment_percentage > 0 ? TrendingUp : rec.adjustment_percentage < 0 ? TrendingDown : Activity;
-                          const changeColor = rec.adjustment_percentage > 0 ? 'text-green-600 bg-green-50' : rec.adjustment_percentage < 0 ? 'text-red-600 bg-red-50' : 'text-gray-600 bg-gray-50';
+                          const changeColor = rec.adjustment_percentage > 0 ? 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/30' : rec.adjustment_percentage < 0 ? 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30' : 'text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-700';
                           const ChangeIcon = changeIcon;
 
                           return (
                             <tr
                               key={index}
-                              className="hover:bg-blue-50 transition-colors"
+                              className="hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
-                                  <Server className="w-4 h-4 text-gray-400" />
-                                  <span className="text-sm font-semibold text-gray-900">{rec.service_name}</span>
+                                  <Server className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{rec.service_name}</span>
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-semibold text-gray-900">
+                                <div className="text-sm font-semibold text-gray-900 dark:text-white">
                                   {rec.threshold_label || rec.alert_type}
                                 </div>
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                   {rec.based_on_samples.toLocaleString()} samples
                                 </div>
                               </td>
@@ -1084,15 +1084,15 @@ const ThresholdConfig = () => {
                                 <div className="flex items-center gap-2">
                                   {isApplied(rec) ? (
                                     <div className="flex flex-col">
-                                      <span className="text-sm text-green-600 font-mono font-bold">
+                                      <span className="text-sm text-green-600 dark:text-green-400 font-mono font-bold">
                                         {formatValue(appliedDetails.get(`${rec.service_name}-${rec.alert_type}`)?.new ?? rec.recommended_threshold, rec.unit || '')}
                                       </span>
-                                      <span className="text-xs text-gray-400 line-through">
+                                      <span className="text-xs text-gray-400 dark:text-gray-500 line-through">
                                         {formatValue(rec.current_threshold, rec.unit || '')}
                                       </span>
                                     </div>
                                   ) : (
-                                    <span className="text-sm text-gray-900 font-mono">
+                                    <span className="text-sm text-gray-900 dark:text-white font-mono">
                                       {formatValue(rec.current_threshold, rec.unit || '')}
                                     </span>
                                   )}
@@ -1101,11 +1101,11 @@ const ThresholdConfig = () => {
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
                                   {isApplied(rec) ? (
-                                    <span className="text-sm text-gray-400 font-mono">
+                                    <span className="text-sm text-gray-400 dark:text-gray-500 font-mono">
                                       {formatValue(rec.recommended_threshold, rec.unit || '')}
                                     </span>
                                   ) : (
-                                    <span className="text-sm font-bold text-primary-600 font-mono">
+                                    <span className="text-sm font-bold text-primary-600 dark:text-primary-400 font-mono">
                                       {formatValue(rec.recommended_threshold, rec.unit || '')}
                                     </span>
                                   )}
@@ -1129,7 +1129,7 @@ const ThresholdConfig = () => {
                                 <div className="flex items-center gap-2">
                                   <button
                                     onClick={() => setSelectedThreshold(rec)}
-                                    className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                    className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
                                     title="View Details"
                                   >
                                     <Eye className="w-4 h-4" />
@@ -1139,10 +1139,10 @@ const ThresholdConfig = () => {
                                     disabled={applying === `${rec.service_name}-${rec.alert_type}` || isApplied(rec)}
                                     className={`p-1.5 rounded-lg transition-colors ${
                                       isApplied(rec)
-                                        ? 'text-gray-400 cursor-not-allowed'
+                                        ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
                                         : applying === `${rec.service_name}-${rec.alert_type}`
                                           ? 'text-green-400 cursor-wait'
-                                          : 'text-green-600 hover:bg-green-50'
+                                          : 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
                                     }`}
                                     title={isApplied(rec) ? "Already Applied" : "Apply Recommendation"}
                                   >
@@ -1169,18 +1169,18 @@ const ThresholdConfig = () => {
                     </table>
                   </div>
                   {categoryRecs.some(rec => rec.rationale) && (
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
                       <details className="text-sm">
-                        <summary className="cursor-pointer font-medium text-gray-700 hover:text-gray-900">
+                        <summary className="cursor-pointer font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
                           View Detailed Rationale
                         </summary>
                         <div className="mt-3 space-y-2">
                           {categoryRecs.map((rec, idx) => (
                             rec.rationale && (
-                              <div key={idx} className="pl-4 border-l-2 border-gray-300">
-                                <div className="font-medium text-gray-900">{rec.service_name} - {rec.threshold_label || rec.alert_type}:</div>
-                                <div className="text-gray-600 mt-1">{rec.rationale}</div>
-                                <div className="text-xs text-gray-500 mt-1">Based on {rec.based_on_samples} samples</div>
+                              <div key={idx} className="pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                                <div className="font-medium text-gray-900 dark:text-white">{rec.service_name} - {rec.threshold_label || rec.alert_type}:</div>
+                                <div className="text-gray-600 dark:text-gray-300 mt-1">{rec.rationale}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Based on {rec.based_on_samples} samples</div>
                               </div>
                             )
                           ))}
@@ -1200,13 +1200,13 @@ const ThresholdConfig = () => {
         <div className="space-y-6">
           {/* Threshold Comparison Chart */}
           {chartData.length > 0 && (
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary-600" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                   Error Threshold Comparison Analysis
                 </h3>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Info className="w-4 h-4" />
                   <span>Current vs ML-Recommended Values</span>
                 </div>
@@ -1242,9 +1242,9 @@ const ThresholdConfig = () => {
           )}
 
           {/* Adjustment Distribution */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-primary-600" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               Threshold Adjustment Distribution
             </h3>
             <ResponsiveContainer width="100%" height={350}>
@@ -1267,9 +1267,9 @@ const ThresholdConfig = () => {
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                          <p className="font-semibold text-gray-900">{payload[0].payload.service}</p>
-                          <p className="text-sm text-gray-600">
+                        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                          <p className="font-semibold text-gray-900 dark:text-white">{payload[0].payload.service}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
                             Adjustment: <span className="font-bold">{payload[0].value}%</span>
                           </p>
                         </div>
@@ -1290,9 +1290,9 @@ const ThresholdConfig = () => {
           </div>
 
           {/* Sample Size Analysis */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Database className="w-5 h-5 text-primary-600" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Database className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               Data Quality & Sample Size Analysis
             </h3>
             <ResponsiveContainer width="100%" height={350}>
@@ -1335,7 +1335,7 @@ const ThresholdConfig = () => {
 
       {/* Current Configuration by Service */}
       {/* {config && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Configuration by Service</h3>
           <div className="text-sm text-gray-600 mb-4">
             Generated at: {new Date(config.generated_at).toLocaleString()}
@@ -1374,7 +1374,7 @@ const ThresholdConfig = () => {
       {/* Enhanced Threshold Detail Modal */}
       {selectedThreshold && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden animate-fade-in">
             {/* Modal Header with Gradient */}
             <div className="px-6 py-5 bg-gradient-to-r from-primary-600 to-primary-800 text-white">
               <div className="flex items-center justify-between">
@@ -1525,19 +1525,19 @@ const ThresholdConfig = () => {
 
               {/* Statistics Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <Database className="w-4 h-4 text-purple-600" />
-                    <div className="text-xs font-medium text-gray-600">Samples</div>
+                    <Database className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400">Samples</div>
                   </div>
-                  <div className="text-lg font-bold text-gray-900">
+                  <div className="text-lg font-bold text-gray-900 dark:text-white">
                     {selectedThreshold.based_on_samples.toLocaleString()}
                   </div>
                 </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <Shield className="w-4 h-4 text-green-600" />
-                    <div className="text-xs font-medium text-gray-600">Confidence</div>
+                    <Shield className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400">Confidence</div>
                   </div>
                   <div className={`text-lg font-bold ${
                     selectedThreshold.confidence.toLowerCase() === 'high' ? 'text-green-600' :
@@ -1547,21 +1547,21 @@ const ThresholdConfig = () => {
                     {selectedThreshold.confidence}
                   </div>
                 </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <AlertCircle className="w-4 h-4 text-blue-600" />
-                    <div className="text-xs font-medium text-gray-600">Type</div>
+                    <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400">Type</div>
                   </div>
-                  <div className="text-sm font-bold text-gray-900 capitalize">
+                  <div className="text-sm font-bold text-gray-900 dark:text-white capitalize">
                     {selectedThreshold.alert_type}
                   </div>
                 </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <Target className="w-4 h-4 text-orange-600" />
-                    <div className="text-xs font-medium text-gray-600">Unit</div>
+                    <Target className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400">Unit</div>
                   </div>
-                  <div className="text-sm font-bold text-gray-900">
+                  <div className="text-sm font-bold text-gray-900 dark:text-white">
                     {selectedThreshold.unit || 'N/A'}
                   </div>
                 </div>
@@ -1636,13 +1636,13 @@ const ThresholdConfig = () => {
 
               {/* Detailed Rationale */}
               {selectedThreshold.rationale && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <Info className="w-4 h-4 text-gray-600" />
+                <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                    <Info className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     Detailed Analysis & Rationale
                   </h3>
-                  <div className="bg-white rounded border border-gray-300 p-3">
-                    <pre className="text-xs text-gray-700 font-mono whitespace-pre-wrap leading-relaxed">
+                  <div className="bg-white dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 p-3">
+                    <pre className="text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap leading-relaxed">
                       {selectedThreshold.rationale}
                     </pre>
                   </div>
