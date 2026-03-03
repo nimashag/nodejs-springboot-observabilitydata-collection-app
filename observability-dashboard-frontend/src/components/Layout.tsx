@@ -69,9 +69,9 @@ const Layout = ({ children }: LayoutProps) => {
       subItems: [
         { path: '/alerts/dashboard', label: 'Dashboard' },
         { path: '/alerts/data', label: 'Alert Data' },
-        { path: '/alerts/intelligence', label: 'Alert Intelligence' },
+        // { path: '/alerts/intelligence', label: 'Alert Intelligence' },
         { path: '/alerts/prioritization', label: 'Alert Prioritization' },
-        { path: '/alerts/health-trends', label: 'Service Health Trends' },
+        // { path: '/alerts/health-trends', label: 'Service Health Trends' },
         { path: '/alerts/threshold-config', label: 'Threshold Config' },
         { path: '/alerts/correlations', label: 'Correlations' },
         { path: '/alerts/settings', label: 'Settings' }
