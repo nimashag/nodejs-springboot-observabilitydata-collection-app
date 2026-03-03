@@ -11,12 +11,16 @@ import {
   checkHealth as checkLogHealth,
 } from "../api/logs/logAggregationApi";
 import { alertApiService } from "../api/alerts/alertApi";
+import { metricsApiService } from "../api/metrics/metricsApi";
+import { anomalyApiService } from "../api/anomalies/anomalyApi";
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [logCount, setLogCount] = useState(0);
   const [alertCount, setAlertCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
+  const [metricsCount, setMetricsCount] = useState(0);
+  const [anomalyCount, setAnomalyCount] = useState(0);
   const [logServiceStatus, setLogServiceStatus] = useState<
     "online" | "offline" | "checking"
   >("checking");
@@ -49,13 +53,39 @@ export default function Dashboard() {
 
       // Fetch alerts data
       const alertsPromise = alertApiService
-        .getAlerts(1, 1000)
+        .getAlertSummary()
         .then((response) => {
-          setAlertCount(response.total || response.alerts?.length || 0);
+          setAlertCount(response.total_alerts || 0);
         })
         .catch((error) => {
           console.error("Error fetching alerts:", error);
           setAlertServiceStatus("offline");
+        });
+
+      // Fetch metrics data
+      const metricsPromise = metricsApiService
+        .getSignals()
+        .then((response) => {
+          // Count total signals/metrics
+          const totalSignals = response.signals?.length || 0;
+          setMetricsCount(totalSignals);
+        })
+        .catch((error) => {
+          console.error("Error fetching metrics:", error);
+          setMetricsCount(0);
+        });
+
+      // Fetch anomalies data
+      const anomaliesPromise = anomalyApiService
+        .getIncidents()
+        .then((response) => {
+          // Use predicted_anomaly_count or count of incidents
+          const count = response.predicted_anomaly_count || response.incidents?.length || 0;
+          setAnomalyCount(count);
+        })
+        .catch((error) => {
+          console.error("Error fetching anomalies:", error);
+          setAnomalyCount(0);
         });
 
       // Check service health
@@ -79,6 +109,8 @@ export default function Dashboard() {
       await Promise.all([
         logsPromise,
         alertsPromise,
+        metricsPromise,
+        anomaliesPromise,
         logHealthPromise,
         alertHealthPromise,
       ]);
@@ -92,30 +124,30 @@ export default function Dashboard() {
   const stats = [
     {
       name: "Metrics",
-      value: loading ? "..." : "1,234",
-      change: "+12.5%",
+      value: loading ? "..." : metricsCount.toLocaleString(),
+      change: metricsCount > 0 ? "Active signals" : "No signals",
       icon: BarChart3,
       color: "bg-blue-500",
     },
     {
       name: "Logs",
       value: loading ? "..." : logCount.toLocaleString(),
-      change: logCount > 0 ? "+8.2%" : "0%",
+      change: logCount > 0 ? "Collected" : "No logs",
       icon: FileText,
       color: "bg-green-500",
     },
     {
       name: "Alerts",
       value: loading ? "..." : alertCount.toLocaleString(),
-      change: alertCount > 0 ? "-5.1%" : "0%",
+      change: alertCount > 0 ? "Active" : "No alerts",
       icon: AlertTriangle,
       color: "bg-red-500",
     },
     {
-      name: "Errors",
-      value: loading ? "..." : errorCount.toLocaleString(),
-      change: errorCount > 0 ? "+2.3%" : "0%",
-      icon: TrendingUp,
+      name: "Anomalies",
+      value: loading ? "..." : anomalyCount.toLocaleString(),
+      change: anomalyCount > 0 ? "Detected" : "None detected",
+      icon: Activity,
       color: "bg-purple-500",
     },
   ];
@@ -148,14 +180,8 @@ export default function Dashboard() {
                   <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                     {stat.value}
                   </p>
-                  <p
-                    className={`text-sm mt-2 ${
-                      stat.change.startsWith("+")
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {stat.change} from last period
+                  <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">
+                    {stat.change}
                   </p>
                 </div>
                 <div className={`${stat.color} p-3 rounded-lg`}>
