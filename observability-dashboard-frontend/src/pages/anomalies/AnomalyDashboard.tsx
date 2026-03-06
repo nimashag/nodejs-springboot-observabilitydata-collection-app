@@ -2,6 +2,8 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   BarChart3,
+  ChevronDown,
+  ChevronUp,
   CircleDot,
   RefreshCcw,
   ShieldAlert,
@@ -12,11 +14,15 @@ import {
   Database,
 } from "lucide-react";
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
   Line,
   LineChart,
+  Pie,
+  PieChart,
+  Cell,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -34,6 +40,29 @@ import type {
 
 type SeverityFilter = "all" | "high" | "medium" | "low";
 type ReasonToken = "duration" | "cpu" | "db" | "status5xx" | "unknown";
+type RootCauseInsight = {
+  label: string;
+  count: number;
+  services: string[];
+  service_breakdown: Array<{ name: string; count: number }>;
+};
+type DashboardIncident = IncidentSummaryItem & {
+  occurrence_count?: number;
+  first_detected_at?: string;
+  last_detected_at?: string;
+};
+const PIE_COLORS = ["#059669", "#0891B2", "#14B8A6", "#22C55E", "#0284C7", "#65A30D"];
+
+function incidentSignature(incident: IncidentSummaryItem): string {
+  return [
+    incident.request_id || "",
+    incident.service || "",
+    String(incident.status_code ?? ""),
+    incident.level || "",
+    incident.reason || "",
+    (incident.events || []).join("|"),
+  ].join("::");
+}
 
 function parseReasonTokens(reason: string): ReasonToken[] {
   if (!reason) return [];
@@ -121,6 +150,9 @@ export default function AnomalyDashboard() {
   const [data, setData] = useState<IncidentsPayload | null>(null);
   const [allIncidentsData, setAllIncidentsData] =
     useState<AllIncidentsResponse | null>(null);
+  const [expandedRootCause, setExpandedRootCause] = useState<string | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,13 +197,84 @@ export default function AnomalyDashboard() {
     return () => window.clearInterval(timer);
   }, []);
 
+  const allHistoricalIncidentsRaw = useMemo(
+    () => allIncidentsData?.all_incidents || [],
+    [allIncidentsData],
+  );
+
+  const historicalIncidentsDeduped = useMemo<DashboardIncident[]>(() => {
+    if (!allHistoricalIncidentsRaw.length) return [];
+
+    const grouped = new Map<string, DashboardIncident>();
+    allHistoricalIncidentsRaw.forEach((incident) => {
+      const key = incidentSignature(incident);
+      const currentDetectedAt = incident.detected_at || "";
+      const existing = grouped.get(key);
+
+      if (!existing) {
+        grouped.set(key, {
+          ...incident,
+          occurrence_count: 1,
+          first_detected_at: currentDetectedAt,
+          last_detected_at: currentDetectedAt,
+          detected_at: currentDetectedAt,
+        });
+        return;
+      }
+
+      const existingLast = existing.last_detected_at || "";
+      const existingFirst = existing.first_detected_at || "";
+      const nextLast =
+        currentDetectedAt && currentDetectedAt > existingLast
+          ? currentDetectedAt
+          : existingLast;
+      const nextFirst =
+        !existingFirst || (currentDetectedAt && currentDetectedAt < existingFirst)
+          ? currentDetectedAt
+          : existingFirst;
+
+      const useCurrentAsBase =
+        currentDetectedAt &&
+        (!existingLast || currentDetectedAt > existingLast);
+
+      grouped.set(
+        key,
+        useCurrentAsBase
+          ? {
+              ...incident,
+              occurrence_count: (existing.occurrence_count || 1) + 1,
+              first_detected_at: nextFirst,
+              last_detected_at: nextLast,
+              detected_at: nextLast,
+            }
+          : {
+              ...existing,
+              occurrence_count: (existing.occurrence_count || 1) + 1,
+              first_detected_at: nextFirst,
+              last_detected_at: nextLast,
+              detected_at: nextLast,
+            },
+      );
+    });
+
+    return Array.from(grouped.values()).sort((a, b) => {
+      const byOccurrences =
+        (b.occurrence_count || 1) - (a.occurrence_count || 1);
+      if (byOccurrences !== 0) return byOccurrences;
+      return (
+        new Date(b.last_detected_at || 0).getTime() -
+        new Date(a.last_detected_at || 0).getTime()
+      );
+    });
+  }, [allHistoricalIncidentsRaw]);
+
   // Get incidents based on view mode
-  const currentIncidents = useMemo(() => {
-    if (viewMode === "all" && allIncidentsData) {
-      return allIncidentsData.all_incidents;
+  const currentIncidents = useMemo<DashboardIncident[]>(() => {
+    if (viewMode === "all") {
+      return historicalIncidentsDeduped;
     }
     return data?.incidents || [];
-  }, [viewMode, data, allIncidentsData]);
+  }, [viewMode, data, historicalIncidentsDeduped]);
 
   const services = useMemo(() => {
     if (!currentIncidents.length) return [];
@@ -182,7 +285,7 @@ export default function AnomalyDashboard() {
     ).sort();
   }, [currentIncidents]);
 
-  const filteredIncidents = useMemo(() => {
+  const filteredIncidents = useMemo<DashboardIncident[]>(() => {
     return currentIncidents.filter((incident) => {
       const severityMatches =
         severityFilter === "all" || getSeverity(incident) === severityFilter;
@@ -192,18 +295,54 @@ export default function AnomalyDashboard() {
     });
   }, [currentIncidents, severityFilter, serviceFilter]);
 
-  const trendData = useMemo(
-    () =>
-      filteredIncidents.map((incident, index) => ({
-        name: `#${index + 1}`,
-        score:
-          incident.max_anomaly_score ??
-          (incident.reason
-            ? incident.reason.split(";").filter(Boolean).length
-            : 1),
-      })),
-    [filteredIncidents],
-  );
+  const filteredHistoricalRawIncidents = useMemo(() => {
+    return allHistoricalIncidentsRaw.filter((incident) => {
+      const severityMatches =
+        severityFilter === "all" || getSeverity(incident) === severityFilter;
+      const serviceMatches =
+        serviceFilter === "all" || incident.service === serviceFilter;
+      return severityMatches && serviceMatches;
+    });
+  }, [allHistoricalIncidentsRaw, severityFilter, serviceFilter]);
+
+  const latestAnomalyRows = data?.predicted_anomaly_count ?? 0;
+  const latestNormalRows = data?.predicted_normal_count ?? 0;
+  const latestTotalRows = data?.total_rows ?? 0;
+  const latestIncidentRequests = data?.incidents?.length ?? 0;
+  const historicalUniqueIncidents = filteredIncidents.length;
+  const historicalDetections = filteredHistoricalRawIncidents.length;
+
+  const trendData = useMemo(() => {
+    if (viewMode === "all") {
+      const buckets = new Map<string, { count: number; ts: number; label: string }>();
+      filteredHistoricalRawIncidents.forEach((incident) => {
+        const ts = incident.detected_at;
+        if (!ts) return;
+        const date = new Date(ts);
+        const key = date.toISOString();
+        const existing = buckets.get(key);
+        if (existing) {
+          existing.count += 1;
+          return;
+        }
+        buckets.set(key, {
+          count: 1,
+          ts: date.getTime(),
+          label: date.toLocaleTimeString(),
+        });
+      });
+      return Array.from(buckets.values())
+        .sort((a, b) => a.ts - b.ts)
+        .map((item) => ({ name: item.label, count: item.count }));
+    }
+
+    return filteredIncidents.map((incident, index) => ({
+      name: `#${index + 1}`,
+      score:
+        incident.max_anomaly_score ??
+        (incident.reason ? incident.reason.split(";").filter(Boolean).length : 1),
+    }));
+  }, [viewMode, filteredIncidents, filteredHistoricalRawIncidents]);
 
   const serviceImpactData = useMemo(() => {
     const counts = new Map<string, number>();
@@ -218,28 +357,110 @@ export default function AnomalyDashboard() {
       .sort((a, b) => b.incidents - a.incidents)
       .slice(0, 6);
   }, [filteredIncidents]);
+  const serviceImpactPieData = useMemo(
+    () =>
+      serviceImpactData.map((item, idx) => ({
+        ...item,
+        fill: PIE_COLORS[idx % PIE_COLORS.length],
+      })),
+    [serviceImpactData],
+  );
 
   const metaText = useMemo(() => {
     if (!data) return "";
     if (viewMode === "all" && allIncidentsData) {
-      return `Historical view: ${allIncidentsData.total_count} incidents from ${allIncidentsData.files_scanned} snapshots`;
+      return `Historical view: ${historicalIncidentsDeduped.length} unique incidents (${allIncidentsData.total_count} detections) from ${allIncidentsData.files_scanned} snapshots`;
     }
     return `Latest snapshot: ${data.generated_at}`;
-  }, [data, viewMode, allIncidentsData]);
+  }, [data, viewMode, allIncidentsData, historicalIncidentsDeduped]);
 
-  const rootCauseInsights = useMemo(() => {
+  const countDefinitionText = useMemo(() => {
+    if (viewMode === "all") {
+      return `Historical mode: ${historicalUniqueIncidents} unique incidents were seen ${historicalDetections} times across snapshots.`;
+    }
+    return `Latest mode: anomaly rows (${latestAnomalyRows}) are row-level predictions; incidents (${latestIncidentRequests}) are grouped by request_id.`;
+  }, [
+    viewMode,
+    historicalUniqueIncidents,
+    historicalDetections,
+    latestAnomalyRows,
+    latestIncidentRequests,
+  ]);
+
+  const storySummaryText = useMemo(() => {
+    if (viewMode === "all") {
+      return `${historicalUniqueIncidents} unique incident(s) detected from ${historicalDetections} historical detection(s).`;
+    }
+    return data?.incident_story?.summary || "-";
+  }, [viewMode, data, historicalUniqueIncidents, historicalDetections]);
+
+  const storyTopServices = useMemo(() => {
+    if (viewMode !== "all") return data?.incident_story?.top_services || [];
+    const counts = new Map<string, number>();
+    filteredIncidents.forEach((incident) => {
+      counts.set(
+        incident.service || "unknown",
+        (counts.get(incident.service || "unknown") || 0) +
+          (incident.occurrence_count || 1),
+      );
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5) as Array<[string, number]>;
+  }, [viewMode, data, filteredIncidents]);
+
+  const storyTopEvents = useMemo(() => {
+    if (viewMode !== "all") return data?.incident_story?.top_events || [];
+    const counts = new Map<string, number>();
+    filteredIncidents.forEach((incident) => {
+      (incident.events || []).forEach((eventName) => {
+        if (!eventName) return;
+        counts.set(
+          eventName,
+          (counts.get(eventName) || 0) + (incident.occurrence_count || 1),
+        );
+      });
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5) as Array<[string, number]>;
+  }, [viewMode, data, filteredIncidents]);
+
+  const storyTopStatusCodes = useMemo(() => {
+    if (viewMode !== "all") return data?.incident_story?.top_status_codes || [];
+    const counts = new Map<string, number>();
+    filteredIncidents.forEach((incident) => {
+      const key = String(incident.status_code ?? "unknown");
+      counts.set(
+        key,
+        (counts.get(key) || 0) + (incident.occurrence_count || 1),
+      );
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5) as Array<[string, number]>;
+  }, [viewMode, data, filteredIncidents]);
+
+  const rootCauseInsights = useMemo<RootCauseInsight[]>(() => {
     const counters = new Map<
       ReasonToken,
-      { count: number; services: Set<string> }
+      { count: number; services: Set<string>; serviceCounts: Map<string, number> }
     >();
     filteredIncidents.forEach((incident) => {
+      const weight = viewMode === "all" ? incident.occurrence_count || 1 : 1;
+      const serviceName = incident.service || "unknown";
       parseReasonTokens(incident.reason || "").forEach((token) => {
         const entry = counters.get(token) || {
           count: 0,
           services: new Set<string>(),
+          serviceCounts: new Map<string, number>(),
         };
-        entry.count += 1;
-        entry.services.add(incident.service || "unknown");
+        entry.count += weight;
+        entry.services.add(serviceName);
+        entry.serviceCounts.set(
+          serviceName,
+          (entry.serviceCounts.get(serviceName) || 0) + weight,
+        );
         counters.set(token, entry);
       });
     });
@@ -251,8 +472,23 @@ export default function AnomalyDashboard() {
         label: reasonTokenLabel(token),
         count: details.count,
         services: Array.from(details.services).sort(),
+        service_breakdown: Array.from(details.serviceCounts.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count),
       }));
-  }, [filteredIncidents]);
+  }, [filteredIncidents, viewMode]);
+
+  const rootCauseTotalCount = useMemo(
+    () => rootCauseInsights.reduce((sum, item) => sum + item.count, 0),
+    [rootCauseInsights],
+  );
+
+  const storyContextText = useMemo(() => {
+    if (viewMode === "all") {
+      return `Scope: last ${allIncidentsData?.files_scanned || 0} snapshot files. Counts are weighted by recurrence.`;
+    }
+    return `Scope: latest snapshot only (${data?.generated_at || "n/a"}).`;
+  }, [viewMode, allIncidentsData, data]);
 
   return (
     <div className="space-y-6">
@@ -350,34 +586,42 @@ export default function AnomalyDashboard() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
         <StatCard
-          label="Total rows"
-          value={data?.total_rows}
+          label={viewMode === "all" ? "Latest Total Rows" : "Total Rows"}
+          value={latestTotalRows}
           icon={<BarChart3 className="h-5 w-5" />}
         />
         <StatCard
-          label="Anomalies (rows)"
-          value={data?.predicted_anomaly_count}
+          label={viewMode === "all" ? "Latest Anomaly Rows" : "Anomalies (Rows)"}
+          value={latestAnomalyRows}
           accent="red"
           icon={<Siren className="h-5 w-5" />}
         />
         <StatCard
-          label="Normals (rows)"
-          value={data?.predicted_normal_count}
+          label={viewMode === "all" ? "Latest Normal Rows" : "Normals (Rows)"}
+          value={latestNormalRows}
           accent="green"
           icon={<ShieldCheck className="h-5 w-5" />}
         />
         <StatCard
-          label={viewMode === "all" ? "All Incidents" : "Latest Incidents"}
-          value={filteredIncidents.length}
+          label={
+            viewMode === "all"
+              ? "Historical Unique Incidents"
+              : "Latest Incidents"
+          }
+          value={viewMode === "all" ? historicalUniqueIncidents : filteredIncidents.length}
           accent="indigo"
           icon={<ShieldAlert className="h-5 w-5" />}
         />
         <StatCard
-          label="Historical Files"
-          value={allIncidentsData?.total_files}
+          label={viewMode === "all" ? "Historical Detections" : "Historical Files"}
+          value={viewMode === "all" ? historicalDetections : allIncidentsData?.total_files}
           accent="slate"
           icon={<Database className="h-5 w-5" />}
         />
+      </div>
+
+      <div className="rounded-xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-900 dark:border-cyan-900/40 dark:bg-cyan-950/20 dark:text-cyan-200">
+        {countDefinitionText}
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -386,56 +630,130 @@ export default function AnomalyDashboard() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Incident Story
             </h2>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              Auto-generated
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                  viewMode === "all"
+                    ? "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
+                    : "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                }`}
+              >
+                {viewMode === "all" ? "Historical Summary" : "Latest Snapshot"}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Auto-generated
+              </span>
+            </div>
           </div>
-          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">
-            {data?.incident_story?.summary || "-"}
+          <p className="mt-3 text-sm font-medium text-gray-800 dark:text-gray-200">
+            {storySummaryText}
           </p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {storyContextText}
+          </p>
+
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-900/40">
+              <p className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Unique Incidents
+              </p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">
+                {viewMode === "all" ? historicalUniqueIncidents : latestIncidentRequests}
+              </p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-900/40">
+              <p className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Detections
+              </p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">
+                {viewMode === "all" ? historicalDetections : latestAnomalyRows}
+              </p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-900/40">
+              <p className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Services
+              </p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">
+                {services.length}
+              </p>
+            </div>
+          </div>
+
           <div className="mt-3 rounded-xl border border-cyan-100 bg-cyan-50 px-3 py-2 dark:border-cyan-900/40 dark:bg-cyan-950/20">
             <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
               Root Cause Analysis
             </p>
-            <ul className="mt-2 space-y-1 text-xs text-gray-700 dark:text-gray-300">
+            <div className="mt-2 space-y-2">
               {rootCauseInsights.length ? (
-                rootCauseInsights.map((item) => (
-                  <li key={item.label}>
-                    <span
-                      className="cursor-help underline decoration-dotted underline-offset-2"
-                      title={`Affected services: ${item.services.join(", ")}`}
+                rootCauseInsights.map((item) => {
+                  const percent =
+                    rootCauseTotalCount > 0
+                      ? Math.round((item.count / rootCauseTotalCount) * 100)
+                      : 0;
+                  const isExpanded = expandedRootCause === item.label;
+                  return (
+                    <div
+                      key={item.label}
+                      className="rounded-lg border border-cyan-200 bg-white/70 p-2 dark:border-cyan-900/50 dark:bg-slate-900/30"
                     >
-                      - {item.label} ({item.count})
-                    </span>
-                  </li>
-                ))
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedRootCause(isExpanded ? null : item.label)
+                        }
+                        className="flex w-full items-center justify-between gap-2 text-left"
+                      >
+                        <span className="text-xs font-medium text-gray-800 dark:text-gray-200">
+                          {item.label}
+                        </span>
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-700 dark:text-cyan-300">
+                          {item.count} detections • {percent}% share
+                          {isExpanded ? (
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          ) : (
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          )}
+                        </span>
+                      </button>
+                      <div className="mt-1 h-1.5 w-full rounded-full bg-cyan-100 dark:bg-cyan-950/40">
+                        <div
+                          className="h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      {isExpanded ? (
+                        <div className="mt-2 rounded-md border border-cyan-100 bg-cyan-50 p-2 dark:border-cyan-900/40 dark:bg-cyan-950/20">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                            Affected Services
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {item.service_breakdown.map((svc) => (
+                              <span
+                                key={`${item.label}-${svc.name}`}
+                                className="rounded-full border border-cyan-200 bg-white px-2 py-0.5 text-[11px] text-gray-700 dark:border-cyan-800 dark:bg-slate-900/30 dark:text-gray-200"
+                              >
+                                {svc.name} ({svc.count})
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })
               ) : (
-                <li>- No dominant pattern found for current filters</li>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  No dominant root cause found for the current filters.
+                </p>
               )}
-            </ul>
+            </div>
           </div>
           <div className="mt-4 space-y-2 text-xs text-gray-600 dark:text-gray-400">
             <div>
               <span className="font-semibold text-gray-800 dark:text-gray-200">
                 Top services:{" "}
               </span>
-              {(data?.incident_story?.top_services || [])
-                .map(([name, count]) => `${name} (${count})`)
-                .join(", ") || "-"}
-            </div>
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-gray-200">
-                Top events:{" "}
-              </span>
-              {(data?.incident_story?.top_events || [])
-                .map(([name, count]) => `${name} (${count})`)
-                .join(", ") || "-"}
-            </div>
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-gray-200">
-                Top status:{" "}
-              </span>
-              {(data?.incident_story?.top_status_codes || [])
+              {storyTopServices
                 .map(([name, count]) => `${name} (${count})`)
                 .join(", ") || "-"}
             </div>
@@ -447,23 +765,53 @@ export default function AnomalyDashboard() {
             Anomaly Trend
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            By incident order
+            {viewMode === "all"
+              ? "Historical detections per snapshot"
+              : "Latest snapshot incident score"}
           </p>
           <div className="mt-3 h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" hide />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="score"
-                  stroke="#0891b2"
-                  strokeWidth={2.5}
-                  dot={false}
-                />
-              </LineChart>
+              {viewMode === "all" ? (
+                <AreaChart data={trendData}>
+                  <defs>
+                    <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0891b2" stopOpacity={0.38} />
+                      <stop offset="95%" stopColor="#0891b2" stopOpacity={0.06} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11 }}
+                    minTickGap={26}
+                  />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip
+                    formatter={(value: number) => [`${value} detections`, "Count"]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#0891b2"
+                    strokeWidth={2.4}
+                    fill="url(#trendFill)"
+                  />
+                </AreaChart>
+              ) : (
+                <LineChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" hide />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip formatter={(value: number) => [`${value}`, "Score"]} />
+                  <Line
+                    type="monotone"
+                    dataKey="score"
+                    stroke="#0891b2"
+                    strokeWidth={2.5}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              )}
             </ResponsiveContainer>
           </div>
         </div>
@@ -477,13 +825,28 @@ export default function AnomalyDashboard() {
           </p>
           <div className="mt-3 h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={serviceImpactData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="service" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="incidents" fill="#059669" radius={[6, 6, 0, 0]} />
-              </BarChart>
+              <PieChart>
+                <Pie
+                  data={serviceImpactPieData}
+                  dataKey="incidents"
+                  nameKey="service"
+                  cx="50%"
+                  cy="44%"
+                  outerRadius={80}
+                  label={({ percent }) => `${((percent || 0) * 100).toFixed(0)}%`}
+                  labelLine={false}
+                >
+                  {serviceImpactPieData.map((entry) => (
+                    <Cell key={entry.service} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => [`${value} incidents`, "Count"]} />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  formatter={(value) => <span className="text-xs">{value}</span>}
+                />
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -505,6 +868,7 @@ export default function AnomalyDashboard() {
             <thead className="bg-gray-50 dark:bg-gray-900/40">
               <tr>
                 {viewMode === "all" && <Th>Detected At</Th>}
+                {viewMode === "all" && <Th>Seen In Snapshots</Th>}
                 <Th>Request ID</Th>
                 <Th>Service</Th>
                 <Th>Status</Th>
@@ -524,11 +888,16 @@ export default function AnomalyDashboard() {
                     <Td mono>
                       <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                         <Clock className="h-3 w-3" />
-                        {incident.detected_at
-                          ? new Date(incident.detected_at).toLocaleString()
+                        {incident.last_detected_at
+                          ? new Date(incident.last_detected_at).toLocaleString()
+                          : incident.detected_at
+                            ? new Date(incident.detected_at).toLocaleString()
                           : "-"}
                       </div>
                     </Td>
+                  )}
+                  {viewMode === "all" && (
+                    <Td mono>{incident.occurrence_count || 1}</Td>
                   )}
                   <Td mono>{incident.request_id}</Td>
                   <Td>{incident.service}</Td>
@@ -554,7 +923,7 @@ export default function AnomalyDashboard() {
               {!filteredIncidents.length ? (
                 <tr>
                   <td
-                    colSpan={viewMode === "all" ? 8 : 7}
+                    colSpan={viewMode === "all" ? 9 : 7}
                     className="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400"
                   >
                     <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-gray-100 px-4 py-2 dark:bg-gray-700/60">

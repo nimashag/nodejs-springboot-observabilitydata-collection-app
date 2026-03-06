@@ -71,11 +71,12 @@ def run_once(model_path: str, with_threshold_label: bool) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Continuously run log+metrics anomaly pipeline.")
+    default_interval = int(os.getenv("ANOMALY_INTERVAL", "30"))
     parser.add_argument(
         "--interval",
         type=int,
-        default=2,
-        help="Loop interval in seconds (default: 2)",
+        default=default_interval,
+        help=f"Loop interval in seconds (default: {default_interval})",
     )
     # Set default model path based on environment
     default_model = "model_experiments/models/random_forest/rf_model.pkl"
