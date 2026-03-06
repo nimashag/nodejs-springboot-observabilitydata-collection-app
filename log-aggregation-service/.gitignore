@@ -6,8 +6,6 @@ aggregated-logs/
 *.tsbuildinfo
 templates/templates.json
 evaluation-results/
-models/
-model.nlp
 # TypeScript compilation outputs
 **/*.js
 **/*.js.map

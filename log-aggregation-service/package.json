@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn src/server.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy:config",
+    "copy:config": "node -e \"const fs=require('fs');const path=require('path');const src=path.join(__dirname,'src/config/classifier.config.json');const dest=path.join(__dirname,'dist/config/classifier.config.json');if(fs.existsSync(src)){fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(src,dest);console.log('Copied classifier.config.json to dist/config');}\"",
     "train": "ts-node src/scripts/trainModel.ts",
     "test:templates": "ts-node src/scripts/testTemplateMining.ts",
     "test:matching": "ts-node src/scripts/testTemplateMatching.ts",
