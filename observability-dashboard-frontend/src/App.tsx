@@ -70,10 +70,10 @@ function App() {
             
             {/* Logs routes */}
             <Route path="/logs/dashboard" element={<LogsDashboard />} />
-            <Route path="/logs/subpart1" element={<LogsViewer />} />
+            <Route path="/logs/logsViewer" element={<LogsViewer />} />
             <Route path="/logs/metadata-analyzer" element={<LogMetadataAnalyzer />} />
-            <Route path="/logs/subpart2" element={<TemplatesPage />} />
-            <Route path="/logs/subpart3" element={<Analytics />} />
+            <Route path="/logs/templates" element={<TemplatesPage />} />
+            <Route path="/logs/analytics" element={<Analytics />} />
             <Route path="/logs/traces/:traceId" element={<TraceView />} />
             
             {/* Alerts routes */}
