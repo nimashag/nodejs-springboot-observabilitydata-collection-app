@@ -100,7 +100,7 @@ function startLoopedWorker({
   scriptName,
   intervalMs,
   args = [],
-  restartDelayMs = 2000,
+  restartDelayMs = 3.6 * 1e6,
 }) {
   const scriptPath = path.join(AGENT_DIR, scriptName);
 
@@ -130,8 +130,8 @@ function startSignalDetector() {
   startLoopedWorker({
     name: "signal-detector",
     scriptName: "signal-detector.js",
-    intervalMs: 5000,
-    args: ["--samples=1", "--intervalMs=5000"],
+    intervalMs: 3.6 * 1e6, // 1 hour
+    args: ["--samples=1", "--intervalMs=3.6*1e6"],
   });
 }
 
@@ -139,7 +139,7 @@ function startKpiCoverageChecker() {
   startLoopedWorker({
     name: "kpi-coverage-checker",
     scriptName: "kpi-coverage-checker.js",
-    intervalMs: 10000,
+    intervalMs: 3.6 * 1e6, // 1 hour
     args: [],
   });
 }
@@ -148,7 +148,7 @@ function startUpdatePlanGenerator() {
   startLoopedWorker({
     name: "update-plan-generator",
     scriptName: "auto-telemetry-config.js",
-    intervalMs: 15000,
+    intervalMs: 3.6 * 1e6, // 1 hour
     args: [],
   });
 }
