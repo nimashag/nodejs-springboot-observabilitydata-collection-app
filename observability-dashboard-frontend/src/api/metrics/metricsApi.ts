@@ -154,6 +154,16 @@ export const metricsApiService = {
     });
     return response.data;
   },
+
+  async refreshPromSuggestions(): Promise<{
+    ok: boolean;
+    message: string;
+    generated_at: number;
+    lines: number;
+  }> {
+    const response = await axiosClient.post("/api/metric/prom-suggestions/refresh");
+    return response.data;
+  },
 };
 
 export const api = {
@@ -164,4 +174,5 @@ export const api = {
   updatePlan: () => metricsApiService.getUpdatePlan(),
   recommendations: () => metricsApiService.getRecommendations(),
   promSuggestions: () => metricsApiService.getPromSuggestions(),
+  refreshPromSuggestions: () => metricsApiService.refreshPromSuggestions(),
 };

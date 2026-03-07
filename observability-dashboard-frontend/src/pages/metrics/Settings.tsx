@@ -47,6 +47,13 @@ function clampMs(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.floor(n)));
 }
 
+function formatMsLabel(ms: number) {
+  if (ms >= 3600000) return `${ms / 3600000}h`;
+  if (ms >= 60000) return `${ms / 60000}m`;
+  if (ms >= 1000) return `${ms / 1000}s`;
+  return `${ms}ms`;
+}
+
 /* ---------------- Tailwind UI ---------------- */
 
 function Button({
@@ -190,8 +197,47 @@ export default function SettingsPage({
     onChange({ ...settings, pollingEnabled: v });
 
   const setInterval = (key: keyof AppSettings["intervals"], v: string) => {
-    const n = clampMs(Number(v), 500, 60000);
+    const n = clampMs(Number(v), 500, 3600000);
     onChange({ ...settings, intervals: { ...settings.intervals, [key]: n } });
+  };
+
+  const applyAwsPreset = () => {
+    onChange({
+      ...settings,
+      intervals: {
+        healthMs: 30000,
+        signalsMs: 900000,
+        kpiMs: 3600000,
+        planMs: 3600000,
+        promMs: 3600000,
+      },
+    });
+  };
+
+  const applyBalancedPreset = () => {
+    onChange({
+      ...settings,
+      intervals: {
+        healthMs: 15000,
+        signalsMs: 300000,
+        kpiMs: 1800000,
+        planMs: 1800000,
+        promMs: 1800000,
+      },
+    });
+  };
+
+  const applyFastLocalPreset = () => {
+    onChange({
+      ...settings,
+      intervals: {
+        healthMs: 5000,
+        signalsMs: 30000,
+        kpiMs: 60000,
+        planMs: 60000,
+        promMs: 60000,
+      },
+    });
   };
 
   async function runDiagnostics() {
@@ -275,7 +321,6 @@ export default function SettingsPage({
   const intervals = settings.intervals;
 
   return (
-    // ✅ NO "metric-agent" wrapper here (removes the extra outer border)
     <div className="grid grid-cols-1 gap-3">
       <Card
         title="Global Controls"
@@ -299,7 +344,17 @@ export default function SettingsPage({
         </Muted>
       </Card>
 
-      <Card title="Intervals" subtitle="Default polling intervals (ms)">
+      <Card
+        title="Intervals"
+        subtitle="Default polling intervals (ms)"
+        right={
+          <>
+            <Button onClick={applyFastLocalPreset}>Fast local</Button>
+            <Button onClick={applyBalancedPreset}>Balanced</Button>
+            <Button onClick={applyAwsPreset}>AWS light</Button>
+          </>
+        }
+      >
         <div className="mt-1 space-y-3">
           {(
             [
@@ -314,9 +369,15 @@ export default function SettingsPage({
               key={key}
               className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3 last:border-b-0 last:pb-0 dark:border-gray-800"
             >
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                {label}
+              <div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {label}
+                </div>
+                <div className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+                  Current: {formatMsLabel(intervals[key])}
+                </div>
               </div>
+
               <div className="flex items-center gap-2">
                 <TextInput
                   value={String(intervals[key])}
@@ -331,7 +392,7 @@ export default function SettingsPage({
           ))}
         </div>
 
-        <Muted>Limits: min 500ms, max 60,000ms.</Muted>
+        <Muted>Limits: min 500ms, max 3,600,000ms (1 hour).</Muted>
       </Card>
 
       <Card

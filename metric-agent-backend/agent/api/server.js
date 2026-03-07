@@ -100,7 +100,7 @@ function startLoopedWorker({
   scriptName,
   intervalMs,
   args = [],
-  restartDelayMs = 3.6 * 1e6,
+  restartDelayMs = 2000,
 }) {
   const scriptPath = path.join(AGENT_DIR, scriptName);
 
@@ -126,12 +126,34 @@ function startLoopedWorker({
   console.log(`[agent-api] ${name} auto-started (interval: ${intervalMs}ms)`);
 }
 
+function runScriptOnce(scriptName, args = []) {
+  return new Promise((resolve, reject) => {
+    const scriptPath = path.join(AGENT_DIR, scriptName);
+
+    const child = spawn("node", [scriptPath, ...args], {
+      stdio: "inherit",
+    });
+
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolve(true);
+      } else {
+        reject(new Error(`${scriptName} exited with code ${code}`));
+      }
+    });
+
+    child.on("error", (err) => {
+      reject(err);
+    });
+  });
+}
+
 function startSignalDetector() {
   startLoopedWorker({
     name: "signal-detector",
     scriptName: "signal-detector.js",
     intervalMs: 3.6 * 1e6, // 1 hour
-    args: ["--samples=1", "--intervalMs=3.6*1e6"],
+    args: ["--samples=1", "--intervalMs=3600000"],
   });
 }
 
@@ -153,7 +175,7 @@ function startUpdatePlanGenerator() {
   });
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   let url;
   try {
     url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
@@ -284,6 +306,32 @@ const server = http.createServer((req, res) => {
     );
   }
 
+  if (
+    pathname === "/api/metric/prom-suggestions/refresh" &&
+    req.method === "POST"
+  ) {
+    try {
+      await runScriptOnce("plan-to-prometheus-style.js");
+
+      const text = readFileSafe(
+        files.prom,
+        "# (empty) run plan-to-prometheus-style.js\n"
+      );
+
+      return ok(req, res, {
+        ok: true,
+        message: "prom suggestions refreshed",
+        generated_at: Date.now(),
+        lines: text.split(/\r?\n/).filter(Boolean).length,
+      });
+    } catch (err) {
+      return sendJson(req, res, 500, {
+        ok: false,
+        error: String(err?.message || err),
+      });
+    }
+  }
+
   if (pathname === "/api/metric/summary" && req.method === "GET") {
     const summary = {
       generated_at: Date.now(),
@@ -348,5 +396,6 @@ server.listen(PORT, () => {
   console.log(`  GET /api/metric/recommendations`);
   console.log(`  GET /api/metric/update-plan`);
   console.log(`  GET /api/metric/prom-suggestions`);
+  console.log(`  POST /api/metric/prom-suggestions/refresh`);
   console.log(`  GET /api/metric/summary`);
 });

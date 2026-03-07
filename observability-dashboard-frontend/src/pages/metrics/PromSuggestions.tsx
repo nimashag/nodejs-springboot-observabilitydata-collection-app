@@ -142,11 +142,21 @@ export default function PromSuggestions({
   settings: AppSettings;
 }) {
   const [enabled, setEnabled] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshMsg, setRefreshMsg] = useState("");
 
   const { data, error, loading } = usePoll(api.promSuggestions, {
     intervalMs: settings.intervals.promMs,
     enabled: settings.pollingEnabled && enabled,
   });
+
+  const [localText, setLocalText] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof data === "string") {
+      setLocalText(data);
+    }
+  }, [data]);
 
   const [promView, setPromView] = useState<"raw" | "structured">(
     settings.ui.defaultPromView,
@@ -157,7 +167,7 @@ export default function PromSuggestions({
     setPromView(settings.ui.defaultPromView);
   }, [settings.ui.defaultPromView]);
 
-  const promText = String(data ?? "");
+  const promText = String(localText ?? "");
   const promBlocks = useMemo(() => parsePromSuggestions(promText), [promText]);
 
   const promFiltered = useMemo(() => {
@@ -177,8 +187,22 @@ export default function PromSuggestions({
       ? `Blocks: ${promFiltered.length} / ${promBlocks.length}`
       : `Lines: ${promText.split(/\r?\n/).filter(Boolean).length}`;
 
+  async function handleRefresh() {
+    try {
+      setRefreshing(true);
+      setRefreshMsg("");
+      await api.refreshPromSuggestions();
+      const text = await api.promSuggestions();
+      setLocalText(text);
+      setRefreshMsg("Suggestions refreshed");
+    } catch (err: any) {
+      setRefreshMsg(`Refresh failed: ${err?.message ?? "unknown error"}`);
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   return (
-    // ✅ Border fix: NO "metric-agent" wrapper here
     <Card
       title="Prom Suggestions"
       subtitle="Prometheus-style naming + labels (derived suggestions)"
@@ -195,6 +219,10 @@ export default function PromSuggestions({
             }
           >
             {enabled ? "Live" : "Load"}
+          </Button>
+
+          <Button onClick={handleRefresh} disabled={refreshing}>
+            {refreshing ? "Refreshing..." : "Generate / Refresh Suggestions"}
           </Button>
 
           <Button
@@ -224,9 +252,16 @@ export default function PromSuggestions({
       {!settings.pollingEnabled ? (
         <Muted>Global polling is OFF (Settings).</Muted>
       ) : null}
+
+      {refreshMsg ? <Muted>{refreshMsg}</Muted> : null}
+
       {error ? <ErrorBox text={error} /> : null}
       {loading && !data && enabled ? <Muted>Loading…</Muted> : null}
-      {!enabled ? <Muted>Click “Load” to fetch the file.</Muted> : null}
+      {!enabled ? (
+        <Muted>
+          Click “Load” to fetch the file, or use “Generate / Refresh Suggestions”.
+        </Muted>
+      ) : null}
 
       {enabled ? (
         <>
