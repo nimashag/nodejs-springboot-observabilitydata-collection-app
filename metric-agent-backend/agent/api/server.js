@@ -3,20 +3,17 @@ import http from "http";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { spawn } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// agent/ folder (parent of api/)
 const AGENT_DIR = path.resolve(__dirname, "..");
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3006;
 
-// If you want to restrict CORS later, set:
-// process.env.ALLOWED_ORIGINS="http://localhost:5173,http://localhost:3000"
 function getAllowedOrigins() {
   const raw = process.env.ALLOWED_ORIGINS;
-  if (!raw) return ["*"]; // default: allow all (simple)
+  if (!raw) return ["*"];
   return raw
     .split(",")
     .map((s) => s.trim())
@@ -28,18 +25,14 @@ const ALLOWED_ORIGINS = getAllowedOrigins();
 function setCors(res, req) {
   const origin = req.headers.origin;
 
-  // If wildcard allowed, simplest:
   if (ALLOWED_ORIGINS.includes("*")) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     return;
   }
 
-  // If restricted, echo back only allowed origin
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
-  } else {
-    // no origin or not allowed -> still no crash, just no CORS header
   }
 }
 
@@ -51,7 +44,6 @@ function sendJson(req, res, status, obj) {
   res.statusCode = status;
   setCors(res, req);
   commonHeaders(res);
-
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.end(JSON.stringify(obj, null, 2));
 }
@@ -60,7 +52,6 @@ function sendText(req, res, status, text) {
   res.statusCode = status;
   setCors(res, req);
   commonHeaders(res);
-
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.end(text);
 }
@@ -82,6 +73,10 @@ function readJsonFileSafe(filePath, fallbackObj) {
   }
 }
 
+function writeJsonFileSafe(filePath, obj) {
+  fs.writeFileSync(filePath, JSON.stringify(obj, null, 2));
+}
+
 function notFound(req, res) {
   sendJson(req, res, 404, { ok: false, error: "not_found" });
 }
@@ -92,6 +87,7 @@ function ok(req, res, payload) {
 
 const files = {
   signals: path.join(AGENT_DIR, "signals.json"),
+  history: path.join(AGENT_DIR, "signals_history.json"),
   baseline: path.join(AGENT_DIR, "baseline.json"),
   kpi: path.join(AGENT_DIR, "kpi_coverage_report.json"),
   recs: path.join(AGENT_DIR, "recommendations.json"),
@@ -99,8 +95,65 @@ const files = {
   prom: path.join(AGENT_DIR, "prometheus_style_suggestions.txt"),
 };
 
+function startLoopedWorker({
+  name,
+  scriptName,
+  intervalMs,
+  args = [],
+  restartDelayMs = 2000,
+}) {
+  const scriptPath = path.join(AGENT_DIR, scriptName);
+
+  function runOnce() {
+    const child = spawn("node", [scriptPath, ...args], {
+      stdio: "inherit",
+    });
+
+    child.on("exit", (code, signal) => {
+      console.log(
+        `[agent-api] ${name} stopped (code=${code}, signal=${signal}). Restarting in ${restartDelayMs}ms...`
+      );
+      setTimeout(runOnce, restartDelayMs);
+    });
+
+    child.on("error", (err) => {
+      console.error(`[agent-api] failed to start ${name}:`, err);
+      setTimeout(runOnce, restartDelayMs);
+    });
+  }
+
+  runOnce();
+  console.log(`[agent-api] ${name} auto-started (interval: ${intervalMs}ms)`);
+}
+
+function startSignalDetector() {
+  startLoopedWorker({
+    name: "signal-detector",
+    scriptName: "signal-detector.js",
+    intervalMs: 5000,
+    args: ["--samples=1", "--intervalMs=5000"],
+  });
+}
+
+function startKpiCoverageChecker() {
+  startLoopedWorker({
+    name: "kpi-coverage-checker",
+    scriptName: "kpi-coverage-checker.js",
+    intervalMs: 10000,
+    args: [],
+  });
+}
+
+function startUpdatePlanGenerator() {
+  startLoopedWorker({
+    name: "update-plan-generator",
+    scriptName: "auto-telemetry-config.js",
+    intervalMs: 15000,
+    args: [],
+  });
+}
+
 const server = http.createServer((req, res) => {
-  // Basic URL parse
   let url;
   try {
     url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
@@ -110,28 +163,28 @@ const server = http.createServer((req, res) => {
 
   const pathname = url.pathname;
 
-  // CORS preflight
   if (req.method === "OPTIONS") {
     setCors(res, req);
     commonHeaders(res);
-
     res.writeHead(204, {
-      "Access-Control-Allow-Methods": "GET,OPTIONS",
+      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     });
     return res.end();
   }
 
-  if (req.method !== "GET") {
-    return sendJson(req, res, 405, { ok: false, error: "method_not_allowed" });
+  if (!["GET", "POST", "OPTIONS"].includes(req.method || "")) {
+    return sendJson(req, res, 405, {
+      ok: false,
+      error: "method_not_allowed",
+    });
   }
 
-  // Routes
-  if (pathname === "/api/metric/health") {
+  if (pathname === "/api/metric/health" && req.method === "GET") {
     return ok(req, res, { ok: true, service: "agent-api", ts: Date.now() });
   }
 
-  if (pathname === "/api/metric/signals") {
+  if (pathname === "/api/metric/signals" && req.method === "GET") {
     return ok(
       req,
       res,
@@ -143,22 +196,58 @@ const server = http.createServer((req, res) => {
     );
   }
 
-  if (pathname === "/api/metric/baseline") {
+  if (pathname === "/api/metric/signals-history" && req.method === "GET") {
+    return ok(
+      req,
+      res,
+      readJsonFileSafe(files.history, {
+        generated_at: Date.now(),
+        total_signals: 0,
+        signals: [],
+      })
+    );
+  }
+
+  if (
+    pathname === "/api/metric/signals-history/reset" &&
+    req.method === "POST"
+  ) {
+    const empty = {
+      generated_at: Date.now(),
+      total_signals: 0,
+      signals: [],
+    };
+
+    writeJsonFileSafe(files.history, empty);
+
+    return ok(req, res, {
+      ok: true,
+      message: "signals history reset",
+      generated_at: empty.generated_at,
+    });
+  }
+
+  if (pathname === "/api/metric/baseline" && req.method === "GET") {
     return ok(req, res, readJsonFileSafe(files.baseline, { services: {} }));
   }
 
-  if (pathname === "/api/metric/kpi-coverage") {
+  if (pathname === "/api/metric/kpi-coverage" && req.method === "GET") {
     return ok(
       req,
       res,
       readJsonFileSafe(files.kpi, {
         generated_at: Date.now(),
+        services_checked: 0,
+        services_missing_kpis: 0,
+        avg_score: 0,
+        improved_services: 0,
+        regressed_services: 0,
         results: [],
       })
     );
   }
 
-  if (pathname === "/api/metric/recommendations") {
+  if (pathname === "/api/metric/recommendations" && req.method === "GET") {
     return ok(
       req,
       res,
@@ -169,19 +258,24 @@ const server = http.createServer((req, res) => {
     );
   }
 
-  if (pathname === "/api/metric/update-plan") {
+  if (pathname === "/api/metric/update-plan" && req.method === "GET") {
     return ok(
       req,
       res,
       readJsonFileSafe(files.plan, {
         generated_at: Date.now(),
         total_rules: 0,
+        avg_confidence: 0,
+        services_covered: 0,
+        improved_actions: 0,
+        regressed_actions: 0,
+        new_actions: 0,
         actions: [],
       })
     );
   }
 
-  if (pathname === "/api/metric/prom-suggestions") {
+  if (pathname === "/api/metric/prom-suggestions" && req.method === "GET") {
     return sendText(
       req,
       res,
@@ -190,27 +284,65 @@ const server = http.createServer((req, res) => {
     );
   }
 
-  // One endpoint for the frontend (so UI can load everything in 1 request)
-  if (pathname === "/api/metric/summary") {
+  if (pathname === "/api/metric/summary" && req.method === "GET") {
     const summary = {
       generated_at: Date.now(),
-      signals: readJsonFileSafe(files.signals, { generated_at: Date.now(), samples: 0, signals: [] }),
-      kpi_coverage: readJsonFileSafe(files.kpi, { generated_at: Date.now(), results: [] }),
-      recommendations: readJsonFileSafe(files.recs, { generated_at: Date.now(), recommendations: [] }),
-      update_plan: readJsonFileSafe(files.plan, { generated_at: Date.now(), total_rules: 0, actions: [] }),
-      prom_suggestions_text: readFileSafe(files.prom, "# (empty) run plan-to-prometheus-style.js\n"),
+      signals: readJsonFileSafe(files.signals, {
+        generated_at: Date.now(),
+        samples: 0,
+        signals: [],
+      }),
+      signals_history: readJsonFileSafe(files.history, {
+        generated_at: Date.now(),
+        total_signals: 0,
+        signals: [],
+      }),
+      kpi_coverage: readJsonFileSafe(files.kpi, {
+        generated_at: Date.now(),
+        services_checked: 0,
+        services_missing_kpis: 0,
+        avg_score: 0,
+        improved_services: 0,
+        regressed_services: 0,
+        results: [],
+      }),
+      recommendations: readJsonFileSafe(files.recs, {
+        generated_at: Date.now(),
+        recommendations: [],
+      }),
+      update_plan: readJsonFileSafe(files.plan, {
+        generated_at: Date.now(),
+        total_rules: 0,
+        avg_confidence: 0,
+        services_covered: 0,
+        improved_actions: 0,
+        regressed_actions: 0,
+        new_actions: 0,
+        actions: [],
+      }),
+      prom_suggestions_text: readFileSafe(
+        files.prom,
+        "# (empty) run plan-to-prometheus-style.js\n"
+      ),
     };
+
     return ok(req, res, summary);
   }
 
   return notFound(req, res);
 });
 
+startSignalDetector();
+startKpiCoverageChecker();
+startUpdatePlanGenerator();
+
 server.listen(PORT, () => {
   console.log(`[agent-api] running on http://localhost:${PORT}`);
   console.log(`[agent-api] endpoints:`);
   console.log(`  GET /api/metric/health`);
   console.log(`  GET /api/metric/signals`);
+  console.log(`  GET /api/metric/signals-history`);
+  console.log(`  POST /api/metric/signals-history/reset`);
   console.log(`  GET /api/metric/baseline`);
   console.log(`  GET /api/metric/kpi-coverage`);
   console.log(`  GET /api/metric/recommendations`);

@@ -1,5 +1,86 @@
 {
-  "generated_at": 1771863678391,
+  "generated_at": 1772818765968,
   "samples": 5,
-  "signals": []
+  "signals": [
+    {
+      "service": "orders-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "restaurants-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "delivery-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "users-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "orders-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "restaurants-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "delivery-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "users-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "orders-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "restaurants-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "delivery-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "users-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "orders-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "restaurants-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "delivery-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "users-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "orders-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "restaurants-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "delivery-service",
+      "error": "fetch failed"
+    },
+    {
+      "service": "users-service",
+      "error": "fetch failed"
+    }
+  ]
 }

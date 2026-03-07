@@ -1,77 +1,110 @@
 {
-  "generated_at": 1771863678455,
+  "generated_at": 1772818766032,
   "discovery_report": {
-    "generated_at": 1771863671952,
+    "generated_at": 1772818760793,
     "services": [
       {
         "service": "orders-service",
-        "snapshot": {
-          "total_requests": 9,
-          "total_errors": 0,
-          "avg_latency_ms": 2,
-          "rss_mb": 76,
-          "heap_used_mb": 27,
-          "heap_used_mb_java": 27
-        },
-        "discovered": {
-          "top_routes": [],
-          "slow_routes": [],
-          "error_routes": []
-        }
+        "error": "fetch failed"
       },
       {
         "service": "restaurants-service",
-        "snapshot": {
-          "total_requests": 9,
-          "total_errors": 0,
-          "avg_latency_ms": 2,
-          "rss_mb": 71,
-          "heap_used_mb": 24,
-          "heap_used_mb_java": 24
-        },
-        "discovered": {
-          "top_routes": [],
-          "slow_routes": [],
-          "error_routes": []
-        }
+        "error": "fetch failed"
       },
       {
         "service": "delivery-service",
-        "snapshot": {
-          "total_requests": 9,
-          "total_errors": 0,
-          "avg_latency_ms": 2,
-          "rss_mb": 75,
-          "heap_used_mb": 28,
-          "heap_used_mb_java": 28
-        },
-        "discovered": {
-          "top_routes": [],
-          "slow_routes": [],
-          "error_routes": []
-        }
+        "error": "fetch failed"
       },
       {
         "service": "users-service",
-        "snapshot": {
-          "total_requests": 9,
-          "total_errors": 0,
-          "avg_latency_ms": 5,
-          "rss_mb": 251,
-          "heap_used_mb": 51,
-          "heap_used_mb_java": 51
-        },
-        "discovered": {
-          "top_routes": [],
-          "slow_routes": [],
-          "error_routes": []
-        }
+        "error": "fetch failed"
       }
     ]
   },
   "signals_report": {
-    "generated_at": 1771863678391,
+    "generated_at": 1772818765968,
     "samples": 5,
-    "signals": []
+    "signals": [
+      {
+        "service": "orders-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "restaurants-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "delivery-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "users-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "orders-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "restaurants-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "delivery-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "users-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "orders-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "restaurants-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "delivery-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "users-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "orders-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "restaurants-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "delivery-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "users-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "orders-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "restaurants-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "delivery-service",
+        "error": "fetch failed"
+      },
+      {
+        "service": "users-service",
+        "error": "fetch failed"
+      }
+    ]
   }
 }
