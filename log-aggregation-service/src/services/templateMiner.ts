@@ -1,22 +1,25 @@
-import KMeans from 'ml-kmeans';
-import * as natural from 'natural';
-import { TfIdf } from 'natural';
-import { LogTemplate, TemplateMiningResult } from '../types/log.types';
-import { EventTypeClassifier } from '../classifiers';
-import { getConfiguredClassifier, getConfiguredClassifierSync } from '../config/classifierLoader';
-import { loadClassifierConfig } from '../config/classifierLoader';
-import { LogParameterizer } from '../utils/logParameterizer';
-import { EventType } from '../types/eventTypes';
+import KMeans from "ml-kmeans";
+import * as natural from "natural";
+import { TfIdf } from "natural";
+import { LogTemplate, TemplateMiningResult } from "../types/log.types";
+import { EventTypeClassifier } from "../classifiers";
+import {
+  getConfiguredClassifier,
+  getConfiguredClassifierSync,
+} from "../config/classifierLoader";
+import { loadClassifierConfig } from "../config/classifierLoader";
+import { LogParameterizer } from "../utils/logParameterizer";
+import { EventType } from "../types/eventTypes";
 
 /**
  * Enhanced Log Template Miner
- * 
+ *
  * Implements ML-based template extraction using:
  * 1. Parameterization (replacing variables with placeholders)
  * 2. TF-IDF vectorization for semantic similarity
  * 3. K-means clustering to group similar logs
  * 4. Template extraction from clusters
- * 
+ *
  * Similar to Drain algorithm but enhanced with ML clustering
  */
 export class LogTemplateMiner {
@@ -25,15 +28,16 @@ export class LogTemplateMiner {
   private tokenizer: natural.WordTokenizer;
   private eventTypeClassifier: EventTypeClassifier;
   private parameterizer: LogParameterizer;
+  private initializationPromise: Promise<void>;
 
   constructor() {
     this.tfidf = new TfIdf();
     this.tokenizer = new natural.WordTokenizer();
-    // Note: getConfiguredClassifier is now async, but constructor can't be async
-    // We'll initialize it synchronously and load model asynchronously if needed
+    // Start with sync classifier
     this.eventTypeClassifier = getConfiguredClassifierSync();
     this.parameterizer = new LogParameterizer();
-    this.initializeClassifier();
+    // Initialize async and store the promise
+    this.initializationPromise = this.initializeClassifier();
   }
 
   /**
@@ -46,16 +50,20 @@ export class LogTemplateMiner {
       if (config.options?.modelPath) {
         const asyncClassifier = await getConfiguredClassifier();
         this.eventTypeClassifier = asyncClassifier;
-        console.log(`TemplateMiner: Loaded pre-trained ${asyncClassifier.name} classifier`);
+        console.log(
+          `TemplateMiner: Loaded pre-trained ${asyncClassifier.name} classifier`,
+        );
       }
     } catch (error) {
-      console.warn(`Failed to initialize classifier with pre-trained model: ${error}`);
+      console.warn(
+        `Failed to initialize classifier with pre-trained model: ${error}`,
+      );
     }
   }
 
   /**
    * Mine templates from a collection of logs
-   * 
+   *
    * @param logs Array of raw log strings
    * @param serviceName Optional service name for service-specific templates
    * @param minClusterSize Minimum number of logs in a cluster to create a template
@@ -66,8 +74,11 @@ export class LogTemplateMiner {
     logs: string[],
     serviceName?: string,
     minClusterSize: number = 3,
-    maxClusters: number = 50
+    maxClusters: number = 50,
   ): Promise<TemplateMiningResult> {
+    // Wait for classifier initialization to complete
+    await this.initializationPromise;
+
     const startTime = Date.now();
 
     if (logs.length === 0) {
@@ -86,13 +97,15 @@ export class LogTemplateMiner {
     console.log(`Mining templates from ${logs.length} logs...`);
 
     // Step 1: Parameterize logs (replace variables with placeholders)
-    const parameterizedLogs = logs.map(log => this.parameterizer.parameterizeLog(log));
+    const parameterizedLogs = logs.map((log) =>
+      this.parameterizer.parameterizeLog(log),
+    );
 
     // Step 2: Vectorize using TF-IDF
     const vectors = this.vectorizeLogs(parameterizedLogs);
 
     if (vectors.length === 0) {
-      console.warn('No vectors generated from logs');
+      console.warn("No vectors generated from logs");
       return {
         templates: [],
         totalLogs: logs.length,
@@ -108,36 +121,46 @@ export class LogTemplateMiner {
     // Step 3: Determine optimal number of clusters
     const optimalK = Math.min(
       Math.max(2, Math.floor(logs.length / minClusterSize)),
-      maxClusters
+      maxClusters,
     );
 
-    console.log(`Clustering ${vectors.length} logs into ${optimalK} clusters...`);
+    console.log(
+      `Clustering ${vectors.length} logs into ${optimalK} clusters...`,
+    );
 
     // Step 4: Cluster similar logs using K-means
     const clusters = this.clusterLogs(vectors, optimalK);
 
     // Step 5: Extract templates from clusters
-    const templates = this.extractTemplates(
+    const templates = await this.extractTemplates(
       clusters,
       logs,
       parameterizedLogs,
       serviceName,
-      minClusterSize
+      minClusterSize,
     );
 
     const miningTime = Date.now() - startTime;
-    const coverage = (templates.reduce((sum, t) => sum + t.frequency, 0) / logs.length) * 100;
+    const coverage =
+      (templates.reduce((sum, t) => sum + t.frequency, 0) / logs.length) * 100;
 
     // Calculate statistics
-    const avgFrequency = templates.length > 0
-      ? templates.reduce((sum, t) => sum + t.frequency, 0) / templates.length
-      : 0;
+    const avgFrequency =
+      templates.length > 0
+        ? templates.reduce((sum, t) => sum + t.frequency, 0) / templates.length
+        : 0;
 
-    const mostCommon = templates.length > 0
-      ? templates.reduce((max, t) => t.frequency > max.frequency ? t : max, templates[0])
-      : undefined;
+    const mostCommon =
+      templates.length > 0
+        ? templates.reduce(
+            (max, t) => (t.frequency > max.frequency ? t : max),
+            templates[0],
+          )
+        : undefined;
 
-    console.log(`Template mining completed: ${templates.length} templates found, ${coverage.toFixed(2)}% coverage`);
+    console.log(
+      `Template mining completed: ${templates.length} templates found, ${coverage.toFixed(2)}% coverage`,
+    );
 
     return {
       templates,
@@ -152,10 +175,9 @@ export class LogTemplateMiner {
     };
   }
 
-
   /**
    * Vectorize logs using TF-IDF
-   * 
+   *
    * @param parameterizedLogs Array of parameterized log strings
    * @returns Array of feature vectors
    */
@@ -164,16 +186,16 @@ export class LogTemplateMiner {
     this.tfidf = new TfIdf();
 
     // Add documents to TF-IDF
-    parameterizedLogs.forEach(log => {
+    parameterizedLogs.forEach((log) => {
       const tokens = this.tokenizeAndStem(log);
       this.tfidf.addDocument(tokens);
     });
 
     // Extract all terms
     const terms = new Set<string>();
-    parameterizedLogs.forEach(log => {
+    parameterizedLogs.forEach((log) => {
       const tokens = this.tokenizeAndStem(log);
-      tokens.forEach(token => terms.add(token));
+      tokens.forEach((token) => terms.add(token));
     });
 
     const termArray = Array.from(terms);
@@ -182,7 +204,7 @@ export class LogTemplateMiner {
     const vectors: number[][] = [];
     for (let i = 0; i < parameterizedLogs.length; i++) {
       const vector: number[] = [];
-      termArray.forEach(term => {
+      termArray.forEach((term) => {
         const tfidf = this.tfidf.tfidf(term, i);
         vector.push(tfidf);
       });
@@ -198,15 +220,15 @@ export class LogTemplateMiner {
   private tokenizeAndStem(log: string): string[] {
     const tokens = this.tokenizer.tokenize(log.toLowerCase()) || [];
     // Use simple stemming by removing common suffixes
-    return tokens.map(token => {
+    return tokens.map((token) => {
       // Simple stemming: remove common suffixes
-      if (token.endsWith('ing') && token.length > 5) {
+      if (token.endsWith("ing") && token.length > 5) {
         return token.slice(0, -3);
       }
-      if (token.endsWith('ed') && token.length > 4) {
+      if (token.endsWith("ed") && token.length > 4) {
         return token.slice(0, -2);
       }
-      if (token.endsWith('s') && token.length > 3) {
+      if (token.endsWith("s") && token.length > 3) {
         return token.slice(0, -1);
       }
       return token;
@@ -215,7 +237,7 @@ export class LogTemplateMiner {
 
   /**
    * Cluster logs using K-means
-   * 
+   *
    * @param vectors Feature vectors
    * @param k Number of clusters
    * @returns Cluster assignments (array of cluster indices)
@@ -226,8 +248,8 @@ export class LogTemplateMiner {
     }
 
     // Normalize vectors (handle different vector lengths)
-    const maxLength = Math.max(...vectors.map(v => v.length));
-    const normalizedVectors = vectors.map(vector => {
+    const maxLength = Math.max(...vectors.map((v) => v.length));
+    const normalizedVectors = vectors.map((vector) => {
       const normalized = [...vector];
       while (normalized.length < maxLength) {
         normalized.push(0);
@@ -237,14 +259,14 @@ export class LogTemplateMiner {
 
     try {
       const result = KMeans(normalizedVectors, k, {
-        initialization: 'kmeans++',
+        initialization: "kmeans++",
         maxIterations: 100,
         tolerance: 0.0001,
       });
 
       return result.clusters;
     } catch (error) {
-      console.error('K-means clustering failed:', error);
+      console.error("K-means clustering failed:", error);
       // Fallback: assign all to cluster 0
       return new Array(vectors.length).fill(0);
     }
@@ -252,7 +274,7 @@ export class LogTemplateMiner {
 
   /**
    * Extract templates from clusters
-   * 
+   *
    * @param clusters Cluster assignments
    * @param originalLogs Original log strings
    * @param parameterizedLogs Parameterized log strings
@@ -260,13 +282,13 @@ export class LogTemplateMiner {
    * @param minClusterSize Minimum cluster size
    * @returns Array of extracted templates
    */
-  private extractTemplates(
+  private async extractTemplates(
     clusters: number[],
     originalLogs: string[],
     parameterizedLogs: string[],
     serviceName?: string,
-    minClusterSize: number = 3
-  ): LogTemplate[] {
+    minClusterSize: number = 3,
+  ): Promise<LogTemplate[]> {
     const templates: LogTemplate[] = [];
     const clusterMap = new Map<number, number[]>();
 
@@ -279,13 +301,16 @@ export class LogTemplateMiner {
     });
 
     // Extract template from each cluster
-    clusterMap.forEach((logIndices, clusterId) => {
+    // Use for...of to support async operations
+    for (const [clusterId, logIndices] of clusterMap.entries()) {
       if (logIndices.length < minClusterSize) {
-        return; // Skip small clusters
+        continue; // Skip small clusters
       }
 
-      const clusterLogs = logIndices.map(idx => originalLogs[idx]);
-      const clusterParameterized = logIndices.map(idx => parameterizedLogs[idx]);
+      const clusterLogs = logIndices.map((idx) => originalLogs[idx]);
+      const clusterParameterized = logIndices.map(
+        (idx) => parameterizedLogs[idx],
+      );
 
       // Find the most representative parameterized log (most common)
       const templateString = this.findMostCommonTemplate(clusterParameterized);
@@ -294,7 +319,13 @@ export class LogTemplateMiner {
       const pattern = this.templateToRegex(templateString);
 
       // Extract metadata
-      const metadata = this.extractTemplateMetadata(clusterLogs, templateString);
+      const metadata = this.extractTemplateMetadata(
+        clusterLogs,
+        templateString,
+      );
+
+      // Await event type classification
+      const eventType = await this.inferEventType(templateString);
 
       const template: LogTemplate = {
         id: `template-${clusterId}-${Date.now()}`,
@@ -304,14 +335,14 @@ export class LogTemplateMiner {
         exampleLogs: clusterLogs.slice(0, 5), // Keep first 5 examples
         frequency: logIndices.length,
         service: serviceName,
-        eventType: this.inferEventType(templateString),
+        eventType: eventType,
         lastSeen: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         metadata,
       };
 
       templates.push(template);
-    });
+    }
 
     return templates;
   }
@@ -322,7 +353,7 @@ export class LogTemplateMiner {
   private findMostCommonTemplate(parameterizedLogs: string[]): string {
     const counts = new Map<string, number>();
 
-    parameterizedLogs.forEach(log => {
+    parameterizedLogs.forEach((log) => {
       counts.set(log, (counts.get(log) || 0) + 1);
     });
 
@@ -346,32 +377,42 @@ export class LogTemplateMiner {
   private templateToRegex(template: string): RegExp {
     // Escape special regex characters
     let regex = template
-      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
       // Replace placeholders with regex patterns
-      .replace(/<UUID>/g, '[0-9a-f-]{36}')
-      .replace(/<IP>/g, '\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}')
-      .replace(/<IPV6>/g, '([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}')
-      .replace(/<EMAIL>/g, '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}')
-      .replace(/<URL>/g, 'https?://[^\\s"\']+')
-      .replace(/<OBJECTID>/g, '[0-9a-f]{24}')
-      .replace(/<TIMESTAMP>/g, '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z?')
-      .replace(/<DATE>/g, '\\d{4}-\\d{2}-\\d{2}')
-      .replace(/<REQUEST_ID>/g, '[0-9a-f-]{36}')
-      .replace(/<SESSION_ID>/g, 'SESSION-[0-9a-f-]+')
-      .replace(/<FILE_PATH>/g, '[\\/\\\\][^\\s"\']+\\.(jpg|jpeg|png|gif|pdf|txt|log|js|ts|java|class)')
-      .replace(/<PORT>/g, ':\\d{4,5}')
-      .replace(/<LONG_NUM>/g, '\\d{6,}')
-      .replace(/<NUM>/g, '\\d{4,5}')
-      .replace(/<ID>/g, '[0-9a-f]{24}|[0-9a-f-]{36}|\\d+');
+      .replace(/<UUID>/g, "[0-9a-f-]{36}")
+      .replace(/<IP>/g, "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}")
+      .replace(/<IPV6>/g, "([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}")
+      .replace(/<EMAIL>/g, "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
+      .replace(/<URL>/g, "https?://[^\\s\"']+")
+      .replace(/<OBJECTID>/g, "[0-9a-f]{24}")
+      .replace(
+        /<TIMESTAMP>/g,
+        "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z?",
+      )
+      .replace(/<DATE>/g, "\\d{4}-\\d{2}-\\d{2}")
+      .replace(/<REQUEST_ID>/g, "[0-9a-f-]{36}")
+      .replace(/<SESSION_ID>/g, "SESSION-[0-9a-f-]+")
+      .replace(
+        /<FILE_PATH>/g,
+        "[\\/\\\\][^\\s\"']+\\.(jpg|jpeg|png|gif|pdf|txt|log|js|ts|java|class)",
+      )
+      .replace(/<PORT>/g, ":\\d{4,5}")
+      .replace(/<LONG_NUM>/g, "\\d{6,}")
+      .replace(/<NUM>/g, "\\d{4,5}")
+      .replace(/<ID>/g, "[0-9a-f]{24}|[0-9a-f-]{36}|\\d+");
 
-    return new RegExp(regex, 'i');
+    return new RegExp(regex, "i");
   }
 
   /**
    * Extract metadata from template
    */
-  private extractTemplateMetadata(logs: string[], template: string): LogTemplate['metadata'] {
-    const avgLength = logs.reduce((sum, log) => sum + log.length, 0) / logs.length;
+  private extractTemplateMetadata(
+    logs: string[],
+    template: string,
+  ): LogTemplate["metadata"] {
+    const avgLength =
+      logs.reduce((sum, log) => sum + log.length, 0) / logs.length;
 
     // Count parameters in template
     const parameterMatches = template.match(/<[A-Z_]+>/g) || [];
@@ -379,8 +420,8 @@ export class LogTemplateMiner {
 
     // Identify parameter types
     const parameterTypes: Record<string, string> = {};
-    parameterMatches.forEach(param => {
-      const type = param.replace(/[<>]/g, '').toLowerCase();
+    parameterMatches.forEach((param) => {
+      const type = param.replace(/[<>]/g, "").toLowerCase();
       parameterTypes[param] = type;
     });
 
@@ -393,17 +434,14 @@ export class LogTemplateMiner {
 
   /**
    * Infer event type from template using the configured classifier
-   * Note: For async classifiers (like NLP), this will return EventType.UNKNOWN initially
-   * The classifier should be trained and used synchronously for best results
+   * Properly handles both sync and async classifiers
    */
-  private inferEventType(template: string): string {
+  private async inferEventType(template: string): Promise<string> {
     try {
       const result = this.eventTypeClassifier.classify(template);
       // Handle both sync and async results
       if (result instanceof Promise) {
-        // For async classifiers, return EventType.UNKNOWN as fallback
-        // In a production system, you might want to await this
-        return EventType.UNKNOWN;
+        return await result;
       }
       return result;
     } catch (error) {
@@ -428,7 +466,7 @@ export class LogTemplateMiner {
 
   /**
    * Match a log against existing templates
-   * 
+   *
    * @param log Raw log string
    * @returns Matching template or null
    */
@@ -436,11 +474,13 @@ export class LogTemplateMiner {
     const parameterized = this.parameterizer.parameterizeLog(log);
 
     // Debug: Log template matching attempts (only if DEBUG env var is set)
-    const debugMode = process.env.DEBUG_TEMPLATE_MATCHING === 'true';
+    const debugMode = process.env.DEBUG_TEMPLATE_MATCHING === "true";
 
     if (debugMode) {
       console.log(`[TemplateMiner] Matching log: ${log.substring(0, 100)}...`);
-      console.log(`[TemplateMiner] Parameterized: ${parameterized.substring(0, 100)}...`);
+      console.log(
+        `[TemplateMiner] Parameterized: ${parameterized.substring(0, 100)}...`,
+      );
       console.log(`[TemplateMiner] Total templates: ${this.templates.size}`);
     }
 
@@ -449,23 +489,25 @@ export class LogTemplateMiner {
       try {
         // Fix pattern: Remove leading/trailing slashes if present (pattern might be stored as "/pattern/i")
         let patternStr = template.pattern;
-        if (patternStr.startsWith('/') && patternStr.endsWith('/i')) {
+        if (patternStr.startsWith("/") && patternStr.endsWith("/i")) {
           patternStr = patternStr.slice(1, -2);
-        } else if (patternStr.startsWith('/') && patternStr.endsWith('/')) {
+        } else if (patternStr.startsWith("/") && patternStr.endsWith("/")) {
           patternStr = patternStr.slice(1, -1);
         }
 
         // Make pattern more flexible: replace hardcoded timestamp milliseconds with flexible pattern
         // This handles cases where template has .648Z but log has .123Z
-        patternStr = patternStr.replace(/\\\.\d{3}Z/g, '\\.\\d{3}Z'); // Make milliseconds flexible
-        patternStr = patternStr.replace(/\\\.\d{3}\\+/g, '\\.\\d{3}\\+'); // Handle timezone offsets
+        patternStr = patternStr.replace(/\\\.\d{3}Z/g, "\\.\\d{3}Z"); // Make milliseconds flexible
+        patternStr = patternStr.replace(/\\\.\d{3}\\+/g, "\\.\\d{3}\\+"); // Handle timezone offsets
 
-        const regex = new RegExp(patternStr, 'i');
+        const regex = new RegExp(patternStr, "i");
         const matchesOriginal = regex.test(log);
         const matchesParameterized = regex.test(parameterized);
 
         if (debugMode) {
-          console.log(`[TemplateMiner] Template ${template.id}: matchesOriginal=${matchesOriginal}, matchesParameterized=${matchesParameterized}`);
+          console.log(
+            `[TemplateMiner] Template ${template.id}: matchesOriginal=${matchesOriginal}, matchesParameterized=${matchesParameterized}`,
+          );
         }
 
         if (matchesOriginal || matchesParameterized) {
@@ -477,7 +519,9 @@ export class LogTemplateMiner {
       } catch (error) {
         // Invalid regex, skip
         if (debugMode) {
-          console.log(`[TemplateMiner] ✗ Invalid regex for template ${template.id}: ${error}`);
+          console.log(
+            `[TemplateMiner] ✗ Invalid regex for template ${template.id}: ${error}`,
+          );
         }
         continue;
       }
@@ -494,7 +538,9 @@ export class LogTemplateMiner {
       const similarity = this.calculateSimilarity(parameterized, templateParam);
 
       if (debugMode && similarity > 0.5) {
-        console.log(`[TemplateMiner] Template ${template.id} similarity: ${(similarity * 100).toFixed(2)}%`);
+        console.log(
+          `[TemplateMiner] Template ${template.id} similarity: ${(similarity * 100).toFixed(2)}%`,
+        );
       }
 
       if (similarity > bestSimilarity && similarity >= similarityThreshold) {
@@ -505,7 +551,9 @@ export class LogTemplateMiner {
 
     if (bestMatch) {
       if (debugMode) {
-        console.log(`[TemplateMiner] ✓ Matched template via similarity (${(bestSimilarity * 100).toFixed(2)}%): ${bestMatch.id}`);
+        console.log(
+          `[TemplateMiner] ✓ Matched template via similarity (${(bestSimilarity * 100).toFixed(2)}%): ${bestMatch.id}`,
+        );
       }
       return bestMatch;
     }
@@ -525,7 +573,7 @@ export class LogTemplateMiner {
     const tokens2 = new Set(str2.toLowerCase().split(/\s+/));
 
     // Calculate intersection and union
-    const intersection = new Set([...tokens1].filter(x => tokens2.has(x)));
+    const intersection = new Set([...tokens1].filter((x) => tokens2.has(x)));
     const union = new Set([...tokens1, ...tokens2]);
 
     // Jaccard similarity
@@ -553,4 +601,3 @@ export class LogTemplateMiner {
     this.templates.clear();
   }
 }
-

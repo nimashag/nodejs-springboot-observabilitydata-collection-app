@@ -1,65 +1,82 @@
-import { NlpManager } from 'node-nlp';
-import { EventTypeClassifier } from './baseEventTypeClassifier';
-import { EventType } from '../types/eventTypes';
+import { NlpManager } from "node-nlp";
+import { EventTypeClassifier } from "./baseEventTypeClassifier";
+import { EventType } from "../types/eventTypes";
 
 /**
  * NLP-based Event Type Classifier
  * Uses node-nlp for intent recognition and classification
  */
 export class NLPEventTypeClassifier implements EventTypeClassifier {
-    name = 'nlp-based';
-    private nlp: NlpManager;
-    private trained: boolean = false;
+  name = "nlp-based";
+  private nlp: NlpManager;
+  private trained: boolean = false;
 
-    constructor() {
-        this.nlp = new NlpManager({
-            languages: ['en'],
-            forceNER: true,
-            nlu: { useNoneFeature: true }
-        });
+  constructor() {
+    this.nlp = new NlpManager({
+      languages: ["en"],
+      forceNER: true,
+      nlu: { useNoneFeature: true },
+    });
+  }
+
+  async train(
+    trainingData: Array<{ template: string; eventType: string }>,
+  ): Promise<void> {
+    for (const { template, eventType } of trainingData) {
+      this.nlp.addDocument("en", template, eventType);
     }
 
-    async train(trainingData: Array<{ template: string; eventType: string }>): Promise<void> {
-        for (const { template, eventType } of trainingData) {
-            this.nlp.addDocument('en', template, eventType);
-        }
+    await this.nlp.train();
+    this.trained = true;
+  }
 
-        await this.nlp.train();
-        this.trained = true;
+  async classify(template: string): Promise<string> {
+    if (!this.trained) {
+      return EventType.UNKNOWN;
     }
 
-    async classify(template: string): Promise<string> {
-        if (!this.trained) {
-            return EventType.UNKNOWN;
-        }
+    const result = await this.nlp.process("en", template);
+    const intent = result.intent;
 
-        const result = await this.nlp.process('en', template);
-        return result.intent || EventType.UNKNOWN;
+    // Handle node-nlp's "None" intent (no match found)
+    if (!intent || intent === "None" || intent === "none") {
+      return EventType.UNKNOWN;
     }
 
-    async classifyWithConfidence(template: string): Promise<{ eventType: string; confidence: number }> {
-        if (!this.trained) {
-            return { eventType: EventType.UNKNOWN, confidence: 0 };
-        }
+    return intent;
+  }
 
-        const result = await this.nlp.process('en', template);
-        return {
-            eventType: result.intent || EventType.UNKNOWN,
-            confidence: result.score || 0,
-        };
+  async classifyWithConfidence(
+    template: string,
+  ): Promise<{ eventType: string; confidence: number }> {
+    if (!this.trained) {
+      return { eventType: EventType.UNKNOWN, confidence: 0 };
     }
 
-    isTrained(): boolean {
-        return this.trained;
+    const result = await this.nlp.process("en", template);
+    const intent = result.intent;
+
+    // Handle node-nlp's "None" intent (no match found)
+    if (!intent || intent === "None" || intent === "none") {
+      return { eventType: EventType.UNKNOWN, confidence: 0 };
     }
 
-    async save(filepath: string): Promise<void> {
-        await this.nlp.save(filepath);
-    }
+    return {
+      eventType: intent,
+      confidence: result.score || 0,
+    };
+  }
 
-    async load(filepath: string): Promise<void> {
-        await this.nlp.load(filepath);
-        this.trained = true;
-    }
+  isTrained(): boolean {
+    return this.trained;
+  }
+
+  async save(filepath: string): Promise<void> {
+    await this.nlp.save(filepath);
+  }
+
+  async load(filepath: string): Promise<void> {
+    await this.nlp.load(filepath);
+    this.trained = true;
+  }
 }
-
