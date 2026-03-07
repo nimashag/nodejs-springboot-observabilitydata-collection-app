@@ -1,69 +1,29 @@
 {
-  "generated_at": 1771863672279,
+  "generated_at": 1772818760901,
   "results": [
     {
       "service": "orders-service",
       "url": "http://localhost:3002/api/orders/telemetry",
-      "checked_at": 1771863672065,
-      "missing_kpis": [],
-      "coverage": {
-        "latency_avg": true,
-        "traffic_total_requests": true,
-        "errors_total_errors": true,
-        "memory_heap_used": true,
-        "memory_rss": true,
-        "route_level_metrics": true,
-        "latency_percentiles": true,
-        "rps": true
-      }
+      "checked_at": 1772818760896,
+      "error": "fetch failed"
     },
     {
       "service": "restaurants-service",
       "url": "http://localhost:3001/api/restaurants/telemetry",
-      "checked_at": 1771863672069,
-      "missing_kpis": [],
-      "coverage": {
-        "latency_avg": true,
-        "traffic_total_requests": true,
-        "errors_total_errors": true,
-        "memory_heap_used": true,
-        "memory_rss": true,
-        "route_level_metrics": true,
-        "latency_percentiles": true,
-        "rps": true
-      }
+      "checked_at": 1772818760898,
+      "error": "fetch failed"
     },
     {
       "service": "delivery-service",
       "url": "http://localhost:3004/api/delivery/telemetry",
-      "checked_at": 1771863672073,
-      "missing_kpis": [],
-      "coverage": {
-        "latency_avg": true,
-        "traffic_total_requests": true,
-        "errors_total_errors": true,
-        "memory_heap_used": true,
-        "memory_rss": true,
-        "route_level_metrics": true,
-        "latency_percentiles": true,
-        "rps": true
-      }
+      "checked_at": 1772818760899,
+      "error": "fetch failed"
     },
     {
       "service": "users-service",
       "url": "http://localhost:3003/telemetry",
-      "checked_at": 1771863672279,
-      "missing_kpis": [],
-      "coverage": {
-        "latency_avg": true,
-        "traffic_total_requests": true,
-        "errors_total_errors": true,
-        "memory_heap_used": true,
-        "memory_rss": true,
-        "route_level_metrics": true,
-        "latency_percentiles": true,
-        "rps": true
-      }
+      "checked_at": 1772818760901,
+      "error": "fetch failed"
     }
   ]
 }

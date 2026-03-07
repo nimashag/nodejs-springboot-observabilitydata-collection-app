@@ -90,12 +90,14 @@ function Sparkline({
 }) {
   const w = 260;
   const h = height;
-  if (!values.length)
+
+  if (!values.length) {
     return (
       <div className="text-xs text-gray-500 dark:text-gray-400">
         No data yet
       </div>
     );
+  }
 
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -132,6 +134,7 @@ function BarList({
   items: Array<{ label: string; value: number }>;
 }) {
   const max = Math.max(1, ...items.map((x) => x.value));
+
   return (
     <div className="mt-2 grid gap-2">
       {items.map((it) => (
@@ -168,29 +171,39 @@ export default function Overview({ settings }: { settings: AppSettings }) {
     intervalMs: settings.intervals.healthMs,
     enabled: pollOn,
   });
+
   const signals = usePoll(api.signals, {
     intervalMs: settings.intervals.signalsMs,
     enabled: pollOn,
   });
+
   const kpi = usePoll(api.kpiCoverage, {
     intervalMs: settings.intervals.kpiMs,
     enabled: pollOn,
   });
+
   const plan = usePoll(api.updatePlan, {
     intervalMs: settings.intervals.planMs,
     enabled: pollOn,
   });
 
-  const criticalCount =
-    signals.data?.signals?.filter(
-      (s: any) => s?.signal && s?.severity === "critical",
-    ).length ?? 0;
+  const signalList = Array.isArray(signals.data?.signals)
+    ? signals.data.signals
+    : [];
 
-  const totalSignals = signals.data?.signals?.length ?? 0;
+  const criticalCount = signalList.filter(
+    (s: any) => s?.signal && s?.severity === "critical",
+  ).length;
+
+  const totalSignals =
+    typeof signals.data?.total_signals === "number"
+      ? signals.data.total_signals
+      : signalList.length;
 
   const missingKpiServices =
-    kpi.data?.results?.filter((r: any) => (r.missing_kpis || []).length > 0)
-      .length ?? 0;
+    kpi.data?.results?.filter(
+      (r: any) => (r.missing_kpis || []).length > 0 || r.status === "error",
+    ).length ?? 0;
 
   const totalRules = plan.data?.actions?.length ?? 0;
 
@@ -210,36 +223,53 @@ export default function Overview({ settings }: { settings: AppSettings }) {
       !!kpi.data?.generated_at ||
       !!plan.data?.generated_at ||
       !!health.data?.ts;
+
     if (!hasAny) return;
 
     setHist((prev) => {
-      const next = [
-        ...prev,
-        {
-          t: Date.now(),
-          critical: criticalCount,
-          total: totalSignals,
-          missingSvc: missingKpiServices,
-          actions: totalRules,
-        },
-      ];
+      const nextPoint = {
+        t: Date.now(),
+        critical: criticalCount,
+        total: totalSignals,
+        missingSvc: missingKpiServices,
+        actions: totalRules,
+      };
+
+      const last = prev[prev.length - 1];
+
+      if (
+        last &&
+        last.critical === nextPoint.critical &&
+        last.total === nextPoint.total &&
+        last.missingSvc === nextPoint.missingSvc &&
+        last.actions === nextPoint.actions
+      ) {
+        return prev;
+      }
+
+      const next = [...prev, nextPoint];
       return next.slice(-30);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     signals.data?.generated_at,
+    signals.data?.total_signals,
     kpi.data?.generated_at,
     plan.data?.generated_at,
+    health.data?.ts,
+    criticalCount,
+    totalSignals,
+    missingKpiServices,
+    totalRules,
   ]);
 
   const sevBars = useMemo(() => {
-    const list = signals.data?.signals ?? [];
-    let crit = 0,
-      warn = 0,
-      info = 0,
-      other = 0;
+    let crit = 0;
+    let warn = 0;
+    let info = 0;
+    let other = 0;
 
-    for (const s of list as any[]) {
+    for (const s of signalList as any[]) {
       const sev = String(s?.severity ?? "");
       if (sev === "critical") crit++;
       else if (sev === "warning") warn++;
@@ -253,7 +283,7 @@ export default function Overview({ settings }: { settings: AppSettings }) {
       { label: "info", value: info },
       { label: "other", value: other },
     ];
-  }, [signals.data?.generated_at]);
+  }, [signalList]);
 
   const topMissing = useMemo(() => {
     const rows = (kpi.data?.results ?? []) as any[];
@@ -265,15 +295,13 @@ export default function Overview({ settings }: { settings: AppSettings }) {
       .filter((x) => x.value > 0)
       .sort((a, b) => b.value - a.value)
       .slice(0, 6);
-  }, [kpi.data?.generated_at]);
+  }, [kpi.data?.generated_at, kpi.data?.results]);
 
   const seriesCritical = hist.map((x) => x.critical);
   const seriesMissing = hist.map((x) => x.missingSvc);
 
   return (
-    // ✅ Border fix: removed "metric-agent" wrapper
     <div className="space-y-4">
-      {/* Top grid */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Status" subtitle="Agent health">
           {health.error ? (
@@ -397,7 +425,16 @@ export default function Overview({ settings }: { settings: AppSettings }) {
                   Total actions
                 </div>
                 <div className="text-xs text-gray-800 dark:text-gray-200">
-                  {totalRules}
+                  {plan.data?.total_rules ?? plan.data?.actions?.length ?? 0}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Avg confidence
+                </div>
+                <div className="text-xs text-gray-800 dark:text-gray-200">
+                  {plan.data?.avg_confidence ?? "—"}
                 </div>
               </div>
 
@@ -423,7 +460,6 @@ export default function Overview({ settings }: { settings: AppSettings }) {
         </Card>
       </div>
 
-      {/* Bottom grid */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Trends" subtitle="Last samples (local history)">
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">

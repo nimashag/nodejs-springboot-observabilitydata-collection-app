@@ -1,23 +1,23 @@
 import fs from "fs";
 
-// Inputs
-const PRED_FILE = new URL("./ml/outputs/routes_predicted.csv", import.meta.url); // change if your filename differs
+const PRED_FILE = new URL("./ml/outputs/routes_predicted.csv", import.meta.url);
 const OUT_FILE = new URL("./telemetry_update_plan.json", import.meta.url);
 
-// Simple parser for CSV (no libs)
 function readCSV(pathUrl) {
   const text = fs.readFileSync(pathUrl, "utf-8").trim();
   const lines = text.split(/\r?\n/);
   const headers = lines[0].split(",");
+
   return lines.slice(1).map((line) => {
     const cols = line.split(",");
     const row = {};
-    headers.forEach((h, i) => (row[h.trim()] = (cols[i] ?? "").trim()));
+    headers.forEach((h, i) => {
+      row[h.trim()] = (cols[i] ?? "").trim();
+    });
     return row;
   });
 }
 
-// Map route intent -> KPIs needed (customize as you like)
 const INTENT_TO_KPIS = {
   state_transition: ["p95_latency_ms", "p99_latency_ms", "error_rate"],
   catalog_ops: ["p95_latency_ms", "rps", "error_rate"],
@@ -28,13 +28,43 @@ const INTENT_TO_KPIS = {
   generic_api: ["p95_latency_ms", "rps", "error_rate"],
 };
 
-// Where KPIs should be implemented (your “telemetry config targets”)
 const KPI_IMPL = {
   p95_latency_ms: { type: "percentile", source: "latency_samples" },
   p99_latency_ms: { type: "percentile", source: "latency_samples" },
-  rps: { type: "rate", source: "total_requests/uprime" },
+  rps: { type: "rate", source: "total_requests/uptime" },
   error_rate: { type: "rate", source: "total_errors/total_requests" },
 };
+
+function loadPreviousPlan() {
+  try {
+    return JSON.parse(fs.readFileSync(OUT_FILE, "utf-8"));
+  } catch {
+    return {
+      generated_at: 0,
+      total_rules: 0,
+      avg_confidence: 0,
+      services_covered: 0,
+      actions: [],
+    };
+  }
+}
+
+function buildPreviousMap(previousPlan) {
+  const rows = Array.isArray(previousPlan?.actions) ? previousPlan.actions : [];
+  return new Map(
+    rows.map((a) => [
+      `${a.service}::${a.route}::${a.intent}`,
+      a,
+    ])
+  );
+}
+
+function computeTrend(currentConfidence, previousConfidence) {
+  if (typeof previousConfidence !== "number") return "new";
+  if (currentConfidence > previousConfidence) return "improved";
+  if (currentConfidence < previousConfidence) return "regressed";
+  return "unchanged";
+}
 
 function main() {
   if (!fs.existsSync(PRED_FILE)) {
@@ -44,9 +74,9 @@ function main() {
   }
 
   const rows = readCSV(PRED_FILE);
+  const previousPlan = loadPreviousPlan();
+  const previousMap = buildPreviousMap(previousPlan);
 
-  // Expect columns like:
-  // service,method,path,path_norm,predicted_label,confidence
   const actions = [];
 
   for (const r of rows) {
@@ -56,30 +86,65 @@ function main() {
     const intent = r.predicted_label;
     const confidence = Number(r.confidence || 0);
 
-    // Only auto-config when confident enough
     if (confidence < 70) continue;
 
     const kpis = INTENT_TO_KPIS[intent] || INTENT_TO_KPIS.generic_api;
+    const route = `${method} ${path}`;
+    const key = `${service}::${route}::${intent}`;
+    const previous = previousMap.get(key);
 
     actions.push({
       action: "ensure_kpis_for_route",
       service,
-      route: `${method} ${path}`,
+      route,
       intent,
       confidence,
-      required_kpis: kpis.map((k) => ({ name: k, impl: KPI_IMPL[k] || { type: "custom" } })),
+      previous_confidence:
+        typeof previous?.confidence === "number" ? previous.confidence : null,
+      confidence_delta:
+        typeof previous?.confidence === "number"
+          ? Math.round((confidence - previous.confidence) * 100) / 100
+          : null,
+      trend: computeTrend(
+        confidence,
+        typeof previous?.confidence === "number" ? previous.confidence : undefined
+      ),
+      required_kpis: kpis.map((k) => ({
+        name: k,
+        impl: KPI_IMPL[k] || { type: "custom" },
+      })),
     });
   }
 
+  const totalRules = actions.length;
+  const avgConfidence =
+    actions.length > 0
+      ? Math.round(
+          (actions.reduce((sum, a) => sum + (Number(a.confidence) || 0), 0) /
+            actions.length) *
+            100
+        ) / 100
+      : 0;
+
+  const servicesCovered = new Set(actions.map((a) => a.service)).size;
+  const improvedActions = actions.filter((a) => a.trend === "improved").length;
+  const regressedActions = actions.filter((a) => a.trend === "regressed").length;
+  const newActions = actions.filter((a) => a.trend === "new").length;
+
   const out = {
     generated_at: Date.now(),
-    total_rules: actions.length,
+    total_rules: totalRules,
+    avg_confidence: avgConfidence,
+    services_covered: servicesCovered,
+    improved_actions: improvedActions,
+    regressed_actions: regressedActions,
+    new_actions: newActions,
     actions,
   };
 
   fs.writeFileSync(OUT_FILE, JSON.stringify(out, null, 2));
   console.log("Saved:", OUT_FILE.pathname);
-  console.log("Actions:", actions.length);
+  console.log("Actions:", totalRules);
 }
 
 main();

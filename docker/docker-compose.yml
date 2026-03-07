@@ -21,18 +21,23 @@ services:
     container_name: restaurants-service
     ports:
       - "31001:3001"
+
     environment:
+      - ENABLE_DEBUG_ROUTES=true
       - RESTAURANTS_SERVICE_URL=http://restaurants-service:3001/api/restaurants
       - ORDERS_SERVICE_URL=http://orders-service:3002/api/orders
       - USERS_SERVICE_URL=http://users-service:3003/api/restaurants
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
+
     volumes:
       - uploads-data:/app/uploads
       - ~/temp/docker-files/restaurants-service/logs:/app/logs
       - ~/temp/docker-files/restaurants-service/alerts:/app/alerts
       - ~/temp/docker-files/restaurants-service/metrics:/app/metrics
+
     networks:
       - app-network
+
     restart: unless-stopped
 
   orders-service:
@@ -48,6 +53,7 @@ services:
       - ORDERS_SERVICE_URL=http://orders-service:3002/api/orders
       - USERS_SERVICE_URL=http://users-service:3003/api/restaurants
       - DELIVERY_SERVICE_URL=http://delivery-service:3004/api/delivery
+      - ENABLE_DEBUG_ROUTES=true
     volumes:
       - ~/temp/docker-files/orders-service/logs:/app/logs
       - ~/temp/docker-files/orders-service/alerts:/app/alerts
@@ -184,10 +190,14 @@ services:
       - PORT=3006
       - DOCKER_ENV=true
     volumes:
-      - ~/temp/docker-files/delivery-service/metrics:/app/metrics/delivery-service:ro
-      - ~/temp/docker-files/orders-service/metrics:/app/metrics/orders-service:ro
-      - ~/temp/docker-files/restaurants-service/metrics:/app/metrics/restaurants-service:ro
-      - ~/temp/docker-files/users-service/metrics:/app/metrics/users-service:ro
+      # Persist signal history inside project
+      - ../docker-data/metric-agent/signals_history.json:/app/agent/signals_history.json
+
+      # Metrics inputs from services
+      - ../docker-data/delivery-service/metrics:/app/metrics/delivery-service:ro
+      - ../docker-data/orders-service/metrics:/app/metrics/orders-service:ro
+      - ../docker-data/restaurants-service/metrics:/app/metrics/restaurants-service:ro
+      - ../docker-data/users-service/metrics:/app/metrics/users-service:ro
     networks:
       - app-network
     restart: unless-stopped

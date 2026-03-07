@@ -18,8 +18,6 @@ type AppSettings = {
   };
 };
 
-/* ---------------- Utils ---------------- */
-
 function cn(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(" ");
 }
@@ -33,7 +31,11 @@ function formatTime(ts?: number) {
   }
 }
 
-/* ---------------- Local UI (Tailwind) ---------------- */
+function deltaLabel(n?: number) {
+  if (typeof n !== "number") return "—";
+  if (n > 0) return `+${n}`;
+  return `${n}`;
+}
 
 function Card({
   title,
@@ -92,7 +94,7 @@ function Badge({
   kind,
   children,
 }: {
-  kind: "neutral" | "ok" | "warn" | "crit";
+  kind: "neutral" | "ok" | "warn" | "crit" | "improved" | "regressed";
   children: ReactNode;
 }) {
   const styles =
@@ -102,7 +104,11 @@ function Badge({
         ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300"
         : kind === "crit"
           ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300"
-          : "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200";
+          : kind === "improved"
+            ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300"
+            : kind === "regressed"
+              ? "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-900/50 dark:bg-fuchsia-950/30 dark:text-fuchsia-300"
+              : "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200";
 
   return (
     <span
@@ -129,12 +135,10 @@ function TextInput({
   value,
   onChange,
   placeholder,
-  type,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  type?: string;
 }) {
   return (
     <input
@@ -142,7 +146,6 @@ function TextInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      type={type}
     />
   );
 }
@@ -176,8 +179,6 @@ function Button({
   );
 }
 
-/* ---------------- KPI Coverage Page ---------------- */
-
 export default function KpiCoverage({ settings }: { settings: AppSettings }) {
   const [enabled, setEnabled] = useState(true);
   const [q, setQ] = useState("");
@@ -191,21 +192,21 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
   const rows = useMemo(() => {
     const all = data?.results ?? [];
     const qq = q.trim().toLowerCase();
+
     return all
       .filter((r: any) =>
-        showOnlyMissing ? (r.missing_kpis ?? []).length > 0 : true,
+        showOnlyMissing
+          ? (r.missing_kpis ?? []).length > 0 || r.status === "error"
+          : true,
       )
       .filter((r: any) => {
         if (!qq) return true;
         const blob =
-          `${r.service} ${(r.missing_kpis ?? []).join(" ")} ${r.url}`.toLowerCase();
+          `${r.service} ${(r.missing_kpis ?? []).join(" ")} ${r.url} ${r.error ?? ""} ${r.status ?? ""} ${r.trend ?? ""}`.toLowerCase();
         return blob.includes(qq);
       })
-      .sort(
-        (a: any, b: any) =>
-          (b.missing_kpis?.length ?? 0) - (a.missing_kpis?.length ?? 0),
-      );
-  }, [data?.generated_at, q, showOnlyMissing]);
+      .sort((a: any, b: any) => (a.score ?? 0) - (b.score ?? 0));
+  }, [data?.generated_at, q, showOnlyMissing, data?.results]);
 
   const [selected, setSelected] = useState<any | null>(null);
 
@@ -213,7 +214,7 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
     <div className="space-y-4">
       <Card
         title="KPI Coverage"
-        subtitle="Shows missing KPIs per service"
+        subtitle="Live KPI implementation coverage across services"
         right={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -250,7 +251,7 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
               <TextInput
                 value={q}
                 onChange={setQ}
-                placeholder="Filter… (service/kpi/url)"
+                placeholder="Filter… (service/kpi/url/error/trend)"
               />
               <Button
                 active={showOnlyMissing}
@@ -260,7 +261,13 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
               </Button>
             </div>
           }
-          right={<div>Generated: {formatTime(data?.generated_at)}</div>}
+          right={
+            <div>
+              Generated: {formatTime(data?.generated_at)} | Avg score:{" "}
+              {data?.avg_score ?? 0}% | Improved: {data?.improved_services ?? 0}{" "}
+              | Regressed: {data?.regressed_services ?? 0}
+            </div>
+          }
         />
 
         {!settings.pollingEnabled ? (
@@ -269,36 +276,58 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
         {error ? <ErrorBox text={error} /> : null}
         {loading && !data ? <Muted>Loading…</Muted> : null}
 
-        {/* Table */}
         <div className="mt-2 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-          <div className="grid grid-cols-[180px_140px_1fr_1fr] gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
+          <div className="grid grid-cols-[170px_110px_80px_90px_110px_1fr] gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
             <div>Service</div>
             <div>Status</div>
-            <div>Missing KPIs</div>
-            <div>URL</div>
+            <div>Score</div>
+            <div>Delta</div>
+            <div>Trend</div>
+            <div>Missing KPIs / Error</div>
           </div>
 
           {rows.map((r: any, idx: number) => {
             const missing = r.missing_kpis ?? [];
-            const ok = missing.length === 0;
+            const isError = r.status === "error";
+            const isComplete = r.status === "complete";
+
             return (
               <div
                 key={idx}
                 onClick={() => setSelected(r)}
-                className="grid cursor-pointer grid-cols-[180px_140px_1fr_1fr] gap-3 border-b border-gray-100 px-4 py-3 text-xs text-gray-800 hover:bg-gray-50 dark:border-gray-800/70 dark:text-gray-200 dark:hover:bg-gray-800/30"
+                className="grid cursor-pointer grid-cols-[170px_110px_80px_90px_110px_1fr] gap-3 border-b border-gray-100 px-4 py-3 text-xs text-gray-800 hover:bg-gray-50 dark:border-gray-800/70 dark:text-gray-200 dark:hover:bg-gray-800/30"
               >
                 <div className="font-mono text-[12px]">{r.service}</div>
+
                 <div>
-                  {ok ? (
+                  {isError ? (
+                    <Badge kind="crit">error</Badge>
+                  ) : isComplete ? (
                     <Badge kind="ok">complete</Badge>
                   ) : (
                     <Badge kind="warn">{missing.length} missing</Badge>
                   )}
                 </div>
+
+                <div className="font-mono text-[12px]">{r.score ?? 0}%</div>
+
                 <div className="font-mono text-[12px]">
-                  {ok ? "—" : missing.join(", ")}
+                  {deltaLabel(r.score_delta)}
                 </div>
-                <div className="font-mono text-[12px]">{r.url}</div>
+
+                <div>
+                  {r.trend === "improved" ? (
+                    <Badge kind="improved">improved</Badge>
+                  ) : r.trend === "regressed" ? (
+                    <Badge kind="regressed">regressed</Badge>
+                  ) : (
+                    <Badge kind="neutral">unchanged</Badge>
+                  )}
+                </div>
+
+                <div className="font-mono text-[12px]">
+                  {r.error ?? (missing.length ? missing.join(", ") : "—")}
+                </div>
               </div>
             );
           })}
@@ -311,14 +340,15 @@ export default function KpiCoverage({ settings }: { settings: AppSettings }) {
         </div>
 
         <Muted>
-          Services: {data?.results?.length ?? 0} | Showing: {rows.length}
+          Services: {data?.results?.length ?? 0} | Showing: {rows.length} |
+          Missing KPI services: {data?.services_missing_kpis ?? 0}
         </Muted>
       </Card>
 
       <Drawer
         open={!!selected}
         title={`${selected?.service ?? "service"} — KPI Coverage`}
-        subtitle={`Missing KPIs: ${(selected?.missing_kpis ?? []).length}`}
+        subtitle={`Score: ${selected?.score ?? 0}% • Delta: ${deltaLabel(selected?.score_delta)} • Trend: ${selected?.trend ?? "unchanged"}`}
         onClose={() => setSelected(null)}
       >
         <pre className="mt-3 max-h-[560px] overflow-auto rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-800 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-100">
