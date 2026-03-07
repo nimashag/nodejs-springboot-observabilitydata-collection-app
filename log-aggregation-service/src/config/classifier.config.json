@@ -1,7 +1,7 @@
 {
     "classifier": "nlp-based",
     "options": {
-        "k": 3
+        "modelPath": "models/nlp-based-model.json"
     },
     "availableClassifiers": [
         "rule-based",

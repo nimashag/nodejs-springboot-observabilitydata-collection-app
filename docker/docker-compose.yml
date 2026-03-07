@@ -119,6 +119,7 @@ services:
       - USERS_SERVICE_LOG_PATH=/app/service-logs/users-service
     volumes:
       - ~/temp/docker-files/log-aggregation-service/aggregated-logs:/app/aggregated-logs
+      - ~/temp/docker-files/log-aggregation-service/templates:/app/templates
       - ~/temp/docker-files/delivery-service/logs:/app/service-logs/delivery-service:ro
       - ~/temp/docker-files/orders-service/logs:/app/service-logs/orders-service:ro
       - ~/temp/docker-files/restaurants-service/logs:/app/service-logs/restaurants-service:ro
