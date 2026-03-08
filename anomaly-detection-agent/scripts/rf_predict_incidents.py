@@ -33,9 +33,11 @@ FEATURE_LEVEL = "level"
 
 LEVEL_MAP = {"debug": 0, "info": 1, "warn": 2, "warning": 2, "error": 3, "fatal": 4}
 
-EMAIL_SERVICE_URL = "http://localhost:4000/v1/email/send"
+EMAIL_SERVICE_URL = os.getenv("EMAIL_SERVICE_URL", "http://localhost:4000/v1/email/send")
 SEND_EMAIL = os.getenv("ANOMALY_SEND_EMAIL", "1").strip().lower() not in {"0", "false", "no"}
 MIN_INCIDENTS_TO_EMAIL = 1
+EMAIL_COOLDOWN_SECONDS = int(os.getenv("ANOMALY_EMAIL_COOLDOWN_SECONDS", "1800"))
+EMAIL_STATE_FILE = OUT_DIR / "email_state.json"
 # ----------------------------------------
 
 
@@ -192,6 +194,7 @@ def send_incident_email(payload):
     </table>
     """
 
+    print(f"📧 Sending incident email to: {EMAIL_SERVICE_URL}")
     r = requests.post(
         EMAIL_SERVICE_URL,
         json={"subject": subject, "text": text, "html": html},
@@ -202,6 +205,72 @@ def send_incident_email(payload):
         print("✅ Email sent automatically")
     else:
         print("❌ Email failed:", r.status_code, r.text)
+
+
+def incident_email_signature(incident):
+    events = incident.get("events", [])[:5] if isinstance(incident.get("events", []), list) else []
+    return "::".join([
+        str(incident.get("request_id", "")),
+        str(incident.get("service", "")),
+        str(incident.get("status_code", "")),
+        str(incident.get("reason", "")),
+        "|".join(events),
+    ])
+
+
+def load_email_state():
+    if not EMAIL_STATE_FILE.exists():
+        return {"last_sent_by_signature": {}}
+    try:
+        data = json.loads(EMAIL_STATE_FILE.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return {"last_sent_by_signature": {}}
+        if not isinstance(data.get("last_sent_by_signature"), dict):
+            data["last_sent_by_signature"] = {}
+        return data
+    except Exception:
+        return {"last_sent_by_signature": {}}
+
+
+def save_email_state(state):
+    try:
+        EMAIL_STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    except Exception as e:
+        print(f"⚠️  Failed to save email state: {e}")
+
+
+def select_email_candidates(incidents):
+    state = load_email_state()
+    sent_map = state.setdefault("last_sent_by_signature", {})
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    sendable = []
+    sendable_signatures = []
+    suppressed = 0
+
+    for incident in incidents:
+        sig = incident_email_signature(incident)
+        last_sent_ts = int(sent_map.get(sig, 0) or 0)
+        if now_ts - last_sent_ts >= EMAIL_COOLDOWN_SECONDS:
+            sendable.append(incident)
+            sendable_signatures.append(sig)
+        else:
+            suppressed += 1
+
+    return sendable, suppressed, sendable_signatures, state, now_ts
+
+
+def mark_email_sent(state, sent_signatures, sent_ts):
+    sent_map = state.setdefault("last_sent_by_signature", {})
+    for sig in sent_signatures:
+        sent_map[sig] = sent_ts
+
+    # Keep state compact by pruning stale entries.
+    prune_older_than = sent_ts - max(EMAIL_COOLDOWN_SECONDS * 48, 86400)
+    stale_keys = [k for k, ts in sent_map.items() if int(ts or 0) < prune_older_than]
+    for k in stale_keys:
+        del sent_map[k]
+
+    save_email_state(state)
 
 
 def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
@@ -418,13 +487,28 @@ def main(input_csv=DEFAULT_INPUT_CSV, model_path=DEFAULT_MODEL_PATH):
     # Save with history tracking (timestamp + cleanup)
     save_incidents_with_history(payload)
 
-    # ✅ EMAIL TRIGGER MUST BE HERE (payload exists here)
-    if SEND_EMAIL and len(payload.get("incidents", [])) >= MIN_INCIDENTS_TO_EMAIL:
-        try:
-            send_incident_email(payload)
-        except Exception as e:
-            # Do not fail anomaly pipeline if email service is unavailable.
-            print(f"⚠️ Email send skipped due to error: {e}")
+    # Email trigger with cooldown per incident signature.
+    incidents_for_email = payload.get("incidents", [])
+    if SEND_EMAIL and len(incidents_for_email) >= MIN_INCIDENTS_TO_EMAIL:
+        sendable, suppressed, sendable_signatures, email_state, sent_ts = select_email_candidates(incidents_for_email)
+        if sendable:
+            email_payload = {
+                **payload,
+                "incidents": sendable,
+                "incident_story": build_story(sendable),
+            }
+            try:
+                send_incident_email(email_payload)
+                mark_email_sent(email_state, sendable_signatures, sent_ts)
+                if suppressed:
+                    print(f"ℹ️ Email cooldown suppressed {suppressed} repeating incident(s)")
+            except Exception as e:
+                # Do not fail anomaly pipeline if email service is unavailable.
+                print(f"⚠️ Email send skipped due to error: {e}")
+        else:
+            print(f"ℹ️ Email cooldown active: suppressed {suppressed} repeating incident(s)")
+    elif not SEND_EMAIL:
+        print("ℹ️ No email sent (ANOMALY_SEND_EMAIL disabled)")
     else:
         print("ℹ️ No email sent (no incidents)")
 
