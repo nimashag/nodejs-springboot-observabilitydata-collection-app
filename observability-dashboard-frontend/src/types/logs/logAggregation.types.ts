@@ -85,6 +85,9 @@ export interface TemplateMiningResult {
     totalTemplates: number;
     avgTemplateFrequency: number;
   };
+  /** Present when the backend re-built aggregated logs after mining (template filters stay in sync). */
+  reaggregated?: boolean;
+  reaggregationError?: string;
 }
 
 export interface TemplateMatchRequest {

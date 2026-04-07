@@ -53,6 +53,7 @@ EXPOSE 3007
 # Set environment variables
 ENV PYTHONIOENCODING=utf-8
 ENV NODE_ENV=production
+ENV ANOMALY_INTERVAL=30
 
 # Start command - check RUN_PIPELINE env var to decide whether to run pipeline
 # If RUN_PIPELINE=false, run only API server
@@ -64,4 +65,3 @@ CMD sh -c 'if [ "$RUN_PIPELINE" = "false" ]; then \
         echo "Running pipeline and API server (RUN_PIPELINE=true or not set)"; \
         npm run dev; \
     fi'
-

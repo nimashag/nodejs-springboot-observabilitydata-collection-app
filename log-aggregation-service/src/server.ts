@@ -57,7 +57,14 @@ async function startServer() {
     }
 
     // Create Express app
-    const app = createApp(traceCorrelator, logParser, templateMiner, templateModel, piiDetector);
+    const app = createApp(
+      traceCorrelator,
+      logParser,
+      templateMiner,
+      templateModel,
+      piiDetector,
+      logCollector,
+    );
 
     // Start server
     app.listen(PORT, () => {
