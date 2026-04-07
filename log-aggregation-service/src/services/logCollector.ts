@@ -82,6 +82,17 @@ export class LogCollector {
   }
 
   /**
+   * Stop watchers and run {@link initialize} again: new aggregated file + full re-read of all
+   * service *.log files (same aggregation path as a fresh process start).
+   */
+  async restartCollection(): Promise<void> {
+    console.log('Restarting log collection (re-aggregate all service logs)...');
+    await this.stop();
+    await this.initialize();
+    console.log('Log collection restart complete');
+  }
+
+  /**
    * Watch log files for a specific service
    */
   private async watchServiceLogs(serviceName: string, logDir: string): Promise<void> {

@@ -158,8 +158,15 @@ export default function TemplatesPage() {
       const result = await mineTemplates(params);
       console.log('Template mining result:', result);
       await loadTemplates();
-      // Show success message
-      alert(`Successfully mined ${result.templates.length} templates!`);
+      let msg = `Successfully mined ${result.templates.length} templates!`;
+      if (result.reaggregated) {
+        msg +=
+          ' Aggregated logs were rebuilt so template filters work on the Logs page without restarting the backend.';
+      }
+      if (result.reaggregationError) {
+        msg += `\n\nWarning: log re-aggregation failed: ${result.reaggregationError}. Template filters may be stale until you restart the log aggregation service.`;
+      }
+      alert(msg);
     } catch (error: any) {
       console.error('Error mining templates:', error);
       const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
