@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { Fragment, useState, useEffect, useMemo } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 import {
   getTemplates,
   mineTemplates,
   deleteTemplate,
 } from "../../api/logs/logAggregationApi";
+import { useApp } from "../../context/AppContext";
 import type {
   LogTemplate,
   TemplateMiningParams,
@@ -42,9 +44,14 @@ const EVENT_TYPES = [
 ];
 
 export default function TemplatesPage() {
+  const { addNotification } = useApp();
   const [allTemplates, setAllTemplates] = useState<LogTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [mining, setMining] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<LogTemplate | null>(
+    null,
+  );
+  const [deleting, setDeleting] = useState(false);
   const [selectedFrequencyRange, setSelectedFrequencyRange] =
     useState<string>("");
   const [selectedEventType, setSelectedEventType] = useState<string>("");
@@ -241,36 +248,61 @@ export default function TemplatesPage() {
       const result = await mineTemplates(params);
       console.log("Template mining result:", result);
       await loadTemplates();
-      let msg = `Successfully mined ${result.templates.length} templates!`;
-      if (result.reaggregated) {
-        msg +=
-          " Aggregated logs were rebuilt.";
-      }
+      addNotification({
+        type: "success",
+        title: "Template mining completed",
+        message: `Mined ${result.templates.length} templates.${result.reaggregated ? " Aggregated logs were rebuilt." : ""}`,
+        autoClose: true,
+      });
       if (result.reaggregationError) {
-        msg += `\n\nWarning: log re-aggregation failed: ${result.reaggregationError}. Template filters may be stale until you restart the log aggregation service.`;
+        addNotification({
+          type: "warning",
+          title: "Log re-aggregation failed",
+          message: `${result.reaggregationError}. Template filters may be stale until you restart the log aggregation service.`,
+          autoClose: false,
+        });
       }
-      alert(msg);
     } catch (error: any) {
       console.error("Error mining templates:", error);
       const errorMessage =
         error.response?.data?.error || error.message || "Unknown error";
-      alert(
-        `Error mining templates: ${errorMessage}. Please check the console for details.`,
-      );
+      addNotification({
+        type: "error",
+        title: "Template mining failed",
+        message: errorMessage,
+        autoClose: false,
+      });
     } finally {
       setMining(false);
     }
   };
 
   const handleDeleteTemplate = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this template?")) return;
-
     try {
+      setDeleting(true);
       await deleteTemplate(id);
       await loadTemplates();
+      addNotification({
+        type: "success",
+        title: "Template deleted",
+        message: `Template ${id} was deleted successfully.`,
+        autoClose: true,
+      });
     } catch (error) {
       console.error("Error deleting template:", error);
-      alert("Error deleting template. Please check the console.");
+      const errorMessage =
+        (error as any)?.response?.data?.error ||
+        (error as any)?.message ||
+        "Failed to delete template";
+      addNotification({
+        type: "error",
+        title: "Delete failed",
+        message: errorMessage,
+        autoClose: false,
+      });
+    } finally {
+      setDeleting(false);
+      setTemplateToDelete(null);
     }
   };
 
@@ -284,6 +316,80 @@ export default function TemplatesPage() {
 
   return (
     <div className="space-y-6">
+      <Transition appear show={templateToDelete != null} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-50"
+          onClose={() => (deleting ? null : setTemplateToDelete(null))}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-200"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-150"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-200 dark:border-gray-700 transition-all">
+                  <div className="p-5">
+                    <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Delete template?
+                    </Dialog.Title>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                      This will remove the template from disk and from the
+                      templates list. This action cannot be undone.
+                    </p>
+                    {templateToDelete && (
+                      <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-3 text-sm">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                          {templateToDelete.id}
+                        </div>
+                        <div className="mt-1 text-gray-600 dark:text-gray-300 line-clamp-2">
+                          {templateToDelete.template}
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-5 flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setTemplateToDelete(null)}
+                        disabled={deleting}
+                        className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() =>
+                          templateToDelete &&
+                          handleDeleteTemplate(templateToDelete.id)
+                        }
+                        disabled={deleting || !templateToDelete}
+                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                      >
+                        {deleting ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
       {/* Header Section */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 border border-blue-100 dark:border-gray-700">
         <div className="flex items-center justify-between mb-6">
@@ -803,7 +909,7 @@ export default function TemplatesPage() {
                           )}
                         </button>
                         <button
-                          onClick={() => handleDeleteTemplate(template.id)}
+                          onClick={() => setTemplateToDelete(template)}
                           className="text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600 dark:hover:bg-red-500 text-sm font-medium px-3 py-2 rounded-lg transition-all"
                         >
                           Delete

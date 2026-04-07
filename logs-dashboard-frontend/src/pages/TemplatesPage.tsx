@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { getTemplates, mineTemplates, deleteTemplate } from '../api/logAggregationApi';
 import type { LogTemplate, TemplateMiningParams } from '../types/logAggregation.types';
 import { format } from 'date-fns';
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -30,6 +32,13 @@ export default function TemplatesPage() {
   const [allTemplates, setAllTemplates] = useState<LogTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [mining, setMining] = useState(false);
+  const [toast, setToast] = useState<null | {
+    type: 'success' | 'error' | 'warning' | 'info';
+    title: string;
+    message: string;
+  }>(null);
+  const [templateToDelete, setTemplateToDelete] = useState<LogTemplate | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [selectedFrequencyRange, setSelectedFrequencyRange] = useState<string>('');
   const [selectedEventType, setSelectedEventType] = useState<string>('');
   const [eventTypes, setEventTypes] = useState<string[]>([]);
@@ -158,38 +167,130 @@ export default function TemplatesPage() {
       const result = await mineTemplates(params);
       console.log('Template mining result:', result);
       await loadTemplates();
-      let msg = `Successfully mined ${result.templates.length} templates!`;
-      if (result.reaggregated) {
-        msg +=
-          ' Aggregated logs were rebuilt so template filters work on the Logs page without restarting the backend.';
-      }
+      const msg = `Mined ${result.templates.length} templates.${result.reaggregated ? ' Aggregated logs were rebuilt.' : ''}`;
+      setToast({ type: 'success', title: 'Template mining completed', message: msg });
       if (result.reaggregationError) {
-        msg += `\n\nWarning: log re-aggregation failed: ${result.reaggregationError}. Template filters may be stale until you restart the log aggregation service.`;
+        setToast({
+          type: 'warning',
+          title: 'Log re-aggregation failed',
+          message: `${result.reaggregationError}. Template filters may be stale until you restart the log aggregation service.`,
+        });
       }
-      alert(msg);
+      setTimeout(() => setToast(null), 5000);
     } catch (error: any) {
       console.error('Error mining templates:', error);
       const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
-      alert(`Error mining templates: ${errorMessage}. Please check the console for details.`);
+      setToast({ type: 'error', title: 'Template mining failed', message: errorMessage });
+      setTimeout(() => setToast(null), 7000);
     } finally {
       setMining(false);
     }
   };
 
   const handleDeleteTemplate = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this template?')) return;
-    
     try {
+      setDeleting(true);
       await deleteTemplate(id);
       await loadTemplates();
+      setToast({ type: 'success', title: 'Template deleted', message: `Template ${id} was deleted successfully.` });
+      setTimeout(() => setToast(null), 5000);
     } catch (error) {
       console.error('Error deleting template:', error);
-      alert('Error deleting template. Please check the console.');
+      const errorMessage = (error as any)?.response?.data?.error || (error as any)?.message || 'Failed to delete template';
+      setToast({ type: 'error', title: 'Delete failed', message: errorMessage });
+      setTimeout(() => setToast(null), 7000);
+    } finally {
+      setDeleting(false);
+      setTemplateToDelete(null);
     }
   };
 
   return (
     <div>
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 max-w-md">
+          <div
+            className={`rounded-lg border shadow-lg p-4 ${
+              toast.type === 'success'
+                ? 'bg-green-50 border-green-200 text-green-900'
+                : toast.type === 'warning'
+                  ? 'bg-yellow-50 border-yellow-200 text-yellow-900'
+                  : toast.type === 'info'
+                    ? 'bg-blue-50 border-blue-200 text-blue-900'
+                    : 'bg-red-50 border-red-200 text-red-900'
+            }`}
+          >
+            <div className="font-semibold">{toast.title}</div>
+            <div className="text-sm mt-1 whitespace-pre-line">{toast.message}</div>
+          </div>
+        </div>
+      )}
+      <Transition appear show={templateToDelete != null} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => (deleting ? null : setTemplateToDelete(null))}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-200"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-150"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl bg-white dark:bg-slate-900 shadow-2xl border border-gray-200 dark:border-cyan-800/30 transition-all">
+                  <div className="p-5">
+                    <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-cyan-100">
+                      Delete template?
+                    </Dialog.Title>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-cyan-400/80">
+                      This will remove the template from disk and from the templates list. This action cannot be undone.
+                    </p>
+                    {templateToDelete && (
+                      <div className="mt-3 rounded-lg border border-gray-200 dark:border-cyan-800/30 bg-gray-50 dark:bg-slate-800/40 p-3 text-sm">
+                        <div className="font-medium text-gray-900 dark:text-cyan-100">
+                          {templateToDelete.id}
+                        </div>
+                        <div className="mt-1 text-gray-700 dark:text-cyan-200/80 line-clamp-2">
+                          {templateToDelete.template}
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-5 flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setTemplateToDelete(null)}
+                        disabled={deleting}
+                        className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-cyan-800/30 text-gray-700 dark:text-cyan-100 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => templateToDelete && handleDeleteTemplate(templateToDelete.id)}
+                        disabled={deleting || !templateToDelete}
+                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                      >
+                        {deleting ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
@@ -415,7 +516,7 @@ export default function TemplatesPage() {
                         )}
                       </button>
                       <button
-                        onClick={() => handleDeleteTemplate(template.id)}
+                        onClick={() => setTemplateToDelete(template)}
                         className="text-red-600 hover:text-red-700 text-sm font-medium px-3 py-1 rounded hover:bg-red-50 transition-colors"
                       >
                         Delete
