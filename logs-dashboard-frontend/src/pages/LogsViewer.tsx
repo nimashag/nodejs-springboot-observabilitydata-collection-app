@@ -73,10 +73,21 @@ export default function LogsViewer() {
   const refreshTimerRef = useRef<number | null>(null);
   const [filteredLogs, setFilteredLogs] = useState<StructuredLog[]>([]);
 
-  // Load services and templates only once on mount
+  // Load services and templates on mount
   useEffect(() => {
     loadServices();
     loadTemplates();
+  }, []);
+
+  // Refetch template list when the tab becomes visible again (e.g. mined templates in another tab)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        loadTemplates();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
   // Load logs when filters, page, or pageSize change
@@ -89,6 +100,7 @@ export default function LogsViewer() {
     if (autoRefresh) {
       refreshTimerRef.current = setInterval(() => {
         loadLogs();
+        loadTemplates();
       }, refreshInterval);
     } else {
       if (refreshTimerRef.current) {

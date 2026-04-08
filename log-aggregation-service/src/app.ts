@@ -15,13 +15,15 @@ import { MLBasedLogParser } from './services/logParser';
 import { LogTemplateMiner } from './services/templateMiner';
 import { TemplateModel } from './models/templateModel';
 import { PIIDetector } from './services/piiDetector';
+import { LogCollector } from './services/logCollector';
 
 export function createApp(
   traceCorrelator: TraceCorrelator,
   logParser: MLBasedLogParser,
   templateMiner: LogTemplateMiner,
   templateModel: TemplateModel,
-  piiDetector: PIIDetector
+  piiDetector: PIIDetector,
+  logCollector?: LogCollector,
 ): Application {
   const app = express();
 
@@ -34,7 +36,12 @@ export function createApp(
   const traceController = new TraceController(traceCorrelator);
   const logController = new LogController(traceCorrelator);
   const trainingController = new TrainingController(logParser);
-  const templateController = new TemplateController(templateMiner, templateModel);
+  const templateController = new TemplateController(
+    templateMiner,
+    templateModel,
+    logCollector,
+    traceCorrelator,
+  );
   const piiController = new PIIController(piiDetector);
 
   // Routes

@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { LogTemplateMiner } from '../services/templateMiner';
 import { TemplateModel } from '../models/templateModel';
+import { LogCollector } from '../services/logCollector';
+import { TraceCorrelator } from '../services/traceCorrelator';
 import fs from 'fs';
 import path from 'path';
 import { StructuredLog } from '../types/log.types';
@@ -8,10 +10,19 @@ import { StructuredLog } from '../types/log.types';
 export class TemplateController {
   private templateMiner: LogTemplateMiner;
   private templateModel: TemplateModel;
+  private logCollector?: LogCollector;
+  private traceCorrelator?: TraceCorrelator;
 
-  constructor(templateMiner: LogTemplateMiner, templateModel: TemplateModel) {
+  constructor(
+    templateMiner: LogTemplateMiner,
+    templateModel: TemplateModel,
+    logCollector?: LogCollector,
+    traceCorrelator?: TraceCorrelator,
+  ) {
     this.templateMiner = templateMiner;
     this.templateModel = templateModel;
+    this.logCollector = logCollector;
+    this.traceCorrelator = traceCorrelator;
   }
 
   /**
@@ -62,9 +73,30 @@ export class TemplateController {
         this.templateMiner.addTemplate(template);
       });
 
+      const shouldReaggregate =
+        process.env.REAGGREGATE_AFTER_TEMPLATE_MINING !== 'false' &&
+        this.logCollector != null;
+
+      let reaggregated = false;
+      let reaggregationError: string | undefined;
+
+      if (shouldReaggregate) {
+        try {
+          await this.logCollector!.restartCollection();
+          this.traceCorrelator?.clearCache();
+          reaggregated = true;
+        } catch (reaggErr) {
+          console.error('Re-aggregation after template mining failed:', reaggErr);
+          reaggregationError =
+            reaggErr instanceof Error ? reaggErr.message : String(reaggErr);
+        }
+      }
+
       res.json({
         success: true,
         result,
+        reaggregated,
+        ...(reaggregationError ? { reaggregationError } : {}),
       });
     } catch (error) {
       console.error('Error mining templates:', error);

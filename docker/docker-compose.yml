@@ -246,6 +246,8 @@ services:
     container_name: email-service
     ports:
       - "31012:4000"
+    env_file:
+      - ../email-service/.env
     environment:
       - PORT=4000
       - NODE_ENV=production
@@ -264,7 +266,8 @@ services:
     environment:
       - PORT=3007
       - PYTHONIOENCODING=utf-8
-      - ANOMALY_SEND_EMAIL=${ANOMALY_SEND_EMAIL:-0}
+      - ANOMALY_SEND_EMAIL=${ANOMALY_SEND_EMAIL:-1}
+      - ANOMALY_INTERVAL=${ANOMALY_INTERVAL:-30}
       - EMAIL_SERVICE_URL=http://email-service:4000/v1/email/send
       - DOCKER_ENV=true
       # Set RUN_PIPELINE=false to run only the API server (useful when you want to use existing data)

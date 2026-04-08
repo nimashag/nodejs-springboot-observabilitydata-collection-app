@@ -100,8 +100,18 @@ export const deleteTemplate = async (id: string): Promise<void> => {
 };
 
 export const mineTemplates = async (params: TemplateMiningParams): Promise<TemplateMiningResult> => {
-  const response = await api.post<{ success: boolean; result: TemplateMiningResult }>('/api/templates/mine', params);
-  return response.data.result;
+  const response = await api.post<{
+    success: boolean;
+    result: TemplateMiningResult;
+    reaggregated?: boolean;
+    reaggregationError?: string;
+  }>('/api/templates/mine', params);
+  const { result, reaggregated, reaggregationError } = response.data;
+  return {
+    ...result,
+    reaggregated,
+    reaggregationError,
+  };
 };
 
 export const matchTemplate = async (request: TemplateMatchRequest): Promise<TemplateMatchResponse> => {
