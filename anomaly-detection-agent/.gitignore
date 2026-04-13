@@ -106,6 +106,10 @@ models/*.pth
 
 # Model experiments
 model_experiments/
+!model_experiments/
+!model_experiments/eval_models.py
+!model_experiments/outputs/
+!model_experiments/outputs/model_accuracy.json
 !model_experiments/.gitkeep
 
 

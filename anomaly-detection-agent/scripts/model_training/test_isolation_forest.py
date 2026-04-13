@@ -15,9 +15,21 @@ MODEL_PATH = "models/isolation_forest_model.joblib"
 df = pd.read_csv(TEST_PATH)
 model = joblib.load(MODEL_PATH)
 
-FEATURES = ["level", "status_code", "anomaly_score"]
-X_test = df[FEATURES]
+# Use raw metrics instead of anomaly_score to avoid leakage
+FEATURES = [
+    "level",
+    "status_code",
+    "duration_ms",
+    "cpu_percent",
+    "memory_mb",
+    "db_query_time_ms",
+]
+X_test = df[FEATURES].copy()
 y_true = df["anomaly_label"]
+
+numeric_features = ["status_code", "duration_ms", "cpu_percent", "memory_mb", "db_query_time_ms"]
+for col in numeric_features:
+    X_test[col] = pd.to_numeric(X_test[col], errors="coerce").fillna(0)
 
 # -----------------------------
 # Predict
