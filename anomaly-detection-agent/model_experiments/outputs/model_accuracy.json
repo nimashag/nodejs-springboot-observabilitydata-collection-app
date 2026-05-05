@@ -1,0 +1,23 @@
+{
+  "dataset": "data/datasets/dataset.csv",
+  "test_size": 0.3,
+  "random_state": 42,
+  "split_method": "stratified_random",
+  "results": {
+    "random_forest": {
+      "accuracy": 0.9083,
+      "train_rows": 560,
+      "test_rows": 240
+    },
+    "logistic_regression": {
+      "accuracy": 0.9167,
+      "train_rows": 560,
+      "test_rows": 240
+    },
+    "isolation_forest": {
+      "accuracy": 0.6208,
+      "train_rows": 560,
+      "test_rows": 240
+    }
+  }
+}
