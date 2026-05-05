@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import json
+from typing import List, Optional
 
 # Import Phase 1 modules
 from phase1_priority_scoring import PriorityScoringEngine
@@ -89,13 +90,19 @@ class Phase1Orchestrator:
         
         return results
     
-    def process_alert(self, alert_data: dict, send_email: bool = True):
+    def process_alert(
+        self,
+        alert_data: dict,
+        send_email: bool = True,
+        recipients_override: Optional[List[str]] = None,
+    ):
         """
         Process incoming alert through Phase 1 pipeline
         
         Args:
             alert_data: Alert information
             send_email: Whether to send email notification
+            recipients_override: Optional list of To addresses (e.g. from dashboard UI)
             
         Returns:
             Dict with all predictions and decisions
@@ -143,7 +150,9 @@ class Phase1Orchestrator:
                 }
             }
             
-            self.email_service.send_alert_email(alert_data, ml_predictions)
+            self.email_service.send_alert_email(
+                alert_data, ml_predictions, recipients_override=recipients_override
+            )
             self.stats['alerts_sent'] += 1
             print(f"   [OK] Email sent ({priority_prediction['priority_level']})")
         
@@ -158,7 +167,7 @@ class Phase1Orchestrator:
             'email_sent': send_email
         }
     
-    def send_test_emails(self):
+    def send_test_emails(self, recipients_override: Optional[List[str]] = None):
         """Send test emails for all priority levels"""
         print("\n" + "=" * 80)
         print("[E] SENDING TEST EMAILS")
@@ -234,7 +243,9 @@ class Phase1Orchestrator:
                 }
             }
             
-            self.email_service.send_alert_email(test_alert['data'], ml_predictions)
+            self.email_service.send_alert_email(
+                test_alert['data'], ml_predictions, recipients_override=recipients_override
+            )
             print(f"   [OK] {test_alert['priority']} email sent")
         
         print("\n[OK] All test emails sent!")

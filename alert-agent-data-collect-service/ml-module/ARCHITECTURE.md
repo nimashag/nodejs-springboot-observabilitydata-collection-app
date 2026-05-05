@@ -62,7 +62,7 @@
 │                         EMAIL DELIVERY                               │
 │  ┌──────────────────────────────────────────────────────────────┐  │
 │  │  SMTP: Gmail (smtp.gmail.com:465)                            │  │
-│  │  To: nayanaharikusalanajani@gmail.com                        │  │
+│  │  To: observeriqhungerjet@gmail.com                        │  │
 │  │                                                               │  │
 │  │  Email Content:                                               │  │
 │  │  ┌────────────────────────────────────────────────────┐     │  │
@@ -140,7 +140,7 @@ Performance:
 #### 3. Smart Email Service
 ```
 Input:  Alert data + ML predictions
-SMTP:   Gmail (nayanaharikusalanajani@gmail.com)
+SMTP:   Gmail (observeriqhungerjet@gmail.com)
 Output: Rich HTML email with ML insights
 
 Routing:
