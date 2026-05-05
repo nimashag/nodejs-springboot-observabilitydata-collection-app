@@ -230,9 +230,12 @@ const Layout = ({ children }: LayoutProps) => {
               <Menu className="w-5 h-5" />
             </button>
             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-              {navItems.find(item => isActive(item.path))?.label || 
-               navItems.flatMap(item => item.subItems || []).find(sub => isSubItemActive(sub.path))?.label ||
-               'Dashboard'}
+              {navItems
+                .flatMap((item) => item.subItems || [])
+                .find((sub) => sub.path === location.pathname)?.label ??
+                navItems.find((item) => item.path === location.pathname)?.label ??
+                navItems.find((item) => isActive(item.path))?.label ??
+                'Dashboard'}
             </h2>
           </div>
 

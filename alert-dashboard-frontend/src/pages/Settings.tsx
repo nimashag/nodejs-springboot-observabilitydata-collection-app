@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Settings as SettingsIcon, 
   Moon, 
@@ -11,10 +11,17 @@ import {
   CheckCircle,
   Mail,
   Send,
-  Loader
+  Loader,
+  Plus,
+  X,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { apiService } from '../services/api'
+import {
+  loadStoredRecipients,
+  saveRecipientsToStorage,
+  parseEmailsFromText,
+} from '../utils/alertEmailRecipients'
 
 const Settings = () => {
   const { 
@@ -31,6 +38,58 @@ const Settings = () => {
   const [saved, setSaved] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
   const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' })
+  const [notificationRecipients, setNotificationRecipients] = useState<string[]>([])
+  const [bulkRecipientInput, setBulkRecipientInput] = useState('')
+
+  useEffect(() => {
+    setNotificationRecipients(loadStoredRecipients())
+  }, [])
+
+  const handleSaveRecipientsOnly = () => {
+    saveRecipientsToStorage(notificationRecipients)
+    addNotification({
+      type: 'success',
+      title: 'Recipients saved',
+      message: 'Notification addresses saved in this browser.',
+      autoClose: true,
+    })
+  }
+
+  const handleAddRecipientsFromTextarea = () => {
+    const parsed = parseEmailsFromText(bulkRecipientInput)
+    if (!parsed.length) {
+      addNotification({
+        type: 'error',
+        title: 'No valid emails',
+        message: 'Enter valid addresses separated by commas, spaces, or new lines.',
+        autoClose: true,
+      })
+      return
+    }
+    setNotificationRecipients((prev: string[]) => {
+      const next = [...prev]
+      for (const e of parsed) {
+        if (!next.some((x) => x.toLowerCase() === e.toLowerCase())) next.push(e)
+      }
+      saveRecipientsToStorage(next)
+      return next
+    })
+    setBulkRecipientInput('')
+    addNotification({
+      type: 'success',
+      title: 'Recipients updated',
+      message: `Added ${parsed.length} address(es). List saved in this browser.`,
+      autoClose: true,
+    })
+  }
+
+  const handleRemoveRecipient = (index: number) => {
+    setNotificationRecipients((prev: string[]) => {
+      const next = prev.filter((_: string, i: number) => i !== index)
+      saveRecipientsToStorage(next)
+      return next
+    })
+  }
   
   const handleSaveSettings = () => {
     setRefreshInterval(localRefreshInterval)
@@ -45,11 +104,23 @@ const Settings = () => {
   }
 
   const handleSendTestEmail = async () => {
+    if (!notificationRecipients.length) {
+      addNotification({
+        type: 'error',
+        title: 'Add recipients',
+        message: 'Add at least one notification email below before sending.',
+        autoClose: true,
+      })
+      return
+    }
     setSendingEmail(true)
     setEmailStatus({ type: null, message: '' })
     
     try {
-      const result = await apiService.sendEmail({ test_mode: true })
+      const result = await apiService.sendEmail({
+        test_mode: true,
+        recipients: notificationRecipients,
+      })
       
       if (result.success) {
         setEmailStatus({ 
@@ -59,7 +130,8 @@ const Settings = () => {
         addNotification({
           type: 'success',
           title: 'Email Sent',
-          message: 'Test emails have been sent to nayanaharikusalanajani@gmail.com',
+          message:
+            'Test emails sent successfully. Check your alert notification inbox.',
           autoClose: true
         })
       } else {
@@ -86,6 +158,15 @@ const Settings = () => {
   }
 
   const handleSendCustomEmail = async () => {
+    if (!notificationRecipients.length) {
+      addNotification({
+        type: 'error',
+        title: 'Add recipients',
+        message: 'Add at least one notification email below before sending.',
+        autoClose: true,
+      })
+      return
+    }
     setSendingEmail(true)
     setEmailStatus({ type: null, message: '' })
     
@@ -105,9 +186,10 @@ const Settings = () => {
     }
     
     try {
-      const result = await apiService.sendEmail({ 
+      const result = await apiService.sendEmail({
         alert_data: sampleAlert,
-        test_mode: false 
+        test_mode: false,
+        recipients: notificationRecipients,
       })
       
       if (result.success) {
@@ -118,7 +200,8 @@ const Settings = () => {
         addNotification({
           type: 'success',
           title: 'Email Sent',
-          message: 'Alert email has been sent to nayanaharikusalanajani@gmail.com',
+          message:
+            'Sample alert email sent successfully. Check your alert notification inbox.',
           autoClose: true
         })
       } else {
@@ -259,12 +342,71 @@ const Settings = () => {
         <div className="space-y-4">
           <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
             <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Email Configuration</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              {/* Recipient: <strong className="text-gray-900 dark:text-gray-100">nayanaharikusalanajani@gmail.com</strong> */}
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Messages are sent from the SMTP account configured on the alert ML service (e.g. observeriqhungerjet@gmail.com).
+              Below you choose one or more addresses that receive alert mail. This list is stored only in your browser.
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Emails are automatically sent when alerts are detected. You can also manually send test emails to verify the system is working.
+              You can send test messages to verify delivery.
             </p>
+          </div>
+
+          <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Notification recipients</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Paste or type addresses (comma, space, or new line). Click Add, then use Save to persist without sending.
+            </p>
+            <textarea
+              value={bulkRecipientInput}
+              onChange={(e) => setBulkRecipientInput(e.target.value)}
+              placeholder={"friend@example.com\ncolleague@example.com"}
+              rows={3}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 text-sm mb-3 resize-y min-h-[80px]"
+            />
+            <div className="flex flex-wrap gap-2 mb-4">
+              <button
+                type="button"
+                onClick={handleAddRecipientsFromTextarea}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                Add to list
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveRecipientsOnly}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 rounded-lg text-sm font-medium"
+              >
+                <Save className="w-4 h-4" />
+                Save recipients
+              </button>
+            </div>
+            {notificationRecipients.length > 0 ? (
+              <ul className="space-y-2">
+                {notificationRecipients.map((email, idx) => (
+                  <li
+                    key={`${email}-${idx}`}
+                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-600/80 border border-gray-200 dark:border-gray-500"
+                  >
+                    <span className="text-sm text-gray-900 dark:text-gray-100 truncate" title={email}>
+                      {email}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveRecipient(idx)}
+                      className="shrink-0 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400"
+                      aria-label={`Remove ${email}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                No recipients yet. Add at least one email to enable test sends.
+              </p>
+            )}
           </div>
 
           <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
@@ -304,7 +446,7 @@ const Settings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               onClick={handleSendTestEmail}
-              disabled={sendingEmail}
+              disabled={sendingEmail || notificationRecipients.length === 0}
               className="flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed"
             >
               {sendingEmail ? (
@@ -322,7 +464,7 @@ const Settings = () => {
             
             <button
               onClick={handleSendCustomEmail}
-              disabled={sendingEmail}
+              disabled={sendingEmail || notificationRecipients.length === 0}
               className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed"
             >
               {sendingEmail ? (
@@ -344,7 +486,9 @@ const Settings = () => {
               <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
               <div className="text-sm text-blue-800 dark:text-blue-200">
                 <p className="font-medium">Manual Email Sending</p>
-                <p>Use these buttons to manually test the email system. Test emails will send sample alerts for all priority levels (P0-P3).</p>
+                <p>
+                  Test sends use your recipient list above. Sample priorities include P0–P2; each goes to every address in the list.
+                </p>
               </div>
             </div>
           </div>
