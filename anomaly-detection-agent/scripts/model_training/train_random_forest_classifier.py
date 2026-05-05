@@ -15,7 +15,15 @@ import joblib
 DATASET = "data/merged/logs_with_metrics_only_matches_labeled_custom.csv"
 MODEL_OUT = "models/random_forest_anomaly_classifier.joblib"
 
-FEATURES = ["level", "status_code", "anomaly_score"]
+# Use raw metrics instead of anomaly_score to avoid label leakage
+FEATURES = [
+    "level",
+    "status_code",
+    "duration_ms",
+    "cpu_percent",
+    "memory_mb",
+    "db_query_time_ms",
+]
 TARGET = "anomaly_label"
 
 # -------------------------
@@ -23,8 +31,13 @@ TARGET = "anomaly_label"
 # -------------------------
 df = pd.read_csv(DATASET)
 
-X = df[FEATURES]
+X = df[FEATURES].copy()
 y = df[TARGET]
+
+# Coerce numeric columns safely
+numeric_features = ["status_code", "duration_ms", "cpu_percent", "memory_mb", "db_query_time_ms"]
+for col in numeric_features:
+    X[col] = pd.to_numeric(X[col], errors="coerce").fillna(0)
 
 print(f"✅ Loaded dataset: {X.shape[0]} rows")
 
@@ -32,7 +45,6 @@ print(f"✅ Loaded dataset: {X.shape[0]} rows")
 # PREPROCESSING
 # -------------------------
 categorical_features = ["level"]
-numeric_features = ["status_code", "anomaly_score"]
 
 preprocessor = ColumnTransformer(
     transformers=[

@@ -1,80 +1,124 @@
 {
-  "generated_at": "2026-02-26T04:31:29.095090Z",
+  "generated_at": "2026-03-11T08:46:15.220461Z",
   "input_csv": "data/merged/logs_with_metrics_clean.csv",
   "model_path": "model_experiments/models/random_forest/rf_model.pkl",
-  "total_rows": 76,
-  "predicted_anomaly_count": 9,
-  "predicted_normal_count": 67,
-  "predicted_anomaly_request_count": 2,
+  "total_rows": 320,
+  "predicted_anomaly_count": 26,
+  "predicted_normal_count": 294,
+  "predicted_anomaly_request_count": 4,
   "incident_story": {
     "title": "Incident Story (Auto-Generated)",
-    "summary": "2 anomalous request(s) detected. Most impacted service: users-service.",
+    "summary": "4 anomalous request(s) detected. Most impacted service: orders-service.",
     "top_services": [
       [
-        "users-service",
-        2
+        "orders-service",
+        3
+      ],
+      [
+        "restaurants-service",
+        1
       ]
     ],
     "top_events": [
       [
-        "request.incoming",
+        "http.request.received",
+        4
+      ],
+      [
+        "http.request.completed.success",
+        4
+      ],
+      [
+        "auth.token_validated",
+        3
+      ],
+      [
+        "authorize.access_granted",
         2
       ],
       [
-        "auth.login.request",
-        2
-      ],
-      [
-        "user.login.start",
-        2
-      ],
-      [
-        "user.login.invalid_password",
-        2
-      ],
-      [
-        "auth.login.invalid_credentials",
+        "payment.intent.create.start",
         2
       ]
     ],
     "top_status_codes": [
       [
-        "401",
-        2
+        "200",
+        3
+      ],
+      [
+        "304",
+        1
       ]
     ]
   },
   "incidents": [
     {
-      "request_id": "3b8cddad-6033-4a6a-91df-ad513a5f8e67",
-      "service": "users-service",
-      "status_code": 401,
-      "level": "error",
-      "level_encoded": 3,
+      "request_id": "374f8994-4d46-4142-8b1d-71226bdaabf2",
+      "service": "restaurants-service",
+      "status_code": 304,
+      "level": "info",
+      "level_encoded": 1,
       "events": [
-        "request.incoming",
-        "auth.login.request",
-        "user.login.start",
-        "user.login.invalid_password",
-        "auth.login.invalid_credentials",
-        "request.completed.error"
+        "http.request.received",
+        "restaurant.list.start",
+        "restaurant.service.get_all.start",
+        "restaurant.service.get_all.success",
+        "restaurant.list.success",
+        "http.request.completed.success"
       ],
       "reason": "db_query_time_ms>=300",
       "row_count": 6
     },
     {
-      "request_id": "35773f41-3b61-4ed6-b5c0-5f2bd8b22982",
-      "service": "users-service",
-      "status_code": 401,
-      "level": "error",
-      "level_encoded": 3,
+      "request_id": "1bc91e22-d51c-4345-985c-062d5c93c0de",
+      "service": "orders-service",
+      "status_code": 200,
+      "level": "info",
+      "level_encoded": 1,
       "events": [
-        "request.incoming",
-        "auth.login.request",
-        "user.login.start",
-        "user.login.invalid_password",
-        "auth.login.invalid_credentials",
-        "request.completed.error"
+        "http.request.received",
+        "auth.token_validated",
+        "authorize.access_granted",
+        "payment.intent.create.start",
+        "payment.intent.create.success",
+        "http.request.completed.success"
+      ],
+      "reason": "",
+      "row_count": 6
+    },
+    {
+      "request_id": "3c91f766-d9ab-4acc-b25e-4a2574c6bd25",
+      "service": "orders-service",
+      "status_code": 200,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "auth.token_validated",
+        "payment.mark_as_paid.start",
+        "order.service.process_payment.start",
+        "order.service.process_payment.updating",
+        "order.service.process_payment.success",
+        "payment.mark_as_paid.success",
+        "http.request.completed.success"
+      ],
+      "reason": "db_query_time_ms>=300",
+      "row_count": 8
+    },
+    {
+      "request_id": "a22e78d3-09c9-4b37-a7ae-0194f3d9302a",
+      "service": "orders-service",
+      "status_code": 200,
+      "level": "info",
+      "level_encoded": 1,
+      "events": [
+        "http.request.received",
+        "auth.token_validated",
+        "authorize.access_granted",
+        "payment.intent.create.start",
+        "payment.intent.create.success",
+        "http.request.completed.success"
       ],
       "reason": "",
       "row_count": 6

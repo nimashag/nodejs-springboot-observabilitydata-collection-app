@@ -8,6 +8,7 @@ from pathlib import Path
 DATASET = "../../../data/merged/logs_with_metrics_only_matches_labeled_custom.csv"
 
 MODEL_OUT = "rf_model.pkl"
+TEST_SIZE = 0.2
 
 LEVEL_MAP = {"debug":0,"info":1,"warn":2,"warning":2,"error":3,"fatal":4}
 
@@ -31,7 +32,7 @@ X = df[FEATURES]
 y = df["anomaly_label"]
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
+    X, y, test_size=TEST_SIZE, random_state=42, stratify=y
 )
 
 model = RandomForestClassifier(
@@ -44,6 +45,7 @@ model.fit(X_train, y_train)
 
 y_pred = model.predict(X_test)
 
+print(f"✅ Train rows: {len(X_train)} | Test rows: {len(X_test)} | Test size: {TEST_SIZE}")
 print("🎯 Accuracy:", accuracy_score(y_test, y_pred))
 print(classification_report(y_test, y_pred))
 

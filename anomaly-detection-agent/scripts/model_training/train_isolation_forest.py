@@ -18,8 +18,20 @@ CONTAMINATION = 0.1   # expected anomaly ratio (tuneable)
 # -----------------------------
 df = pd.read_csv(DATA_PATH)
 
-FEATURES = ["level", "status_code", "anomaly_score"]
-X = df[FEATURES]
+# Use raw metrics instead of anomaly_score to avoid leakage
+FEATURES = [
+    "level",
+    "status_code",
+    "duration_ms",
+    "cpu_percent",
+    "memory_mb",
+    "db_query_time_ms",
+]
+X = df[FEATURES].copy()
+
+numeric_features = ["status_code", "duration_ms", "cpu_percent", "memory_mb", "db_query_time_ms"]
+for col in numeric_features:
+    X[col] = pd.to_numeric(X[col], errors="coerce").fillna(0)
 
 # -----------------------------
 # Preprocessing
@@ -27,7 +39,7 @@ X = df[FEATURES]
 preprocessor = ColumnTransformer(
     transformers=[
         ("cat", OneHotEncoder(handle_unknown="ignore"), ["level"]),
-        ("num", "passthrough", ["status_code", "anomaly_score"])
+        ("num", "passthrough", numeric_features)
     ]
 )
 

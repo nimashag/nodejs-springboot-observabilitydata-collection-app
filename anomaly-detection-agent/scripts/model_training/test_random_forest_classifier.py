@@ -14,7 +14,15 @@ from sklearn.metrics import (
 MODEL_PATH = "models/random_forest_anomaly_classifier.joblib"
 TEST_DATA = "data/test/logs_test2.csv"   # <--  test CSV
 
-FEATURES = ["level", "status_code", "anomaly_score"]
+# Use raw metrics instead of anomaly_score to avoid label leakage
+FEATURES = [
+    "level",
+    "status_code",
+    "duration_ms",
+    "cpu_percent",
+    "memory_mb",
+    "db_query_time_ms",
+]
 TARGET = "anomaly_label"
 
 # -------------------------
@@ -28,8 +36,12 @@ print("✅ Model loaded")
 # -------------------------
 df = pd.read_csv(TEST_DATA)
 
-X_test = df[FEATURES]
+X_test = df[FEATURES].copy()
 y_true = df[TARGET]
+
+numeric_features = ["status_code", "duration_ms", "cpu_percent", "memory_mb", "db_query_time_ms"]
+for col in numeric_features:
+    X_test[col] = pd.to_numeric(X_test[col], errors="coerce").fillna(0)
 
 print(f"✅ Test rows: {len(df)}")
 
