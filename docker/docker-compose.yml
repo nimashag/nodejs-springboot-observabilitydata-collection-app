@@ -156,6 +156,10 @@ services:
       - ALLOWED_ORIGINS=
       - ALERT_COLLECTION_INTERVAL=60000
       - DOCKER_ENV=true
+      # Alert ML email (phase1_smart_email.py). Optional: set ALERT_SMTP_PASSWORD in .env (omit to use image default).
+      - SMTP_USERNAME=${ALERT_SMTP_USERNAME:-observeriqhungerjet@gmail.com}
+      - SMTP_PASSWORD=${ALERT_SMTP_PASSWORD:-}
+      - ALERT_EMAIL_RECIPIENTS=${ALERT_EMAIL_RECIPIENTS:-observeriqhungerjet@gmail.com}
     volumes:
       - ~/temp/docker-files/alert-agent-data-collect-service/output:/app/output
       - ~/temp/docker-files/delivery-service/alerts:/app/alerts/delivery-service:ro

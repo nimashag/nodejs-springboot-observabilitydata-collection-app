@@ -558,6 +558,7 @@ export const apiService = {
       [key: string]: any;
     };
     test_mode?: boolean;
+    recipients?: string[];
   }): Promise<{
     success: boolean;
     message?: string;

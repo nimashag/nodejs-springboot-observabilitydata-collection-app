@@ -296,6 +296,8 @@ export const alertApiService = {
       [key: string]: any;
     };
     test_mode?: boolean;
+    /** When set, ML service sends To these addresses (multi-recipient). */
+    recipients?: string[];
   }): Promise<any> => {
     const response = await api.post("/api/send-email", data);
     return response.data;

@@ -1,11 +1,47 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from datetime import datetime, timedelta
 import json
+import os
+import smtplib
+import time
+from datetime import datetime, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Dict, List, Optional
-import time
+
+
+def _env_nonempty(key: str, default: str) -> str:
+    raw = os.environ.get(key)
+    if raw is None:
+        return default
+    s = str(raw).strip()
+    return s if s else default
+
+
+def _smtp_defaults_from_env() -> Dict:
+    """Defaults match repo config; override with SMTP_* / ALERT_EMAIL_* env vars (restart ML service after changes)."""
+    use_ssl = os.environ.get("SMTP_USE_SSL", "true").strip().lower() in ("1", "true", "yes")
+    port_raw = os.environ.get("SMTP_PORT", "465").strip()
+    return {
+        "server": _env_nonempty("SMTP_SERVER", "smtp.gmail.com"),
+        "port": int(port_raw) if port_raw.isdigit() else 465,
+        "username": _env_nonempty("SMTP_USERNAME", "observeriqhungerjet@gmail.com"),
+        "password": _env_nonempty("SMTP_PASSWORD", "lnws glse zzof noce"),
+        "use_ssl": use_ssl,
+    }
+
+
+def _recipient_list_from_env(smtp_username_fallback: str = "") -> List[str]:
+    """Comma-separated ALERT_EMAIL_RECIPIENTS; else same inbox as_sender (env or fallback)."""
+    raw = os.environ.get("ALERT_EMAIL_RECIPIENTS", "").strip()
+    if raw:
+        return [addr.strip() for addr in raw.split(",") if addr.strip()]
+    user = (
+        os.environ.get("SMTP_USERNAME", "").strip()
+        or smtp_username_fallback.strip()
+        or "observeriqhungerjet@gmail.com"
+    )
+    return [user]
+
 
 class SmartEmailService:
     def __init__(self, smtp_config=None):
@@ -15,42 +51,42 @@ class SmartEmailService:
         Args:
             smtp_config: Dict with 'server', 'port', 'username', 'password', 'use_ssl'
         """
-        # Default SMTP configuration (Gmail)
-        self.smtp_config = smtp_config or {
-            'server': 'smtp.gmail.com',
-            'port': 465,
-            'username': 'nayanaharikusalanajani@gmail.com',
-            'password': 'krhe erjc powm yxhu',
-            'use_ssl': True
-        }
-        
+        self.smtp_config = smtp_config or _smtp_defaults_from_env()
+
+        recipients = _recipient_list_from_env(self.smtp_config.get("username") or "")
+
         # Email routing configuration
         self.routing_config = {
             'P0': {
                 'delivery': 'immediate',
-                'recipients': ['nayanaharikusalanajani@gmail.com'],  # On-call team
+                'recipients': list(recipients),
                 'subject_prefix': '[*] CRITICAL',
                 'batch_interval': None
             },
             'P1': {
                 'delivery': 'immediate',
-                'recipients': ['nayanaharikusalanajani@gmail.com'],
+                'recipients': list(recipients),
                 'subject_prefix': '[!] HIGH',
                 'batch_interval': 300  # 5 minutes
             },
             'P2': {
                 'delivery': 'digest',
-                'recipients': ['nayanaharikusalanajani@gmail.com'],
+                'recipients': list(recipients),
                 'subject_prefix': '[i] MEDIUM',
                 'batch_interval': 900  # 15 minutes
             },
             'P3': {
                 'delivery': 'digest',
-                'recipients': ['nayanaharikusalanajani@gmail.com'],
+                'recipients': list(recipients),
                 'subject_prefix': '[n] LOW',
                 'batch_interval': 3600  # 1 hour
             }
         }
+
+        print(
+            f"[Email] SMTP From={self.smtp_config['username']} → To={self.routing_config['P0']['recipients']} "
+            "(set SMTP_USERNAME, SMTP_PASSWORD, ALERT_EMAIL_RECIPIENTS; restart ml_service.py after edits)"
+        )
         
         # Pending alerts for batching
         self.pending_alerts = {
@@ -74,19 +110,41 @@ class SmartEmailService:
             'last_sent': None
         }
     
-    def send_alert_email(self, alert_data: Dict, ml_predictions: Dict = None):
+    def send_alert_email(
+        self,
+        alert_data: Dict,
+        ml_predictions: Dict = None,
+        recipients_override: Optional[List[str]] = None,
+    ):
         """
         Send alert email based on priority and routing rules
         
         Args:
             alert_data: Alert information (service, type, severity, metrics)
             ml_predictions: ML model predictions (priority, TTR, etc.)
+            recipients_override: If set (non-empty), send immediately to these addresses (UI / multi-recipient).
         """
         priority = ml_predictions.get('priority_level', 'P2') if ml_predictions else 'P2'
         routing = self.routing_config[priority]
         
         # Build email content
         email_content = self._build_email_content(alert_data, ml_predictions)
+        
+        override = (
+            [str(r).strip() for r in recipients_override if r and str(r).strip()]
+            if recipients_override
+            else []
+        )
+        
+        # Explicit recipient list: always immediate delivery to every address (skip digest batching)
+        if override:
+            self._send_email(
+                recipients=override,
+                subject=f"{routing['subject_prefix']}: {alert_data['service_name']} - {alert_data['alert_name']}",
+                body=email_content,
+                priority=priority,
+            )
+            return
         
         # Check if should send immediately or batch
         if routing['delivery'] == 'immediate' or priority == 'P0':
@@ -730,38 +788,39 @@ class SmartEmailService:
         """
     
     def _send_email(self, recipients: List[str], subject: str, body: str, priority: str = 'P2'):
-        """Send email via SMTP"""
+        """Send email via SMTP (one envelope per recipient — improves Gmail deliverability)."""
+        cleaned = [str(r).strip() for r in recipients if r and str(r).strip()]
+        if not cleaned:
+            print("[X] Failed to send email: no recipients")
+            return
         try:
-            msg = MIMEMultipart('alternative')
-            msg['From'] = self.smtp_config['username']
-            msg['To'] = ', '.join(recipients)
-            msg['Subject'] = subject
-            
-            # Set priority headers
-            if priority == 'P0':
-                msg['X-Priority'] = '1'
-                msg['X-MSMail-Priority'] = 'High'
-            
-            msg.attach(MIMEText(body, 'html'))
-            
-            # Connect and send
             if self.smtp_config['use_ssl']:
                 server = smtplib.SMTP_SSL(self.smtp_config['server'], self.smtp_config['port'])
             else:
                 server = smtplib.SMTP(self.smtp_config['server'], self.smtp_config['port'])
                 server.starttls()
-            
+
             server.login(self.smtp_config['username'], self.smtp_config['password'])
-            server.sendmail(self.smtp_config['username'], recipients, msg.as_string())
+            sender = self.smtp_config['username']
+
+            for to_addr in cleaned:
+                msg = MIMEMultipart('alternative')
+                msg['From'] = sender
+                msg['To'] = to_addr
+                msg['Subject'] = subject
+                if priority == 'P0':
+                    msg['X-Priority'] = '1'
+                    msg['X-MSMail-Priority'] = 'High'
+                msg.attach(MIMEText(body, 'html'))
+                server.sendmail(sender, [to_addr], msg.as_string())
+                print(f"[OK] Email sent to {to_addr}: {subject}")
+
             server.quit()
-            
-            # Update statistics
+
             self.stats['total_sent'] += 1
             self.stats['by_priority'][priority] += 1
             self.stats['last_sent'] = datetime.now()
-            
-            print(f"[OK] Email sent: {subject}")
-            
+
         except Exception as e:
             print(f"[X] Failed to send email: {e}")
     

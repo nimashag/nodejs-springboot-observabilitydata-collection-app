@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 import traceback
 from datetime import datetime
+from typing import Any, List, Optional
 
 # Add module to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -198,6 +199,17 @@ def models_info():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+def _parse_recipients_override(payload: Any) -> Optional[List[str]]:
+    """Return sanitized list of recipient emails from JSON body, or None to use server defaults."""
+    if not payload or not isinstance(payload, dict):
+        return None
+    raw = payload.get('recipients')
+    if not raw or not isinstance(raw, list):
+        return None
+    out = [str(x).strip() for x in raw if x and str(x).strip()]
+    return out if out else None
+
+
 @app.route('/email/send', methods=['POST'])
 def send_email():
     """
@@ -230,10 +242,13 @@ def send_email():
             }), 400
         
         test_mode = data.get('test_mode', False)
-        
+        recipients_override = _parse_recipients_override(data)
+        if recipients_override:
+            print(f"[EMAIL] Recipient override ({len(recipients_override)}): {recipients_override}")
+
         if test_mode:
             # Send test emails for all priority levels
-            orchestrator.send_test_emails()
+            orchestrator.send_test_emails(recipients_override=recipients_override)
             return jsonify({
                 'success': True,
                 'message': 'Test emails sent successfully',
@@ -249,7 +264,11 @@ def send_email():
                 }), 400
             
             # Process alert with email enabled
-            result = orchestrator.process_alert(alert_data, send_email=True)
+            result = orchestrator.process_alert(
+                alert_data,
+                send_email=True,
+                recipients_override=recipients_override,
+            )
             
             return jsonify({
                 'success': True,
