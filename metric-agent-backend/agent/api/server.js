@@ -100,7 +100,7 @@ function startLoopedWorker({
   scriptName,
   intervalMs,
   args = [],
-  restartDelayMs = 2000,
+  restartDelayMs = 3.6 * 1e6,
 }) {
   const scriptPath = path.join(AGENT_DIR, scriptName);
 
@@ -153,7 +153,7 @@ function startSignalDetector() {
     name: "signal-detector",
     scriptName: "signal-detector.js",
     intervalMs: 3.6 * 1e6, // 1 hour
-    args: ["--samples=1", "--intervalMs=3600000"],
+    args: ["--samples=1", "--intervalMs=3.6*1e6"],
   });
 }
 
