@@ -1,7 +1,10 @@
-# kubernetes-docker-nodejs-microservices-demo
-Microservices Demo Project (using Node.js, Docker, Kubernetes etc.)
+# ObservIQ - Smart Observability Middleware for Microservice Application Monitoring
+ObservIQ is a smart observability platform for microservice-based applications that automates log analysis, metric discovery, alert optimization, and anomaly detection. By leveraging machine learning and intelligent monitoring techniques, it provides actionable insights that improve system visibility, reliability, and operational efficiency.
 
 ---
+## Demo Video & Documentations: https://observiqml.vercel.app
+
+<img width="1256" height="837" alt="Image" src="https://github.com/user-attachments/assets/79e77871-6503-4c8a-8d5e-af7723b7c06d" />
 
 ## Getting Started: Prerequisites
 
